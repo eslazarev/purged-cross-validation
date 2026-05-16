@@ -22,6 +22,7 @@ from hypothesis import strategies as st
 
 from purgedcv._embargo import apply_embargo
 from purgedcv._purge import purge
+from purgedcv._typing import NDArrayAny
 from purgedcv.diagnostics import (
     assert_embargo_respected,
     assert_no_temporal_leakage,
@@ -31,7 +32,7 @@ from purgedcv.diagnostics import (
 @st.composite
 def dataset_and_split(
     draw: st.DrawFn,
-) -> tuple[pd.Series, pd.Series, np.ndarray, np.ndarray]:
+) -> tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny]:
     """Generate a dataset with prediction/evaluation times and a disjoint
     train/test split.
 
@@ -58,7 +59,7 @@ class TestPurgeProperties:
     @given(dataset_and_split())
     def test_purged_train_has_no_temporal_leakage(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
     ) -> None:
         pred, evalu, train_idx, test_idx = case
         purged = purge(train_idx, test_idx, pred, evalu)
@@ -68,7 +69,7 @@ class TestPurgeProperties:
     @given(dataset_and_split(), st.integers(min_value=0, max_value=10))
     def test_purge_padding_monotonicity(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
         days: int,
     ) -> None:
         """purge(..., purge_horizon=Δ) is a subset of purge(...) for Δ ≥ 0."""
@@ -89,7 +90,7 @@ class TestPurgeProperties:
     @given(dataset_and_split(), st.integers(min_value=0, max_value=10))
     def test_purged_with_padding_respects_padded_diagnostic(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
         days: int,
     ) -> None:
         """The output of purge(..., purge_horizon=Δ) passes the diagnostic
@@ -105,7 +106,7 @@ class TestEmbargoProperties:
     @given(dataset_and_split(), st.integers(min_value=0, max_value=10))
     def test_embargoed_train_respects_embargo(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
         embargo_days: int,
     ) -> None:
         pred, evalu, train_idx, test_idx = case
@@ -117,7 +118,7 @@ class TestEmbargoProperties:
     @given(dataset_and_split(), st.integers(min_value=0, max_value=10))
     def test_embargo_zero_is_identity(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
         embargo_days: int,
     ) -> None:
         """apply_embargo with embargo=0 is the identity for any input."""
@@ -135,7 +136,7 @@ class TestPurgePlusEmbargoComposition:
     )
     def test_purge_then_embargo_clean(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
         purge_days: int,
         embargo_days: int,
     ) -> None:
@@ -160,7 +161,7 @@ class TestPurgePlusEmbargoComposition:
     )
     def test_purge_embargo_commute_in_set(
         self,
-        case: tuple[pd.Series, pd.Series, np.ndarray, np.ndarray],
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
         purge_days: int,
         embargo_days: int,
     ) -> None:

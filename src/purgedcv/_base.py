@@ -14,6 +14,8 @@ from purgedcv._purge import purge
 from purgedcv._time import HorizonLike, parse_horizon, validate_times
 from purgedcv.diagnostics import assert_groups_disjoint
 
+from ._typing import NDArrayAny
+
 
 class BaseTemporalSplitter(ABC):
     """Duck-typed sklearn CV splitter with purge + embargo orchestration.
@@ -61,7 +63,7 @@ class BaseTemporalSplitter(ABC):
             self._groups = None
 
     @abstractmethod
-    def _iter_test_indices(self, n_samples: int) -> Sequence[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> Sequence[NDArrayAny]:
         """Return the test index arrays for each fold, in order."""
         ...
 
@@ -72,10 +74,10 @@ class BaseTemporalSplitter(ABC):
 
     def split(
         self,
-        X: np.ndarray | pd.DataFrame,  # noqa: N803
+        X: NDArrayAny | pd.DataFrame,  # noqa: N803
         y: object = None,
         groups: object = None,
-    ) -> Iterator[tuple[np.ndarray, np.ndarray]]:
+    ) -> Iterator[tuple[NDArrayAny, NDArrayAny]]:
         """Yield ``(train_idx, test_idx)`` pairs for each fold.
 
         The ``y`` and ``groups`` parameters of this method are accepted for
@@ -110,7 +112,7 @@ class BaseTemporalSplitter(ABC):
                 assert_groups_disjoint(train_idx, test_idx, self._groups)
             yield train_idx, test_idx
 
-    def _candidate_train_idx(self, n_samples: int, test_idx: np.ndarray) -> np.ndarray:
+    def _candidate_train_idx(self, n_samples: int, test_idx: NDArrayAny) -> NDArrayAny:
         """Return the candidate training indices BEFORE purge and embargo
         are applied.
 
@@ -118,7 +120,7 @@ class BaseTemporalSplitter(ABC):
         splitters override this to restrict the candidate set to indices
         strictly before the test fold.
 
-        The return must be a 1-D ``np.ndarray`` of integer indices (dtype int64
+        The return must be a 1-D ``NDArrayAny`` of integer indices (dtype int64
         is the convention), because downstream :func:`purge` and
         :func:`apply_embargo` use boolean fancy indexing on it.
         """
@@ -152,7 +154,7 @@ class BaseTemporalSplitter(ABC):
         new._evaluation_times = evaluation_times.reset_index(drop=True)
         return new
 
-    def _n_samples_or_check(self, X: np.ndarray | pd.DataFrame) -> int:  # noqa: N803
+    def _n_samples_or_check(self, X: NDArrayAny | pd.DataFrame) -> int:  # noqa: N803
         """Return ``len(X)``, raising ``ValueError`` if it disagrees with
         the bound ``prediction_times`` length.
         """

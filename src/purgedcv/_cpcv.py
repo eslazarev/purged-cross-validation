@@ -19,6 +19,8 @@ from purgedcv._base import BaseTemporalSplitter
 from purgedcv._paths import reconstruct_paths
 from purgedcv._time import HorizonLike
 
+from ._typing import NDArrayAny
+
 
 class CombinatorialPurgedCV(BaseTemporalSplitter):
     """Combinatorial Purged Cross-Validation (fold enumeration).
@@ -110,10 +112,10 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
     ) -> int:
         return comb(self.n_splits, self.n_test_groups)
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         group_size, remainder = divmod(n_samples, self.n_splits)
         cursor = 0
-        group_indices: list[np.ndarray] = []
+        group_indices: list[NDArrayAny] = []
         for k in range(self.n_splits):
             sz = group_size + (1 if k < remainder else 0)
             group_indices.append(np.arange(cursor, cursor + sz, dtype=np.int64))
@@ -126,9 +128,9 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
     def backtest_paths(
         self,
         estimator: object,
-        X: np.ndarray | pd.DataFrame,  # noqa: N803
-        y: np.ndarray | pd.Series,
-    ) -> np.ndarray:
+        X: NDArrayAny | pd.DataFrame,  # noqa: N803
+        y: NDArrayAny | pd.Series,
+    ) -> NDArrayAny:
         """Fit ``estimator`` on each fold and reconstruct the C(N-1, K-1)
         out-of-sample backtest paths.
 
@@ -195,7 +197,7 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         y_arr = np.asarray(y)
 
         fold_test_indices = list(self._iter_test_indices(n_samples))
-        fold_predictions: list[np.ndarray] = []
+        fold_predictions: list[NDArrayAny] = []
         for train_idx, test_idx in self.split(X):
             if len(train_idx) == 0:
                 warnings.warn(

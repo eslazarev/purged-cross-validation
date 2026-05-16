@@ -19,8 +19,10 @@ from __future__ import annotations
 import numpy as np
 from scipy import stats
 
+from ._typing import NDArrayAny
 
-def _validate_returns(returns: np.ndarray) -> np.ndarray:
+
+def _validate_returns(returns: NDArrayAny) -> NDArrayAny:
     """Coerce input to 1-D float ndarray, reject NaN and length < 2."""
     arr = np.asarray(returns, dtype=float).ravel()
     if arr.size < 2:
@@ -31,7 +33,7 @@ def _validate_returns(returns: np.ndarray) -> np.ndarray:
 
 
 def probabilistic_sharpe_ratio(
-    returns: np.ndarray,
+    returns: NDArrayAny,
     benchmark_skill: float,
 ) -> float:
     """Probability that the true Sharpe ratio exceeds ``benchmark_skill``.
@@ -91,7 +93,7 @@ def probabilistic_sharpe_ratio(
 
 
 def deflated_sharpe_ratio(
-    returns: np.ndarray,
+    returns: NDArrayAny,
     n_trials: int,
     var_sharpe: float,
 ) -> float:

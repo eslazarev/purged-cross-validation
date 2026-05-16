@@ -30,7 +30,7 @@ Why write another one? People have asked scikit-learn, auto-sklearn, and mlpack 
 ## Installation
 
 ```bash
-# From PyPI (once published)
+
 pip install purgedcv
 
 # Directly from the repository

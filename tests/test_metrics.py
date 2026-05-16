@@ -13,11 +13,12 @@ from purgedcv._metrics import (
     min_track_record_length,
     probabilistic_sharpe_ratio,
 )
+from purgedcv._typing import NDArrayAny
 
 
 def _make_returns(
     mean: float, std: float, n: int, *, skew: float = 0.0, kurt: float = 3.0, seed: int = 42
-) -> np.ndarray:
+) -> NDArrayAny:
     """Generate a return series with approximately the requested moments.
     Uses a normal distribution as the baseline; skew/kurt arguments are
     accepted for documentation but not enforced (the generated series

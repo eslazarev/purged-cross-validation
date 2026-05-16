@@ -14,7 +14,6 @@ logging or sanity-checking.
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from purgedcv._time import HorizonLike, parse_horizon
@@ -23,6 +22,8 @@ from purgedcv.exceptions import (
     GroupLeakageError,
     TemporalLeakageError,
 )
+
+from ._typing import NDArrayAny
 
 __all__ = [
     "assert_embargo_respected",
@@ -33,8 +34,8 @@ __all__ = [
 
 
 def assert_no_temporal_leakage(
-    train_idx: np.ndarray,
-    test_idx: np.ndarray,
+    train_idx: NDArrayAny,
+    test_idx: NDArrayAny,
     prediction_times: pd.Series,
     evaluation_times: pd.Series,
     *,
@@ -90,8 +91,8 @@ def assert_no_temporal_leakage(
 
 
 def assert_embargo_respected(
-    train_idx: np.ndarray,
-    test_idx: np.ndarray,
+    train_idx: NDArrayAny,
+    test_idx: NDArrayAny,
     prediction_times: pd.Series,
     evaluation_times: pd.Series,
     embargo: HorizonLike,
@@ -137,8 +138,8 @@ def assert_embargo_respected(
 
 
 def assert_groups_disjoint(
-    train_idx: np.ndarray,
-    test_idx: np.ndarray,
+    train_idx: NDArrayAny,
+    test_idx: NDArrayAny,
     groups: pd.Series,
 ) -> None:
     """Raise :class:`GroupLeakageError` if any group identifier appears in
@@ -170,8 +171,8 @@ def assert_groups_disjoint(
 
 
 def compute_overlap_fraction(
-    train_idx: np.ndarray,
-    test_idx: np.ndarray,
+    train_idx: NDArrayAny,
+    test_idx: NDArrayAny,
     prediction_times: pd.Series,
     evaluation_times: pd.Series,
 ) -> float:

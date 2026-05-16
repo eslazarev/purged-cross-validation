@@ -13,6 +13,8 @@ import pandas as pd
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
 
+from ._typing import NDArrayAny
+
 
 class PurgedKFold(BaseTemporalSplitter):
     """K-fold CV with contiguous test folds and purge + embargo applied.
@@ -91,12 +93,12 @@ class PurgedKFold(BaseTemporalSplitter):
     ) -> int:
         return self.n_splits
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         fold_size, remainder = divmod(n_samples, self.n_splits)
         # Distribute the remainder across the first `remainder` folds so
         # all samples are used and fold sizes differ by at most 1.
         cursor = 0
-        out: list[np.ndarray] = []
+        out: list[NDArrayAny] = []
         for k in range(self.n_splits):
             sz = fold_size + (1 if k < remainder else 0)
             out.append(np.arange(cursor, cursor + sz, dtype=np.int64))
@@ -199,7 +201,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
     ) -> int:
         return self.n_splits
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         if self._groups is None:  # bound at construction; should be unreachable
             raise RuntimeError(
                 "PurgedGroupKFold._groups was unbound at split time. "
@@ -209,7 +211,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
         n_groups = len(self._unique_groups)
         block_size, remainder = divmod(n_groups, self.n_splits)
         cursor = 0
-        out: list[np.ndarray] = []
+        out: list[NDArrayAny] = []
         for k in range(self.n_splits):
             sz = block_size + (1 if k < remainder else 0)
             block = self._unique_groups[cursor : cursor + sz]

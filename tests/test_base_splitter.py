@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from purgedcv._base import BaseTemporalSplitter
+from purgedcv._typing import NDArrayAny
 from purgedcv.exceptions import GroupLeakageError
 
 
@@ -19,7 +20,7 @@ def _times(n: int = 20, horizon_days: int = 1) -> tuple[pd.Series, pd.Series]:
 class _TwoFoldStub(BaseTemporalSplitter):
     """Minimal concrete subclass for contract testing."""
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         # First half, second half.
         mid = n_samples // 2
         return [np.arange(mid), np.arange(mid, n_samples)]
@@ -31,7 +32,7 @@ class _TwoFoldStub(BaseTemporalSplitter):
 class _GroupRespectingStub(BaseTemporalSplitter):
     """Yields one fold per unique group_id, using self._groups."""
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         assert self._groups is not None  # by construction in the test
         groups_array = self._groups.to_numpy()
         return [np.where(groups_array == g)[0] for g in self._groups.unique()]
@@ -49,7 +50,7 @@ class _GroupRespectingStub(BaseTemporalSplitter):
 class _LeakyStub(BaseTemporalSplitter):
     """Emits exactly one fold whose test indices straddle group boundaries."""
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         return [np.array([5, 6, 15, 16])]
 
     def get_n_splits(
