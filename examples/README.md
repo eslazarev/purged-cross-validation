@@ -21,6 +21,17 @@ jupyter notebook examples/
 
 ---
 
+## Controlled proof (no download, deterministic)
+
+`synthetic_leakage_proof.ipynb` is the one example with a known right answer.
+The target is built so no feature can predict it, then naive shuffled k-fold
+and `PurgedKFold` run side by side. Naive scores R² ≈ 0.83–0.91 on a target
+nothing can predict; `PurgedKFold` drops the train/test label overlap from 100%
+to 0% and that fabricated skill collapses below a predict-the-mean baseline.
+Deterministic (fixed seed) and offline — no download.
+
+---
+
 ## Notebooks
 
 ### 1. `clinical_mortality_physionet.ipynb` — ICU Mortality Prediction
