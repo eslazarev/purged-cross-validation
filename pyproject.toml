@@ -5,28 +5,55 @@ build-backend = "hatchling.build"
 [project]
 name = "purgedcv"
 version = "0.0.2"
-description = "scikit-learn-compatible cross-validation for time-series machine learning: purging, embargoes, combinatorial backtest paths."
+description = "scikit-learn-compatible cross-validation for time-series and financial machine learning: purging, embargoes, combinatorial purged CV, and deflated Sharpe ratios."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Evgenii Lazarev" }]
 keywords = [
-    "time-series",
     "cross-validation",
-    "machine-learning",
-    "scikit-learn",
+    "time-series",
+    "time-series-cross-validation",
+    "time-series-split",
+    "purged-cross-validation",
     "purged-kfold",
-    "combinatorial-cv",
+    "purging",
+    "embargo",
+    "combinatorial-purged-cross-validation",
+    "cpcv",
+    "walk-forward",
+    "data-leakage",
+    "backtesting",
+    "backtest",
+    "deflated-sharpe-ratio",
+    "probabilistic-sharpe-ratio",
+    "model-validation",
+    "scikit-learn",
+    "sklearn",
+    "machine-learning",
+    "financial-machine-learning",
+    "quantitative-finance",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Typing :: Typed",
+    "Natural Language :: English",
 ]
 dependencies = [
     "numpy>=1.24",
@@ -53,6 +80,8 @@ examples = [
 [project.urls]
 Homepage = "https://github.com/eslazarev/purged-cross-validation"
 Repository = "https://github.com/eslazarev/purged-cross-validation"
+Documentation = "https://github.com/eslazarev/purged-cross-validation#readme"
+Issues = "https://github.com/eslazarev/purged-cross-validation/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/purgedcv"]
