@@ -27,6 +27,24 @@ Why write another one? People have asked scikit-learn, auto-sklearn, and mlpack 
 
 ---
 
+## Does it actually catch leakage?
+
+A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](examples/synthetic_leakage_proof.ipynb), deterministic, no download):
+
+| model | naive shuffled KFold R² | PurgedKFold R² |
+|---|--:|--:|
+| predict-the-mean (reference) | -0.01 | -0.13 |
+| k-NN | **0.83** | -1.31 |
+| RandomForest | **0.91** | -1.94 |
+
+Train/test label overlap: **100% under naive → 0% under PurgedKFold**.
+
+![Out-of-sample R² on an unpredictable target: naive shuffled KFold scores far above zero (fabricated), PurgedKFold collapses below it.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/synthetic_leakage_proof.png)
+
+Naive CV reports R² ≈ 0.83–0.91 on a target nothing can predict. That is pure leakage from the overlap. `PurgedKFold` removes the overlap and the fabricated skill collapses below a predict-the-mean baseline. The negative number is not the point; *no positive skill* is the correct answer, and only the purged split reports it. The library does not make models look better; it stops them looking better than they are.
+
+---
+
 ## Installation
 
 ```bash
