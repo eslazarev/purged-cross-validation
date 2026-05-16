@@ -6,16 +6,17 @@ import numpy as np
 import pytest
 
 from purgedcv._paths import reconstruct_paths
+from purgedcv._typing import NDArrayAny
 
 
-def _cpcv_fold_test_indices(n_samples: int, n_splits: int, n_test_groups: int) -> list[np.ndarray]:
+def _cpcv_fold_test_indices(n_samples: int, n_splits: int, n_test_groups: int) -> list[NDArrayAny]:
     """Helper: reproduce CombinatorialPurgedCV._iter_test_indices independently
     so reconstruct_paths tests don't depend on the splitter."""
     from itertools import combinations
 
     group_size, remainder = divmod(n_samples, n_splits)
     cursor = 0
-    group_indices: list[np.ndarray] = []
+    group_indices: list[NDArrayAny] = []
     for k in range(n_splits):
         sz = group_size + (1 if k < remainder else 0)
         group_indices.append(np.arange(cursor, cursor + sz, dtype=np.int64))

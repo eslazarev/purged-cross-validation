@@ -6,19 +6,22 @@ chapter 12 section 12.4, figure 12.2.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from itertools import combinations
 from math import comb
 
 import numpy as np
 
+from ._typing import NDArrayAny
+
 
 def reconstruct_paths(
-    fold_predictions: list[np.ndarray],
-    fold_test_indices: list[np.ndarray],
+    fold_predictions: Sequence[NDArrayAny],
+    fold_test_indices: Sequence[NDArrayAny],
     n_splits: int,
     n_test_groups: int,
     n_samples: int,
-) -> np.ndarray:
+) -> NDArrayAny:
     """Assemble Combinatorial Purged CV fold predictions into backtest paths.
 
     Given the predictions and test indices for all C(N, K) folds produced by
@@ -93,7 +96,7 @@ def reconstruct_paths(
     # Reconstruct the group blocks from n_samples + n_splits.
     group_size, remainder = divmod(n_samples, n_splits)
     cursor = 0
-    group_indices: list[np.ndarray] = []
+    group_indices: list[NDArrayAny] = []
     for k in range(n_splits):
         sz = group_size + (1 if k < remainder else 0)
         group_indices.append(np.arange(cursor, cursor + sz, dtype=np.int64))
@@ -103,7 +106,7 @@ def reconstruct_paths(
     # fold-iteration order, where prediction_slice is the portion of that
     # fold's predictions corresponding to that group's rows.
     fold_combos = list(combinations(range(n_splits), n_test_groups))
-    group_to_fold_slices: dict[int, list[tuple[int, np.ndarray]]] = {g: [] for g in range(n_splits)}
+    group_to_fold_slices: dict[int, list[tuple[int, NDArrayAny]]] = {g: [] for g in range(n_splits)}
     for fold_idx, (combo, preds) in enumerate(zip(fold_combos, fold_predictions, strict=True)):
         cursor_in_fold = 0
         for g in combo:

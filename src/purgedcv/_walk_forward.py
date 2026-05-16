@@ -11,6 +11,8 @@ import pandas as pd
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
 
+from ._typing import NDArrayAny
+
 WindowMode = Literal["sliding", "expanding"]
 
 
@@ -122,7 +124,7 @@ class WalkForwardSplit(BaseTemporalSplitter):
     ) -> int:
         return self.n_splits
 
-    def _iter_test_indices(self, n_samples: int) -> list[np.ndarray]:
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         total_test = self.test_size * self.n_splits
         if total_test >= n_samples:
             raise ValueError(
@@ -137,7 +139,7 @@ class WalkForwardSplit(BaseTemporalSplitter):
             for k in range(self.n_splits)
         ]
 
-    def _candidate_train_idx(self, n_samples: int, test_idx: np.ndarray) -> np.ndarray:
+    def _candidate_train_idx(self, n_samples: int, test_idx: NDArrayAny) -> NDArrayAny:
         """Walk-forward semantics: training set is everything strictly
         before the test fold (regardless of window mode). This overrides
         the base class default of 'everything except test'."""
@@ -146,10 +148,10 @@ class WalkForwardSplit(BaseTemporalSplitter):
 
     def split(
         self,
-        X: np.ndarray | pd.DataFrame,  # noqa: N803
+        X: NDArrayAny | pd.DataFrame,  # noqa: N803
         y: object = None,
         groups: object = None,
-    ) -> Iterator[tuple[np.ndarray, np.ndarray]]:
+    ) -> Iterator[tuple[NDArrayAny, NDArrayAny]]:
         """Yield ``(train_idx, test_idx)`` pairs for each walk-forward fold.
 
         The base class handles X length validation, purge, and embargo;

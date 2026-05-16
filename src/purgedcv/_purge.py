@@ -9,14 +9,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from ._typing import NDArrayAny
+
 
 def purge(
-    train_idx: np.ndarray,
-    test_idx: np.ndarray,
+    train_idx: NDArrayAny,
+    test_idx: NDArrayAny,
     prediction_times: pd.Series,
     evaluation_times: pd.Series,
     purge_horizon: pd.Timedelta | None = None,
-) -> np.ndarray:
+) -> NDArrayAny:
     """Drop training rows whose half-open label horizon overlaps the test horizon.
 
     The test horizon is
@@ -60,5 +62,5 @@ def purge(
     train_eval = evaluation_times.iloc[train_idx].to_numpy()
 
     keep = (train_eval <= test_start.to_numpy()) | (train_pred >= test_end.to_numpy())
-    kept: np.ndarray = train_idx[keep]
+    kept: NDArrayAny = train_idx[keep]
     return kept

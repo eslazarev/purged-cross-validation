@@ -24,11 +24,12 @@ from purgedcv import (
     PurgedKFold,
     WalkForwardSplit,
 )
+from purgedcv._typing import NDArrayAny
 
 
 def _make_dataset(
     n: int = 60, horizon_days: int = 1
-) -> tuple[np.ndarray, np.ndarray, pd.Series, pd.Series]:
+) -> tuple[NDArrayAny, NDArrayAny, pd.Series, pd.Series]:
     rng = np.random.default_rng(seed=42)
     X = rng.standard_normal((n, 4))  # noqa: N806
     y = X @ rng.standard_normal(4) + rng.standard_normal(n) * 0.1

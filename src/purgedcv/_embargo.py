@@ -9,14 +9,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from ._typing import NDArrayAny
+
 
 def apply_embargo(
-    train_idx: np.ndarray,
-    test_idx: np.ndarray,
+    train_idx: NDArrayAny,
+    test_idx: NDArrayAny,
     prediction_times: pd.Series,
     evaluation_times: pd.Series,
     embargo: pd.Timedelta,
-) -> np.ndarray:
+) -> NDArrayAny:
     """Drop training rows whose ``prediction_time`` falls inside the closed
     embargo window ``[test_eval_max, test_eval_max + embargo]``.
 
@@ -57,5 +59,5 @@ def apply_embargo(
 
     train_pred = prediction_times.iloc[train_idx].to_numpy()
     in_embargo = (train_pred >= test_eval_max.to_numpy()) & (train_pred <= cutoff.to_numpy())
-    kept: np.ndarray = train_idx[~in_embargo]
+    kept: NDArrayAny = train_idx[~in_embargo]
     return kept
