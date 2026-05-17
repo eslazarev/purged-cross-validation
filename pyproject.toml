@@ -75,6 +75,7 @@ dev = [
 examples = [
     "jupyter>=1.0",
     "matplotlib>=3.7",
+    "pricehub>=0.0.7",
 ]
 
 [project.urls]

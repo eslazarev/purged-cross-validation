@@ -9,6 +9,8 @@ below a predict-the-mean baseline. Deterministic via the fixed seed.
 
 from __future__ import annotations
 
+import itertools
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -74,3 +76,41 @@ def test_synthetic_leakage_proof_holds() -> None:
         assert purged_r2 <= 0.0, (model, purged_r2)
         # The fabricated skill is large and collapses once the overlap is gone.
         assert naive_r2 - purged_r2 > 1.0, (model, naive_r2, purged_r2)
+
+
+@pytest.mark.e2e
+def test_purge_horizon_dose_response() -> None:
+    """Residual leakage falls monotonically and is gone exactly when the
+    purge horizon reaches the true label horizon -- not a step sooner."""
+    rng = np.random.default_rng(SEED)
+    e = rng.standard_normal(N + H)
+    y = np.array([e[t : t + H].mean() for t in range(N)])
+    x = np.cumsum(rng.gamma(shape=2.0, scale=1.0, size=N))
+    features = x.reshape(-1, 1)
+    pred = pd.Series(pd.date_range("2020-01-01", periods=N, freq="D"))
+    true_evalu = pred + pd.Timedelta(days=H)
+
+    horizons = list(range(0, int(1.5 * H) + 1, 2))
+    residual: list[float] = []
+    for assumed in horizons:
+        cv_p = PurgedKFold(
+            n_splits=N_SPLITS,
+            prediction_times=pred,
+            evaluation_times=pred + pd.Timedelta(days=assumed),
+        )
+        fr = [
+            compute_overlap_fraction(tr, te, pred, true_evalu) for tr, te in cv_p.split(features, y)
+        ]
+        residual.append(float(np.mean(fr)))
+
+    # Under-purging leaks; monotone non-increasing as the horizon grows.
+    assert residual[0] > 0.0
+    assert all(b <= a + 1e-12 for a, b in itertools.pairwise(residual))
+
+    # The crossing is exactly at the true horizon: zero only once purge >= H,
+    # strictly positive for every horizon below it.
+    for h, r in zip(horizons, residual, strict=True):
+        if h < H:
+            assert r > 0.0, (h, r)
+        else:
+            assert r == 0.0, (h, r)

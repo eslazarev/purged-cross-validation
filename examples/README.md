@@ -1,10 +1,8 @@
 # purged-cross-validation Example Notebooks
 
-Four domain-specific notebooks that demonstrate the `purged-cross-validation` library on real-world
+Domain-specific notebooks that demonstrate the `purged-cross-validation` library on real-world
 time-series problems. Each notebook downloads its dataset on first run and caches it in
 `examples/data/` (git-ignored). Subsequent runs use the local cache and work offline.
-
-**First run downloads ~18 MB total; subsequent runs are fully offline.**
 
 The `examples/data/` directory is created automatically by the notebooks and is excluded
 from git via `.gitignore`, so reviewers see fresh downloads on their own machine.
@@ -136,3 +134,118 @@ become a returns-like skill score against a persistence baseline, scored with
 `probabilistic_sharpe_ratio` (PSR), `deflated_sharpe_ratio` (DSR, corrected for
 20 trials), and `min_track_record_length`. A bar chart shows the spread of PSR
 across the 5 paths, which is the point of CPCV over single-path walk-forward.
+
+---
+
+### 5. `ohlc_trading_signal.ipynb` — Crypto OHLC Forward-Return Leakage
+
+**Dataset:** Binance spot BTC/USDT daily candles, pinned window
+2021-01-01 to 2023-09-28 (1001 bars).
+
+**Source:** the [`pricehub`](https://pypi.org/project/pricehub/) package
+(`get_ohlc("binance_spot", "BTCUSDT", "1d", ...)`), an examples-extra
+dependency. No API key.
+
+**Files cached:**
+- `btcusdt_1d_binance_spot_2021_2023.csv` (~0.1 MB) — fetched once, then offline
+
+**License:** Binance public market data; subject to the exchange's API terms
+
+**Download size:** ~0.1 MB on first run
+
+The library's home domain. The label is the log return over the next 20
+bars, so neighbouring labels overlap heavily; the feature is cumulative
+volume, a real quantity that doubles as an accidental clock. Naive shuffled
+k-fold reports R² ≈ +0.85 for a feature with no economic reason to forecast
+returns; `PurgedKFold` cuts the train/test overlap from 100% to 0% and the
+score collapses to about −1.2. This is the real-data counterpart to the
+controlled `synthetic_leakage_proof.ipynb`.
+
+---
+
+### 6. `model_comparison_honest_cv.ipynb` — Which Model Survives Honest CV?
+
+**Dataset:** Binance spot BTC/USDT daily candles, pinned window
+2021-01-01 to 2023-09-28 (1001 bars; shares the cache with notebook 5).
+
+**Source:** the [`pricehub`](https://pypi.org/project/pricehub/) package
+(`get_ohlc`), an examples-extra dependency. No API key.
+
+**Files cached:**
+- `btcusdt_1d_binance_spot_2021_2023.csv` — reused from notebook 5 if present
+
+**License:** Binance public market data; subject to the exchange's API terms
+
+**Download size:** ~0.1 MB on first run (none if notebook 5 ran first)
+
+Answers "which model predicts price best?" honestly. Ridge, k-NN,
+RandomForest and HistGBR (plus a mean baseline) are scored two ways: naive
+shuffled k-fold vs `PurgedKFold` R² (the leak gap, per model), then
+`CombinatorialPurgedCV` drives a toy long/short strategy whose per-path
+Sharpe feeds a Deflated Sharpe Ratio with `n_trials` set to the number of
+models and `var_sharpe` estimated across them. On real BTC daily bars with
+ordinary momentum/volatility/volume features, no model clears DSR ≥ 0.95 —
+no edge survives the correction for having tried several models. That is the
+answer, and it is the point of the package.
+
+---
+
+### 7. `uk_smart_meter_lcl.ipynb` — Real UK Smart-Meter Demand (Honest CV Comparison)
+
+**Dataset:** UK Power Networks, Low Carbon London smart-meter trial,
+~5,500 households, half-hourly, Nov 2011 – Feb 2014.
+
+**Source:** London Datastore, dataset
+`smartmeter-energy-use-data-in-london-households` (the 168-file CSV split).
+Download the zip; the notebook builds a small cached subset.
+
+**Files cached:**
+- `lcl_halfhourly.csv` — 60 standard-tariff households, fixed-seed sample,
+  built from the raw files (git-ignored). Synthetic fallback if absent.
+
+**License:** UK Power Networks / London Datastore open terms.
+
+**Download size:** ~760 MB raw zip (one-time, user-side); cached subset is small.
+
+The first reproducible side-by-side of CV schemes on the canonical LCL
+dataset. Honest result, reported as measured: naive shuffled k-fold (WAPE
+29.3%) barely beats walk-forward (29.8%) — the temporal-leakage gap is only
+~2% here, because the predictable signal is genuine seasonality every split
+learns and the half-hourly noise floor is high. The leak that does bite is
+by household: `GroupKFold` on unseen customers is ~7% worse than the pooled
+temporal estimate, so time-based CV overstates accuracy for new-customer
+deployment. Two methodological traps surface and are documented: raw
+half-hourly MAPE is undefined near zero (use WAPE), and `PurgedGroupKFold`
+degenerates on a fully-overlapping panel (use `GroupKFold` for the group
+leak, `WalkForwardSplit` for the temporal one). A nuanced, measured finding
+rather than a dramatic one.
+
+---
+
+### 8. `earthquake_magnitude_leakage.ipynb` — A Real Phantom Edge
+
+**Dataset:** USGS global earthquake catalog, M5.0+ events 2014–2023
+(~17,200 events).
+
+**Source:** USGS FDSN event API
+(`earthquake.usgs.gov/fdsnws/event/1/query`, CSV, no key, fixed query
+window for reproducibility).
+
+**Files cached:**
+- `usgs_quakes_m5_2014_2024.csv` (~3 MB) — fetched once, then offline
+
+**License:** U.S. Geological Survey, public domain.
+
+**Download size:** ~3 MB on first run
+
+The dramatic, honest, non-financial case. Earthquake magnitude is not
+predictable from past magnitudes (Gutenberg-Richter; the empirical
+correlation here is +0.02), so the honest R² is ~0 by established science.
+The label is the mean magnitude over the next 20 events (overlapping); one
+feature is the cumulative event count, a real quantity that doubles as a
+monotone clock. Naive shuffled k-fold reports **R² = +0.65** — pure
+leakage. `PurgedKFold` (−0.75), blocked k-fold (−1.13) and
+`WalkForwardSplit` (−1.24) all collapse to the correct "no skill", and the
+train/test label overlap drops from 100% to 0%. The real-data counterpart
+to `synthetic_leakage_proof.ipynb`, on a dataset whose unpredictability is
+a scientific fact rather than an assumption.
