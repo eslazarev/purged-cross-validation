@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use purgedcv in academic work, please cite it as below."
+type: software
+title: "purgedcv: scikit-learn-compatible purged and combinatorial cross-validation for time-series and financial machine learning"
+authors:
+  - given-names: Evgenii
+    family-names: Lazarev
+    email: elazarev@gmail.com
+    orcid: "https://orcid.org/0009-0000-1398-7842"
+version: 0.0.5
+date-released: "2026-05-19"
+repository-code: "https://github.com/eslazarev/purged-cross-validation"
+url: "https://github.com/eslazarev/purged-cross-validation"
+license: MIT
+keywords:
+  - cross-validation
+  - time-series
+  - time-series-cross-validation
+  - purged-cross-validation
+  - purged-kfold
+  - purging
+  - embargo
+  - combinatorial-purged-cross-validation
+  - cpcv
+  - walk-forward
+  - data-leakage
+  - backtesting
+  - deflated-sharpe-ratio
+  - probabilistic-sharpe-ratio
+  - model-validation
+  - scikit-learn
+  - machine-learning
+  - financial-machine-learning
+abstract: >-
+  purgedcv implements purging and embargoing of overlapping labels,
+  walk-forward validation, purged and group-purged k-fold, Combinatorial
+  Purged Cross-Validation (CPCV) with backtest-path reconstruction, and the
+  Probabilistic Sharpe Ratio, Deflated Sharpe Ratio, and Minimum Track
+  Record Length. Every splitter follows the scikit-learn splitter protocol,
+  the package is fully typed (passes mypy strict), and the implementation is
+  pinned by an end-to-end test suite. The algorithms are due to Marcos Lopez
+  de Prado (2018) and Bailey and Lopez de Prado (2012, 2014); this library
+  is an open, MIT-licensed, sklearn-native implementation.

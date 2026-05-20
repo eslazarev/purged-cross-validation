@@ -1,0 +1,66 @@
+# API reference
+
+All public symbols from `purgedcv.__all__`, auto-rendered from the source
+docstrings. The constructors of the splitters share a single set of
+keyword arguments (`prediction_times`, `evaluation_times`,
+`purge_horizon`, `embargo`, `groups`); see
+[`BaseTemporalSplitter`](#purgedcv.BaseTemporalSplitter) for the shared
+contract.
+
+## Splitters
+
+::: purgedcv.BaseTemporalSplitter
+
+::: purgedcv.WalkForwardSplit
+
+::: purgedcv.PurgedKFold
+
+::: purgedcv.PurgedGroupKFold
+
+::: purgedcv.CombinatorialPurgedCV
+
+## Backtest paths
+
+::: purgedcv.reconstruct_paths
+
+## Row-level primitives
+
+::: purgedcv.purge
+
+::: purgedcv.apply_embargo
+
+## Time and horizon utilities
+
+::: purgedcv.parse_horizon
+
+::: purgedcv.horizons_overlap
+
+::: purgedcv.validate_times
+
+## Statistical metrics
+
+::: purgedcv.probabilistic_sharpe_ratio
+
+::: purgedcv.deflated_sharpe_ratio
+
+::: purgedcv.min_track_record_length
+
+## Diagnostics
+
+::: purgedcv.diagnostics.compute_overlap_fraction
+
+::: purgedcv.diagnostics.assert_no_temporal_leakage
+
+::: purgedcv.diagnostics.assert_groups_disjoint
+
+::: purgedcv.diagnostics.assert_embargo_respected
+
+## Exceptions
+
+::: purgedcv.TemporalCVError
+
+::: purgedcv.TemporalLeakageError
+
+::: purgedcv.EmbargoViolationError
+
+::: purgedcv.GroupLeakageError

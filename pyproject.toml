@@ -77,11 +77,16 @@ examples = [
     "matplotlib>=3.7",
     "pricehub>=0.0.7",
 ]
+docs = [
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.24",
+    "mkdocs-include-markdown-plugin>=6.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/eslazarev/purged-cross-validation"
 Repository = "https://github.com/eslazarev/purged-cross-validation"
-Documentation = "https://github.com/eslazarev/purged-cross-validation#readme"
+Documentation = "https://eslazarev.github.io/purged-cross-validation/"
 Issues = "https://github.com/eslazarev/purged-cross-validation/issues"
 
 [tool.hatch.build.targets.wheel]

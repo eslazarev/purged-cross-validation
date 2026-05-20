@@ -220,8 +220,14 @@ __marimo__/
 # Example notebook downloaded datasets (lazily fetched on first run)
 examples/data/
 
-# docs/ kept locally for reference, not published (internal plans, drafts)
-docs/
+# docs/ is now the tracked mkdocs source. Only ignore build/scratch under it.
+docs/_build/
+docs/plans/
+site/
 
-# Local dev tooling, not published
-tools/
+# tools/ is now tracked. Only ignore local scratch under it.
+tools/_local/
+tools/scratch/
+
+# User-managed curation stash (relocated docs awaiting triage)
+docstmp/

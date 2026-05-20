@@ -38,7 +38,7 @@ def _run(out_dir: Path) -> subprocess.CompletedProcess[str]:
 
 
 @pytest.mark.e2e
-@pytest.mark.skipif(not BENCHMARK.exists(), reason="tools/ is gitignored; absent on clean checkout")
+@pytest.mark.skipif(not BENCHMARK.exists(), reason="benchmark script missing -- safety guard")
 def test_competitor_benchmark_invariants_and_determinism(tmp_path: Path) -> None:
     out_a = tmp_path / "a"
     out_b = tmp_path / "b"

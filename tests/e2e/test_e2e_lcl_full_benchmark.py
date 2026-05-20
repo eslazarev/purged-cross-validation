@@ -12,7 +12,7 @@ are docs here, not run under pytest). Two guarantees:
    synthetic fixture in the *real* raw LCL CSV layout, writes both outputs,
    and the per-subsample CSV is byte-identical across two runs (determinism).
    Skipped cleanly when ``tools/`` is absent (a clean checkout has no
-   ``tools/`` -- it is gitignored).
+   ``tools/lcl_full_benchmark.py`` is missing (safety guard).
 """
 
 from __future__ import annotations
@@ -138,7 +138,7 @@ def _write_raw_fixture(raw_dir: Path, n_households: int, days: int, seed: int) -
 
 
 @pytest.mark.e2e
-@pytest.mark.skipif(not BENCHMARK.exists(), reason="tools/ is gitignored; absent on clean checkout")
+@pytest.mark.skipif(not BENCHMARK.exists(), reason="benchmark script missing -- safety guard")
 def test_full_benchmark_cli_quick_runs_and_is_deterministic(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     out_a = tmp_path / "out_a"
