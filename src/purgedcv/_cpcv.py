@@ -1,9 +1,8 @@
 """Internal: CombinatorialPurgedCV (Domain D5.4).
 
 See *Advances in Financial Machine Learning* (Lopez de Prado, Wiley 2018),
-chapter 12 section 12.4. The N-choose-K fold enumeration here is the
-splitter half of the CPCV idea; backtest path reconstruction (domain D6)
-is deferred to Plan C.
+chapter 12 section 12.4. The N-choose-K fold enumeration is paired with
+backtest path reconstruction (domain D6) via :meth:`backtest_paths`.
 """
 
 from __future__ import annotations
@@ -34,10 +33,8 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
     n_test_groups - 1)`` folds.
 
     The base class applies D2 purge and D3 embargo to each fold's train
-    set. Combinatorial enumeration here is the splitter half of CPCV;
-    backtest path reconstruction (assembling the C(N,K) folds into
-    n_paths time-ordered out-of-sample sequences) is a separate domain
-    handled in Plan C.
+    set. :meth:`backtest_paths` then assembles the C(N,K) folds into
+    n_paths time-ordered out-of-sample sequences.
 
     See *Advances in Financial Machine Learning* (Lopez de Prado, Wiley
     2018), chapter 12 section 12.4, for the original method.
@@ -80,8 +77,9 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
                 the padded test horizon are dropped. ``None`` means no
                 purge.
             embargo: Post-test embargo duration; training rows whose
-                prediction time falls in the closed window
-                ``[test_eval_max, test_eval_max + embargo]`` are dropped.
+                prediction time falls in any closed window
+                ``[test_evaluation_time, test_evaluation_time + embargo]``
+                are dropped.
                 ``None`` means no embargo.
 
         Raises:
@@ -140,10 +138,8 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
            other or the original).
         2. Fit on the fold's training set (after purge + embargo).
         3. Predict on the fold's test set.
-        4. If the fold has no training rows (e.g. the structural collapse
-           where the test horizon spans the entire timeline and purge
-           eliminates all training data), the predictions for that fold
-           are NaN.
+        4. If the fold has no training rows under an unusually aggressive
+           purge/embargo configuration, the predictions for that fold are NaN.
 
         The per-fold predictions are then handed to :func:`reconstruct_paths`,
         which assembles them into an ``(n_paths, n_samples)`` matrix where

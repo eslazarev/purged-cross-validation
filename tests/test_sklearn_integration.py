@@ -79,18 +79,10 @@ def test_cross_val_score_accepts_splitter(
 
 
 @pytest.mark.e2e
-def test_cross_val_score_accepts_cpcv_with_structural_fold_collapse() -> None:
-    """CombinatorialPurgedCV is the one splitter that intentionally produces
-    a fold with empty train: combo (group 0, group N-1) spans the entire
-    timeline, so purge eliminates every training candidate. The remaining
-    C(N, K) - 1 folds must still produce finite scores.
-
-    sklearn emits FitFailedWarning for the empty-train fold and assigns NaN
-    via error_score=np.nan. We assert exactly one NaN score, and that
-    FitFailedWarning was raised."""
+def test_cross_val_score_accepts_cpcv_without_non_adjacent_fold_collapse() -> None:
+    """CPCV non-adjacent test groups purge local windows, not one convex hull,
+    so every fold keeps enough train rows for sklearn scoring."""
     from math import comb
-
-    from sklearn.exceptions import FitFailedWarning
 
     X, y, pred, evalu = _make_dataset()  # noqa: N806
     cv = CombinatorialPurgedCV(
@@ -101,20 +93,16 @@ def test_cross_val_score_accepts_cpcv_with_structural_fold_collapse() -> None:
         prediction_times=pred,
         evaluation_times=evalu,
     )
-    with pytest.warns(FitFailedWarning):
-        scores = cross_val_score(
-            DummyRegressor(strategy="mean"),
-            X=X,
-            y=y,
-            cv=cv,
-            scoring="neg_mean_squared_error",
-            error_score=np.nan,
-        )
+    scores = cross_val_score(
+        DummyRegressor(strategy="mean"),
+        X=X,
+        y=y,
+        cv=cv,
+        scoring="neg_mean_squared_error",
+        error_score=np.nan,
+    )
     assert len(scores) == comb(4, 2) == 6
-    n_finite = int(np.sum(np.isfinite(scores)))
-    n_nan = int(np.sum(np.isnan(scores)))
-    assert n_finite == 5
-    assert n_nan == 1
+    assert np.all(np.isfinite(scores))
 
 
 @pytest.mark.e2e

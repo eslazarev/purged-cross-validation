@@ -184,9 +184,9 @@ class TestCombinatorialPurgedCVBacktestPaths:
             assert paths.shape[0] == comb(n_splits - 1, n_test_groups - 1)
             assert paths.shape[1] == n_samples
 
-    def test_structural_fold_collapse_propagates_nan(self) -> None:
-        """When CPCV's (0, N-1) fold collapses under aggressive purge, the
-        affected paths have NaN in the segments routed through that fold."""
+    def test_non_adjacent_test_groups_do_not_collapse_training_set(self) -> None:
+        """CPCV purges each selected test block locally, so a fold testing
+        groups (0, N-1) can still train on the middle groups."""
         pred = pd.Series(pd.date_range("2024-01-01", periods=24, freq="D"))
         evalu = pred + pd.Timedelta(days=1)
         cv = CombinatorialPurgedCV(
@@ -199,15 +199,14 @@ class TestCombinatorialPurgedCVBacktestPaths:
         )
         X = np.zeros((24, 1))  # noqa: N806
         y = np.zeros(24)
-        # Suppress the FitFailedWarning we expect for the collapsed fold.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", FitFailedWarning)
-            paths = cv.backtest_paths(DummyRegressor(strategy="mean"), X, y)
-        # At least one path has at least one NaN entry.
-        assert np.any(np.isnan(paths))
-        # Most entries are still finite (the collapse is localized).
-        finite_fraction = float(np.mean(np.isfinite(paths)))
-        assert finite_fraction > 0.5
+        paths = cv.backtest_paths(DummyRegressor(strategy="mean"), X, y)
+        assert np.all(np.isfinite(paths))
+
+        fold_by_test = {tuple(test_idx.tolist()): train_idx for train_idx, test_idx in cv.split(X)}
+        non_adjacent_test = tuple([*range(0, 6), *range(18, 24)])
+        train_idx = fold_by_test[non_adjacent_test]
+        assert len(train_idx) > 0
+        assert set(train_idx.tolist()).issubset(set(range(6, 18)))
 
 
 class TestCombinatorialPurgedCVBacktestPathsAPI:

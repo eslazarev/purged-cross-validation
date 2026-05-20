@@ -68,8 +68,9 @@ class PurgedKFold(BaseTemporalSplitter):
                 window; training rows whose label horizon overlaps the
                 padded test horizon are dropped. ``None`` means no purge.
             embargo: Post-test embargo duration; training rows whose
-                prediction time falls in the closed window
-                ``[test_eval_max, test_eval_max + embargo]`` are dropped.
+                prediction time falls in any closed window
+                ``[test_evaluation_time, test_evaluation_time + embargo]``
+                are dropped.
                 ``None`` means no embargo.
 
         Raises:

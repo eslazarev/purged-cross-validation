@@ -86,3 +86,24 @@ class TestApplyEmbargo:
         emb = pd.Timedelta(days=3)
         embargoed = apply_embargo(train_idx, test_idx, pred, evalu, embargo=emb)
         assert_embargo_respected(embargoed, test_idx, pred, evalu, embargo=emb)
+
+    def test_disjoint_test_blocks_embargo_each_local_post_test_window(self) -> None:
+        """Embargo must apply after every non-contiguous test block, not
+        only after the final test row."""
+        pred, evalu = _make_horizon_dataset(horizon_days=1, n=12)
+        train_idx = np.array([3, 4, 5, 6, 7, 8])
+        test_idx = np.array([0, 1, 2, 9, 10, 11])
+
+        result = apply_embargo(
+            train_idx,
+            test_idx,
+            pred,
+            evalu,
+            embargo=pd.Timedelta(days=1),
+        )
+
+        # Test rows 0..2 embargo prediction times through Jan 5, so rows
+        # 3 and 4 are removed even though they are far before the final
+        # test block.
+        expected = np.array([5, 6, 7, 8])
+        np.testing.assert_array_equal(result, expected)

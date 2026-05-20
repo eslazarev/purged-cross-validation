@@ -208,17 +208,29 @@ Download the zip; the notebook builds a small cached subset.
 **Download size:** ~760 MB raw zip (one-time, user-side); cached subset is small.
 
 The first reproducible side-by-side of CV schemes on the canonical LCL
-dataset. Honest result, reported as measured: naive shuffled k-fold (WAPE
-29.3%) barely beats walk-forward (29.8%) — the temporal-leakage gap is only
-~2% here, because the predictable signal is genuine seasonality every split
-learns and the half-hourly noise floor is high. The leak that does bite is
-by household: `GroupKFold` on unseen customers is ~7% worse than the pooled
-temporal estimate, so time-based CV overstates accuracy for new-customer
-deployment. Two methodological traps surface and are documented: raw
-half-hourly MAPE is undefined near zero (use WAPE), and `PurgedGroupKFold`
-degenerates on a fully-overlapping panel (use `GroupKFold` for the group
-leak, `WalkForwardSplit` for the temporal one). A nuanced, measured finding
-rather than a dramatic one.
+dataset. The notebook runs one 60-household sample for speed and keeps the
+population-level run offline because it scans the 168 raw LCL CSV files.
+
+Across 20 seeded subsamples of 60 households drawn from the 4,284 eligible
+Standard-tariff households, walk-forward WAPE is 42.36% (95% CI
+41.01–43.71). Naive shuffled k-fold lands at 41.68%, so the temporal-leakage
+gap is 1.60% in relative terms (95% CI 1.27–1.94). The larger deployment gap
+is by household: `GroupKFold` on unseen customers is 6.03% worse than the
+pooled temporal estimate (95% CI 4.93–7.12).
+
+The example is deliberately measured rather than dramatic. Shuffled, blocked,
+and walk-forward estimates are close because much of the predictable signal is
+genuine daily and weekly seasonality. The separate deployment question is
+whether the model will score future readings for known households or entirely
+new households; `GroupKFold` answers the new-household question by holding
+whole customers out. Two methodological traps are documented: raw half-hourly
+MAPE is undefined near zero (use WAPE), and `PurgedGroupKFold` degenerates on
+a fully-overlapping panel (use `GroupKFold` for the group leak,
+`WalkForwardSplit` for the temporal one).
+
+Numbers from the offline run over 167.9M raw rows. Reproduce with
+`python tools/lcl_full_benchmark.py --k 20 --n 60 --seed 0`; the table is
+written to `examples/data/lcl_full_benchmark_summary.md`.
 
 ---
 
@@ -249,3 +261,60 @@ leakage. `PurgedKFold` (−0.75), blocked k-fold (−1.13) and
 train/test label overlap drops from 100% to 0%. The real-data counterpart
 to `synthetic_leakage_proof.ipynb`, on a dataset whose unpredictability is
 a scientific fact rather than an assumption.
+
+---
+
+### 9. `air_quality_clock_leakage.ipynb` — Anatomy of a Phantom Edge
+
+**Dataset:** UCI Air Quality (S. De Vito et al.), one Italian city,
+hourly, 2004–2005 (~9,400 readings).
+
+**Source:** UCI Machine Learning Repository
+(`archive.ics.uci.edu/static/public/360/air+quality.zip`, no key).
+
+**Files cached:**
+- `air_quality_uci.csv` (~1.5 MB) — fetched once, then offline
+
+**License:** CC BY 4.0.
+
+**Download size:** ~1.5 MB on first run
+
+The clearest *cause* demonstration, on a genuinely solvable task
+(forecast mean benzene over the next 72 h; real signal, corr ≈ 0.3).
+Same model, same splits, run twice: with three ordinary lag features
+naive shuffled k-fold scores a modest R² 0.07 and the honest splits go
+negative — unremarkable. Add **one** innocuous cumulative-hour counter
+and naive R² leaps to **0.99** while `PurgedKFold` (−1.52) and
+`WalkForwardSplit` (−0.81) do not move. The 72-hour label means
+neighbours share 71/72 hours; the counter just lets a shuffled split walk
+to the near-twin. It pinpoints the mechanism behind every phantom edge in
+this gallery — an innocuous monotone feature plus overlapping labels plus
+a shuffled split — and shows the purged split stays honest regardless of
+what features you add.
+
+---
+
+### 10. `epl_match_prediction.ipynb` — Premier League Honest vs Naive CV
+
+**Dataset:** English Premier League match results and Bet365 closing odds,
+2010/11 through 2023/24.
+
+**Source:** football-data.co.uk season CSV files, no API key.
+
+**Files cached:**
+- `epl_matches.csv` — concatenated season results and odds, fetched once and
+  then reused offline.
+
+**License:** football-data.co.uk public football-data terms.
+
+**Download size:** small CSV files on first run.
+
+A low-signal sports example. Rolling-form features are computed causally
+from prior matches only, then the same classifier is scored with naive
+shuffled k-fold, blocked k-fold, and `WalkForwardSplit`. The bookmaker's
+de-vigged Bet365 probabilities are the external baseline. The honest result
+is deliberately modest: accuracy is about the same across CV schemes, while
+walk-forward log-loss is slightly worse than naive shuffled k-fold and still
+does not beat the bookmaker. It is a useful counterexample to the dramatic
+leakage notebooks: when the target has little usable signal, honest CV may
+report a small calibration gap rather than a headline accuracy collapse.

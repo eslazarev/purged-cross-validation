@@ -91,6 +91,13 @@ class TestAssertNoTemporalLeakage:
         assert "training horizon" in message
         assert "test horizon" in message
 
+    def test_disjoint_test_blocks_check_local_horizons(self) -> None:
+        """Middle training rows between non-contiguous test blocks are clean."""
+        pred, evalu = _make_horizon_dataset(horizon_days=1, n=12)
+        train_idx = np.array([3, 4, 5, 6, 7, 8])
+        test_idx = np.array([0, 1, 2, 9, 10, 11])
+        assert_no_temporal_leakage(train_idx, test_idx, pred, evalu)
+
 
 class TestAssertEmbargoRespected:
     def test_zero_embargo_is_identity(self) -> None:
@@ -149,6 +156,18 @@ class TestAssertEmbargoRespected:
         message = str(exc_info.value)
         assert "embargo" in message.lower()
         assert "row 15" in message
+
+    def test_disjoint_test_blocks_check_each_embargo_window(self) -> None:
+        pred, evalu = _make_horizon_dataset(horizon_days=1, n=12)
+        test_idx = np.array([0, 1, 2, 9, 10, 11])
+        with pytest.raises(EmbargoViolationError, match="row 3"):
+            assert_embargo_respected(
+                np.array([3]),
+                test_idx,
+                pred,
+                evalu,
+                embargo=pd.Timedelta(days=1),
+            )
 
 
 class TestAssertGroupsDisjoint:
@@ -241,3 +260,9 @@ class TestComputeOverlapFraction:
         test_idx = np.arange(10, 15)
         result = compute_overlap_fraction(train_idx, test_idx, pred, evalu)
         assert type(result) is float
+
+    def test_disjoint_test_blocks_do_not_count_middle_rows_as_overlap(self) -> None:
+        pred, evalu = _make_horizon_dataset(horizon_days=1, n=12)
+        train_idx = np.array([3, 4, 5, 6, 7, 8])
+        test_idx = np.array([0, 1, 2, 9, 10, 11])
+        assert compute_overlap_fraction(train_idx, test_idx, pred, evalu) == 0.0

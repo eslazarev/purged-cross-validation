@@ -1,7 +1,7 @@
 """Pin the v0.3.0a public API surface of purgedcv.
 
 These tests are an explicit contract: every name listed here is part of
-the v0.2.0a stable surface that users may rely on. Adding or removing
+the v0.3.0a stable surface that users may rely on. Adding or removing
 exports must be a deliberate, reviewed change accompanied by an update
 to this file.
 """

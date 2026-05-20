@@ -9,6 +9,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from purgedcv._intervals import overlaps_any_half_open_interval
+
 from ._typing import NDArrayAny
 
 
@@ -19,15 +21,16 @@ def purge(
     evaluation_times: pd.Series,
     purge_horizon: pd.Timedelta | None = None,
 ) -> NDArrayAny:
-    """Drop training rows whose half-open label horizon overlaps the test horizon.
+    """Drop training rows whose half-open label horizon overlaps any test horizon.
 
-    The test horizon is
-    ``[min(test prediction_times) - purge_horizon,
-       max(test evaluation_times) + purge_horizon)``.
+    Each test row contributes a half-open horizon
+    ``[prediction_time - purge_horizon, evaluation_time + purge_horizon)``.
+    The intervals are merged before filtering, so disjoint test blocks purge
+    only their local overlap zones rather than the full convex hull between
+    them.
 
     A training row at position ``i`` is kept iff
-    ``evaluation_times[i] <= test_start`` or
-    ``prediction_times[i] >= test_end``.
+    its label horizon overlaps none of those merged test horizons.
 
     Args:
         train_idx: positional indices of training rows.
@@ -55,12 +58,11 @@ def purge(
         return np.asarray(train_idx)
 
     horizon = purge_horizon if purge_horizon is not None else pd.Timedelta(0)
-    test_start = prediction_times.iloc[test_idx].min() - horizon
-    test_end = evaluation_times.iloc[test_idx].max() + horizon
-
     train_pred = prediction_times.iloc[train_idx].to_numpy()
     train_eval = evaluation_times.iloc[train_idx].to_numpy()
+    test_starts = (prediction_times.iloc[test_idx] - horizon).to_numpy()
+    test_ends = (evaluation_times.iloc[test_idx] + horizon).to_numpy()
 
-    keep = (train_eval <= test_start.to_numpy()) | (train_pred >= test_end.to_numpy())
+    keep = ~overlaps_any_half_open_interval(train_pred, train_eval, test_starts, test_ends)
     kept: NDArrayAny = train_idx[keep]
     return kept

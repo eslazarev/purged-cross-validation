@@ -87,6 +87,13 @@ class TestBaseTemporalSplitterSkeleton:
         with pytest.raises(ValueError, match="length"):
             _TwoFoldStub(prediction_times=pred, evaluation_times=evalu)
 
+    def test_constructor_rejects_non_monotonic_prediction_times(self) -> None:
+        """Index-based temporal splitters require rows sorted by prediction time."""
+        pred = pd.Series(pd.to_datetime(["2024-01-02", "2024-01-01", "2024-01-03"]))
+        evalu = pred + pd.Timedelta(days=1)
+        with pytest.raises(ValueError, match="monotonic"):
+            _TwoFoldStub(prediction_times=pred, evaluation_times=evalu)
+
     def test_constructor_rejects_negative_horizons(self) -> None:
         pred, evalu = _times()
         with pytest.raises(ValueError, match="non-negative"):
@@ -240,6 +247,14 @@ class TestBaseTemporalSplitterWithTimes:
         bad_evalu = pd.Series(pd.date_range("2025-01-01", periods=20, freq="D"))
         with pytest.raises(ValueError):
             cv.with_times(bad_pred, bad_evalu)
+
+    def test_with_times_rejects_non_monotonic_prediction_times(self) -> None:
+        pred, evalu = _times(n=20)
+        cv = _TwoFoldStub(prediction_times=pred, evaluation_times=evalu)
+        new_pred = pd.Series(pd.to_datetime(["2025-01-02", "2025-01-01"] * 10))
+        new_evalu = new_pred + pd.Timedelta(days=1)
+        with pytest.raises(ValueError, match="monotonic"):
+            cv.with_times(new_pred, new_evalu)
 
     def test_with_times_preserves_groups(self) -> None:
         """When groups were bound at construction, with_times must preserve
