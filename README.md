@@ -15,6 +15,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![Development status: alpha](https://img.shields.io/badge/status-alpha-orange)](https://pypi.org/project/purgedcv/)
 [![Docs](https://img.shields.io/badge/docs-mkdocs--material-526CFE?logo=materialformkdocs)](https://eslazarev.github.io/purged-cross-validation/)
+[![DOI](https://zenodo.org/badge/1239914629.svg)](https://doi.org/10.5281/zenodo.20312695)
 
 **[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** — purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 

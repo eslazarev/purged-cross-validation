@@ -37,6 +37,7 @@ The next published release will be **v0.0.5**.
   End-to-end test `test_e2e_competitor_benchmark.py`.
 - `context7.json` so the docs are indexable by Context7.
 
+
 ### Changed
 
 - `BaseTemporalSplitter` now requires monotonic `prediction_times` at
