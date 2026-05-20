@@ -20,6 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 @pytest.mark.e2e
 def test_package_importable_in_subprocess() -> None:
+    import purgedcv
+
     result = subprocess.run(
         [
             sys.executable,
@@ -30,7 +32,9 @@ def test_package_importable_in_subprocess() -> None:
         text=True,
         check=True,
     )
-    assert result.stdout.strip() == "0.3.0a0"
+    # Subprocess must agree with the parent's imported version, whatever it is.
+    # Hardcoding a literal here would break the next CI version bump.
+    assert result.stdout.strip() == purgedcv.__version__
     assert result.stderr == ""
 
 
