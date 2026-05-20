@@ -91,4 +91,4 @@ to elazarev@gmail.com.
 ## Citing the package
 
 If `purgedcv` contributes to academic work, please cite it via
-`CITATION.cff` (machine-readable) or the JOSS paper at `docs/paper.md`.
+`CITATION.cff` (machine-readable) or the JOSS paper at `paper/paper.md`.

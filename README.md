@@ -18,7 +18,7 @@
 
 **[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** — purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 
-*Cite this software:* see [`CITATION.cff`](CITATION.cff) and [`docs/paper.md`](docs/paper.md) (JOSS paper).
+*Cite this software:* see [`CITATION.cff`](CITATION.cff) and [`paper/paper.md`](paper/paper.md) (JOSS paper).
 
 ---
 

@@ -88,7 +88,7 @@ The full-population LCL result above is produced offline by
 shared notebook harness (`examples/_lcl_harness.py`), and the per-subsample
 CSV summary are documented in the
 [smart-meter notebook](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/uk_smart_meter_lcl.ipynb)
-and in the [JOSS paper](paper.md). Reproduce with:
+and in the [JOSS paper](https://github.com/eslazarev/purged-cross-validation/blob/main/paper/paper.md). Reproduce with:
 
 ```bash
 python tools/lcl_full_benchmark.py --k 20 --n 60 --seed 0

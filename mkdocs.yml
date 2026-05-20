@@ -49,16 +49,20 @@ nav:
   - Installation: installation.md
   - Quickstart: quickstart.md
   - API reference: api.md
+  - Architecture: architecture.md
   - Examples: examples.md
   - Methodology: methodology.md
-  - Paper (JOSS): paper.md
   - Changelog: changelog.md
 
 markdown_extensions:
   - admonition
   - attr_list
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite

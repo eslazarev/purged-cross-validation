@@ -21,7 +21,8 @@ competitor's splitter and record:
 
 Competitors that do not install/run on a modern stack, or are closed-source,
 are NOT guessed at: each splitter is isolated, and a failure is recorded with
-its exact reason. Repo-only, deterministic. Writes (git-ignored)
+its exact reason. Deterministic; the script is tracked under ``tools/`` but
+never imported by the library. Writes (git-ignored)
 ``examples/data/competitor_benchmark.csv`` and ``..._summary.md``.
 """
 

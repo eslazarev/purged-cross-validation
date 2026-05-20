@@ -9,7 +9,8 @@ K seeded subsamples and runs the *exact* notebook harness
 gaps come back as mean +/- 95% t-interval, so the notebook's single-sample
 result becomes a measured interval over the real population.
 
-Repo-only: `tools/` is gitignored and the wheel ships only `src/purgedcv`.
+The wheel ships only `src/purgedcv`; this tool lives under `tools/` for
+reproducibility and is never imported by the library.
 Memory-safe: every file is read in chunks; pass 1 keeps one small dict, pass 2
 keeps only the chosen households' rows. Deterministic: one `--seed` drives a
 `SeedSequence` spawn per subsample and the model's `random_state`, so two runs

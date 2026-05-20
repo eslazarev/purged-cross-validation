@@ -26,7 +26,7 @@ import textstat
 
 REPO = Path(__file__).resolve().parent.parent
 
-# Published artifacts only. tools/ and docstmp/ are git-ignored (not pushed).
+# Published artifacts only. docstmp/ is git-ignored (not pushed).
 # CODE_OF_CONDUCT.md is the verbatim Contributor Covenant text -- it would
 # trip the heuristic spuriously, so it is excluded on purpose.
 # CITATION.cff / .zenodo.json are machine metadata, not prose.
@@ -44,11 +44,12 @@ TARGETS = [
     REPO / "examples" / "uk_smart_meter_lcl.ipynb",
     REPO / "examples" / "earthquake_magnitude_leakage.ipynb",
     REPO / "examples" / "air_quality_clock_leakage.ipynb",
-    REPO / "docs" / "paper.md",  # tracked JOSS paper
+    REPO / "paper" / "paper.md",  # tracked JOSS paper
     REPO / "docs" / "index.md",
     REPO / "docs" / "quickstart.md",
     REPO / "docs" / "examples.md",
     REPO / "docs" / "methodology.md",
+    REPO / "docs" / "architecture.md",
 ]
 
 # Curated, evidence-backed GPT-isms. (regex, severity) — severity: 2=strong, 1=soft.

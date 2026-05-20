@@ -10,12 +10,12 @@ tags:
   - scikit-learn
 authors:
   - name: Evgenii Lazarev
-    orcid: 0009-0000-1398-7842
+    orcid: "0009-0000-1398-7842"
     affiliation: 1
 affiliations:
   - name: Independent Researcher
     index: 1
-date: 19 May 2026
+date: 20 May 2026
 bibliography: paper.bib
 ---
 
@@ -86,7 +86,7 @@ outside finance [@hiddenleaks2025]. scikit-learn [@pedregosa2011sklearn]
 defines the splitter protocol that `purgedcv` targets so the methods reach
 the practitioners who need them.
 
-# Implementation and features
+# Software design
 
 The public API maps one to one onto the textbook constructs. `purge` and
 `apply_embargo` are the row-level primitives. `WalkForwardSplit` does
@@ -106,7 +106,14 @@ gap, so the purge tracks the real label, not a guess. Everything is strictly
 typed and the suite includes property-based tests that check invariants such
 as "no training row's label window overlaps any test label."
 
-# Examples and validation
+The implementation deliberately separates interval arithmetic from the
+scikit-learn adapters. Internal helpers normalize prediction, evaluation,
+purge, and embargo windows once; the splitters then compose those primitives
+without duplicating boundary logic. This keeps the simple cases small while
+allowing variable label horizons, rolling or expanding windows, and
+entity-level group holds without replacing the user's estimator workflow.
+
+# Research impact statement
 
 The repository ships a controlled proof and ten notebooks on real public
 data. The point is to show the honest range of outcomes, not only the
@@ -155,6 +162,17 @@ GHCN-Daily rainfall [@noaa_ghcnd], and the full CPCV plus PSR/DSR/MinTRL
 workflow on PJM electricity load [@pjm_load]. A Premier League match
 prediction notebook adds a low-signal sports example where the honest result
 is calibration drift rather than a headline accuracy gap.
+
+# AI usage disclosure
+
+Generative AI tools, including OpenAI Codex/ChatGPT from the GPT-5 family,
+were used as an assistant for code review, refactoring suggestions, test
+scaffolding, documentation drafting, copy-editing, and pre-submission
+checks. The author made the design decisions, reviewed and edited all
+AI-assisted changes, and validated the outputs with the unit, property,
+doctest, end-to-end, type-checking, linting, notebook-execution, and
+benchmark checks described above. No AI-generated claim was accepted without
+source or executable verification.
 
 # Acknowledgements
 

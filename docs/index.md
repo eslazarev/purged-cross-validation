@@ -25,7 +25,7 @@ the original papers and pinned by 285 tests.
 - [API reference](api.md) — autodoc for every public symbol.
 - [Examples](examples.md) — eleven worked notebooks on real public data.
 - [Methodology](methodology.md) — the underlying problem and the prior-art gap.
-- [Paper (JOSS)](paper.md) — the software paper.
+- [Paper (JOSS)](https://github.com/eslazarev/purged-cross-validation/blob/main/paper/paper.md) — the software paper.
 
 ## What the library is for
 
@@ -52,4 +52,4 @@ from what you intend to deploy on, and a pipeline that cannot also say
 ## Cite this software
 
 See [`CITATION.cff`](https://github.com/eslazarev/purged-cross-validation/blob/main/CITATION.cff)
-or the [JOSS paper](paper.md).
+or the [JOSS paper](https://github.com/eslazarev/purged-cross-validation/blob/main/paper/paper.md).
