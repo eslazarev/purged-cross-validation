@@ -78,6 +78,17 @@ class TestPurgeBasic:
         purged = purge(train_idx, test_idx, pred, evalu)
         assert_no_temporal_leakage(purged, test_idx, pred, evalu)
 
+    def test_disjoint_test_blocks_do_not_purge_middle_train_block(self) -> None:
+        """Non-contiguous CPCV-style test blocks must not create one giant
+        convex-hull purge window."""
+        pred, evalu = _make_horizon_dataset(horizon_days=1, n=12)
+        train_idx = np.array([3, 4, 5, 6, 7, 8])
+        test_idx = np.array([0, 1, 2, 9, 10, 11])
+
+        result = purge(train_idx, test_idx, pred, evalu)
+
+        np.testing.assert_array_equal(result, train_idx)
+
 
 class TestPurgeWithPadding:
     def test_padding_extends_purge_zone(self) -> None:

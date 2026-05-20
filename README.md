@@ -148,7 +148,7 @@ evalu = pred + pd.Timedelta(days=2)
 X     = rng.standard_normal((n, 3))
 y     = X @ np.array([0.5, -0.3, 0.2]) + rng.standard_normal(n) * 0.1
 
-# N=6, K=2  →  C(6,2) = 15 folds  →  6-2 = 4 backtest paths
+# N=6, K=2  →  C(6,2) = 15 folds  →  C(5,1) = 5 backtest paths
 cv = CombinatorialPurgedCV(
     n_splits=6,
     n_test_groups=2,
@@ -156,7 +156,7 @@ cv = CombinatorialPurgedCV(
     evaluation_times=evalu,
 )
 
-# paths.shape == (n_paths, n_samples); NaN where a sample was not OOS
+# paths.shape == (n_paths, n_samples); NaN only if a fold could not be fit
 paths = cv.backtest_paths(DummyRegressor(strategy="mean"), X, y)
 print(f"Backtest paths: {paths.shape}")  # (5, 120)
 

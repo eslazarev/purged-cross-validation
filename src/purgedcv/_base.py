@@ -31,7 +31,7 @@ class BaseTemporalSplitter(ABC):
 
     .. note::
        The subclassing interface (``_iter_test_indices``,
-       ``_candidate_train_idx``) is not yet covered by the v0.2 stability
+       ``_candidate_train_idx``) is not yet covered by the v0.3 stability
        contract. Subclasses may need adjustments through v1.0.
     """
 
@@ -44,7 +44,7 @@ class BaseTemporalSplitter(ABC):
         embargo: HorizonLike | None = None,
         groups: pd.Series | None = None,
     ) -> None:
-        validate_times(prediction_times, evaluation_times, require_monotonic=False)
+        validate_times(prediction_times, evaluation_times, require_monotonic=True)
         self._prediction_times = prediction_times.reset_index(drop=True)
         self._evaluation_times = evaluation_times.reset_index(drop=True)
         self.purge_horizon = (
@@ -142,7 +142,7 @@ class BaseTemporalSplitter(ABC):
         fresh splitter via the constructor — this avoids surprising
         interactions between cached state and rebound inputs.
         """
-        validate_times(prediction_times, evaluation_times, require_monotonic=False)
+        validate_times(prediction_times, evaluation_times, require_monotonic=True)
         if len(prediction_times) != len(self._prediction_times):
             raise ValueError(
                 f"with_times got prediction_times of length {len(prediction_times)}; "

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "purgedcv",
+  "description": "scikit-learn-compatible cross-validation for time-series and financial machine learning: purging, embargoes, combinatorial purged CV, walk-forward, and Probabilistic/Deflated Sharpe Ratio.",
+  "folders": [
+    "src/purgedcv",
+    "examples",
+    "paper"
+  ],
+  "excludeFolders": [
+    "tests",
+    ".github",
+    "examples/data",
+    "tools",
+    "docs"
+  ],
+  "excludeFiles": [
+    "paper/paper.bib",
+    "examples/_lcl_harness.py"
+  ],
+  "rules": [
+    "Algorithms (purging, embargo, CPCV, PSR/DSR/MinTRL) are due to Marcos Lopez de Prado and Bailey & Lopez de Prado; this library is an open, MIT-licensed, sklearn-compatible implementation. Cite the original work, not the library, for the methods themselves.",
+    "Show real, measured numbers from examples/ and paper/ rather than inventing accuracy figures. Where the worked examples report 'small gap' or 'no edge survives', preserve that honest framing instead of overclaiming.",
+    "Naive shuffled k-fold is the failure mode this library exists to prevent, not a baseline to compete with on accuracy. The fair comparison between CV schemes is the label-overlap fraction they admit, not their reported score.",
+    "Prefer the documented public API: WalkForwardSplit, PurgedKFold, PurgedGroupKFold, CombinatorialPurgedCV, reconstruct_paths, deflated_sharpe_ratio, probabilistic_sharpe_ratio, min_track_record_length, and the diagnostics module."
+  ]
+}

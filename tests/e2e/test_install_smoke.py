@@ -7,14 +7,21 @@ top-level ``__version__`` attribute is present and well-formed.
 
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
+from importlib.metadata import version
+from pathlib import Path
 
 import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.mark.e2e
 def test_package_importable_in_subprocess() -> None:
+    import purgedcv
+
     result = subprocess.run(
         [
             sys.executable,
@@ -25,7 +32,9 @@ def test_package_importable_in_subprocess() -> None:
         text=True,
         check=True,
     )
-    assert result.stdout.strip() == "0.3.0a0"
+    # Subprocess must agree with the parent's imported version, whatever it is.
+    # Hardcoding a literal here would break the next CI version bump.
+    assert result.stdout.strip() == purgedcv.__version__
     assert result.stderr == ""
 
 
@@ -42,3 +51,16 @@ def test_version_is_well_formed_string() -> None:
     parts = major_minor_patch.split(".")
     assert len(parts) == 3
     assert all(p.isdigit() for p in parts)
+
+
+@pytest.mark.e2e
+def test_packaging_metadata_versions_match_runtime() -> None:
+    """Fresh installs, package metadata, and runtime imports must agree."""
+    import purgedcv
+
+    pyproject = (REPO_ROOT / "pyproject.toml").read_text()
+    match = re.search(r'(?m)^version = "([^"]+)"$', pyproject)
+    assert match is not None
+
+    assert match.group(1) == purgedcv.__version__
+    assert version("purgedcv") == purgedcv.__version__

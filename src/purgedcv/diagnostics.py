@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from purgedcv._intervals import overlaps_any_half_open_interval, points_in_any_closed_interval
 from purgedcv._time import HorizonLike, parse_horizon
 from purgedcv.exceptions import (
     EmbargoViolationError,
@@ -42,12 +43,12 @@ def assert_no_temporal_leakage(
     purge_horizon: HorizonLike | None = None,
 ) -> None:
     """Raise :class:`TemporalLeakageError` if any training row's label horizon
-    overlaps the test horizon, optionally padded on both sides by
+    overlaps any test label horizon, optionally padded on both sides by
     ``purge_horizon``.
 
-    The test horizon is
-    ``[min(test prediction_times) - purge_horizon,
-       max(test evaluation_times) + purge_horizon)``.
+    Test horizons are checked as a union of half-open intervals, not as one
+    convex hull. This matters for CPCV folds whose test groups are
+    intentionally non-contiguous.
 
     Args:
         train_idx: positional indices of training rows.
@@ -73,20 +74,19 @@ def assert_no_temporal_leakage(
 
     horizon = parse_horizon(purge_horizon) if purge_horizon is not None else pd.Timedelta(0)
 
-    test_start = prediction_times.iloc[test_idx].min() - horizon
-    test_end = evaluation_times.iloc[test_idx].max() + horizon
-
     train_pred = prediction_times.iloc[train_idx].to_numpy()
     train_eval = evaluation_times.iloc[train_idx].to_numpy()
+    test_starts = (prediction_times.iloc[test_idx] - horizon).to_numpy()
+    test_ends = (evaluation_times.iloc[test_idx] + horizon).to_numpy()
 
-    overlaps = ~((train_eval <= test_start.to_numpy()) | (train_pred >= test_end.to_numpy()))
+    overlaps = overlaps_any_half_open_interval(train_pred, train_eval, test_starts, test_ends)
     if overlaps.any():
         first_local = int(overlaps.argmax())
         first_global = int(train_idx[first_local])
         raise TemporalLeakageError(
             f"Temporal leakage at row {first_global}: training horizon "
             f"[{train_pred[first_local]}, {train_eval[first_local]}) overlaps "
-            f"test horizon [{test_start}, {test_end})."
+            "at least one test horizon."
         )
 
 
@@ -98,12 +98,13 @@ def assert_embargo_respected(
     embargo: HorizonLike,
 ) -> None:
     """Raise :class:`EmbargoViolationError` if any training row's
-    ``prediction_time`` falls inside the closed embargo window
-    ``[test_eval_max, test_eval_max + embargo]``.
+    ``prediction_time`` falls inside any closed embargo window
+    ``[test_evaluation_time, test_evaluation_time + embargo]``.
 
     Embargo is asymmetric: rows whose ``prediction_time`` is strictly before
-    ``test_eval_max`` are never flagged. ``embargo == 0`` is the identity
-    (no rows flagged) — the embargo window is logically empty at zero width.
+    all test evaluation times are never flagged. ``embargo == 0`` is the
+    identity (no rows flagged) — the embargo window is logically empty at
+    zero width.
 
     Examples:
         >>> import numpy as np
@@ -122,18 +123,17 @@ def assert_embargo_respected(
     if emb == pd.Timedelta(0):
         return
 
-    test_eval_max = evaluation_times.iloc[test_idx].max()
-    cutoff = test_eval_max + emb
-
     train_pred = prediction_times.iloc[train_idx].to_numpy()
-    in_embargo = (train_pred >= test_eval_max.to_numpy()) & (train_pred <= cutoff.to_numpy())
+    embargo_starts = evaluation_times.iloc[test_idx].to_numpy()
+    embargo_ends = (evaluation_times.iloc[test_idx] + emb).to_numpy()
+    in_embargo = points_in_any_closed_interval(train_pred, embargo_starts, embargo_ends)
     if in_embargo.any():
         first_local = int(in_embargo.argmax())
         first_global = int(train_idx[first_local])
         raise EmbargoViolationError(
             f"Embargo violation at row {first_global}: prediction_time "
-            f"{train_pred[first_local]} falls inside post-test embargo window "
-            f"[{test_eval_max}, {cutoff}]."
+            f"{train_pred[first_local]} falls inside at least one post-test "
+            "embargo window."
         )
 
 
@@ -177,7 +177,7 @@ def compute_overlap_fraction(
     evaluation_times: pd.Series,
 ) -> float:
     """Return the fraction of training rows whose half-open label horizon
-    overlaps the test horizon.
+    overlaps any test horizon.
 
     Unlike :func:`assert_no_temporal_leakage`, this never raises — it
     returns ``0.0`` for clean splits and ``1.0`` when every training row
@@ -199,9 +199,9 @@ def compute_overlap_fraction(
     """
     if len(train_idx) == 0 or len(test_idx) == 0:
         return 0.0
-    test_start = prediction_times.iloc[test_idx].min()
-    test_end = evaluation_times.iloc[test_idx].max()
     train_pred = prediction_times.iloc[train_idx].to_numpy()
     train_eval = evaluation_times.iloc[train_idx].to_numpy()
-    overlaps = ~((train_eval <= test_start.to_numpy()) | (train_pred >= test_end.to_numpy()))
+    test_starts = prediction_times.iloc[test_idx].to_numpy()
+    test_ends = evaluation_times.iloc[test_idx].to_numpy()
+    overlaps = overlaps_any_half_open_interval(train_pred, train_eval, test_starts, test_ends)
     return float(overlaps.mean())

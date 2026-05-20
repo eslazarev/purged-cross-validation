@@ -9,6 +9,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from purgedcv._intervals import points_in_any_closed_interval
+
 from ._typing import NDArrayAny
 
 
@@ -19,13 +21,13 @@ def apply_embargo(
     evaluation_times: pd.Series,
     embargo: pd.Timedelta,
 ) -> NDArrayAny:
-    """Drop training rows whose ``prediction_time`` falls inside the closed
-    embargo window ``[test_eval_max, test_eval_max + embargo]``.
+    """Drop training rows whose ``prediction_time`` falls inside any closed
+    embargo window ``[test_evaluation_time, test_evaluation_time + embargo]``.
 
     Embargo is asymmetric: rows whose ``prediction_time`` is strictly before
-    ``test_eval_max`` are never dropped. ``embargo == 0`` is the identity
-    (the embargo window is logically empty at zero width), avoiding the
-    degenerate single-point case.
+    all test evaluation times are never dropped. ``embargo == 0`` is the
+    identity (the embargo window is logically empty at zero width), avoiding
+    degenerate single-point windows.
 
     Args:
         train_idx: positional indices of training rows.
@@ -54,10 +56,9 @@ def apply_embargo(
     if embargo <= pd.Timedelta(0):
         return np.asarray(train_idx)
 
-    test_eval_max = evaluation_times.iloc[test_idx].max()
-    cutoff = test_eval_max + embargo
-
     train_pred = prediction_times.iloc[train_idx].to_numpy()
-    in_embargo = (train_pred >= test_eval_max.to_numpy()) & (train_pred <= cutoff.to_numpy())
+    embargo_starts = evaluation_times.iloc[test_idx].to_numpy()
+    embargo_ends = (evaluation_times.iloc[test_idx] + embargo).to_numpy()
+    in_embargo = points_in_any_closed_interval(train_pred, embargo_starts, embargo_ends)
     kept: NDArrayAny = train_idx[~in_embargo]
     return kept
