@@ -68,7 +68,9 @@ class BaseTemporalSplitter(ABC):
         ...
 
     @abstractmethod
-    def get_n_splits(self, X: object = None, y: object = None, groups: object = None) -> int:  # noqa: N803
+    def get_n_splits(
+        self, X: object = None, y: object = None, groups: object = None  # noqa: N803
+    ) -> int:
         """Return the total number of splits the iterator will yield."""
         ...
 

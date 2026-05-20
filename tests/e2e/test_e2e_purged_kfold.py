@@ -40,8 +40,7 @@ def test_user_story_5fold_with_overlapping_labels() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_purged_kfold_smoke() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import PurgedKFold
@@ -55,8 +54,7 @@ def test_subprocess_purged_kfold_smoke() -> None:
         folds = list(cv.split(np.zeros((20, 1))))
         assert len(folds) == 5
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

@@ -18,19 +18,19 @@ Python 3.10 or newer is required.
 
 ## Running the gates locally
 
-The CI runs four checks. Run them locally before opening a pull request:
+The code CI runs four checks. Run them locally before opening a pull request:
 
 ```bash
 ruff check .
-ruff format --check .
+black --check src tests tools examples/_lcl_harness.py
 mypy src tests
 pytest -q
 ```
 
 All four must pass. The test suite includes property-based tests
 (`hypothesis`), doctest collection, and end-to-end tests that subprocess
-the installed package; the `test_quality_gate.py` e2e re-runs ruff and
-mypy through pytest so a regression cannot slip past `pytest` alone.
+the installed package; the `test_quality_gate.py` e2e re-runs black, ruff,
+and mypy through pytest so a regression cannot slip past `pytest` alone.
 
 A documentation build check is also part of CI:
 

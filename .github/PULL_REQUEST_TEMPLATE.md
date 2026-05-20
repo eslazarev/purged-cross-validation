@@ -5,7 +5,7 @@ it fixes (`Fixes #123`).
 
 ## Checklist
 
-- [ ] `ruff check . && ruff format --check .` is clean.
+- [ ] `ruff check . && black --check src tests tools examples/_lcl_harness.py` is clean.
 - [ ] `mypy src tests` is clean.
 - [ ] `pytest -q` is green locally.
 - [ ] If this changes user-visible behaviour, there is a test under

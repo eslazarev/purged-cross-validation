@@ -32,8 +32,8 @@ jobs:
       - name: Ruff lint
         run: ruff check .
 
-      - name: Ruff format check
-        run: ruff format --check .
+      - name: Black format check
+        run: black --check src tests tools examples/_lcl_harness.py
 
       - name: Mypy (strict)
         run: mypy src tests
@@ -93,19 +93,29 @@ jobs:
           mkdir -p .github/badges
           anybadge -o --value="${cov}%" --file=.github/badges/coverage.svg --label=coverage --color="#007ec6"
 
-      - name: Bump patch version for next release
+      - name: Bump version for next release
         id: bump
         run: |
           new=$(python - <<'PY'
           import re, pathlib
-          p = pathlib.Path("pyproject.toml")
-          t = p.read_text()
-          m = re.search(r'(?m)^version = "(\d+)\.(\d+)\.(\d+)"$', t)
+          pyproject = pathlib.Path("pyproject.toml")
+          init = pathlib.Path("src/purgedcv/__init__.py")
+          t = pyproject.read_text()
+          m = re.search(r'(?m)^version = "(\d+)\.(\d+)\.(\d+)(?:a(\d+))?"$', t)
           if not m:
-              raise SystemExit('expected version = "X.Y.Z" in pyproject.toml')
-          maj, mnr, pat = map(int, m.groups())
-          nv = f"{maj}.{mnr}.{pat + 1}"
-          p.write_text(t[: m.start()] + f'version = "{nv}"' + t[m.end() :])
+              raise SystemExit('expected version = "X.Y.Z" or "X.Y.ZaN" in pyproject.toml')
+          maj, mnr, pat = map(int, m.groups()[:3])
+          alpha = m.group(4)
+          if alpha is None:
+              nv = f"{maj}.{mnr}.{pat + 1}"
+          else:
+              nv = f"{maj}.{mnr}.{pat}a{int(alpha) + 1}"
+          pyproject.write_text(t[: m.start()] + f'version = "{nv}"' + t[m.end() :])
+          init_text = init.read_text()
+          new_init = re.sub(r'(?m)^__version__ = "[^"]+"$', f'__version__ = "{nv}"', init_text)
+          if new_init == init_text:
+              raise SystemExit('failed to match __version__ in src/purgedcv/__init__.py')
+          init.write_text(new_init)
           print(nv)
           PY
           )
@@ -115,7 +125,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add pyproject.toml .github/badges/coverage.svg
+          git add pyproject.toml src/purgedcv/__init__.py .github/badges/coverage.svg
           git commit -m "chore: release v${{ steps.ver.outputs.version }}, bump to v${{ steps.bump.outputs.next }}"
           git push
 

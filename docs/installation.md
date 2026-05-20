@@ -36,7 +36,7 @@ Each extra is independent; install only what you need.
 
     ```bash
     ruff check .
-    ruff format --check .
+    black --check src tests tools examples/_lcl_harness.py
     mypy src tests
     pytest -q
     ```

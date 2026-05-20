@@ -44,8 +44,7 @@ def test_user_story_clinical_patient_split() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_purged_group_kfold_smoke() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import PurgedGroupKFold
@@ -64,8 +63,7 @@ def test_subprocess_purged_group_kfold_smoke() -> None:
         # Verify the GroupLeakageError import is alive at runtime:
         assert GroupLeakageError.__name__ == "GroupLeakageError"
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

@@ -67,8 +67,7 @@ def test_user_story_with_times_adapter() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_walk_forward_smoke() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import WalkForwardSplit
@@ -83,8 +82,7 @@ def test_subprocess_walk_forward_smoke() -> None:
         folds = list(cv.split(np.zeros((20, 1))))
         assert len(folds) == 4
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

@@ -57,8 +57,7 @@ def test_user_story_string_identifiers_work() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_group_check() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import diagnostics, GroupLeakageError
@@ -75,8 +74,7 @@ def test_subprocess_fresh_interpreter_group_check() -> None:
         except GroupLeakageError:
             pass
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

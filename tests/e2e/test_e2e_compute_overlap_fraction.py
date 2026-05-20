@@ -67,8 +67,7 @@ def test_user_story_non_raising_in_monitoring_loop() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_fraction() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import diagnostics
@@ -84,8 +83,7 @@ def test_subprocess_fresh_interpreter_fraction() -> None:
         )
         assert leak == 1.0, f"expected 1.0, got {leak}"
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

@@ -63,8 +63,7 @@ def test_user_story_pre_test_history_preserved() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_embargo() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import apply_embargo
@@ -78,8 +77,7 @@ def test_subprocess_fresh_interpreter_embargo() -> None:
         embargoed = apply_embargo(train, test, pred, evalu, embargo=emb)
         assert_embargo_respected(embargoed, test, pred, evalu, embargo=emb)
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

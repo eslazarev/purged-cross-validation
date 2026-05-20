@@ -70,8 +70,7 @@ def test_user_story_purge_returns_subset_of_input() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_purge() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import purge
@@ -84,8 +83,7 @@ def test_subprocess_fresh_interpreter_purge() -> None:
         purged = purge(train, test, pred, evalu)
         assert_no_temporal_leakage(purged, test, pred, evalu)
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

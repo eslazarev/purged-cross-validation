@@ -58,15 +58,13 @@ def test_user_story_calendar_ambiguous_input_is_rejected_with_useful_message() -
 def test_subprocess_fresh_interpreter_can_use_parse_horizon() -> None:
     """A fresh Python interpreter that just imports the library can call
     ``parse_horizon`` and get the expected result, with no stderr noise."""
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import pandas as pd
         from purgedcv import parse_horizon
         result = parse_horizon("3D")
         assert result == pd.Timedelta(days=3), f"got {result}"
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

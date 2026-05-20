@@ -25,7 +25,9 @@ class _TwoFoldStub(BaseTemporalSplitter):
         mid = n_samples // 2
         return [np.arange(mid), np.arange(mid, n_samples)]
 
-    def get_n_splits(self, X: object = None, y: object = None, groups: object = None) -> int:  # noqa: N803
+    def get_n_splits(
+        self, X: object = None, y: object = None, groups: object = None  # noqa: N803
+    ) -> int:
         return 2
 
 

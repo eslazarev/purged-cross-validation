@@ -61,8 +61,7 @@ def test_user_story_pre_test_history_never_flagged() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_embargo() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import diagnostics, EmbargoViolationError
@@ -80,8 +79,7 @@ def test_subprocess_fresh_interpreter_embargo() -> None:
         except EmbargoViolationError:
             pass
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

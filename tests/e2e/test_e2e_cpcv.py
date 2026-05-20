@@ -43,8 +43,7 @@ def test_user_story_cpcv_yields_distribution_of_folds() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_cpcv_smoke() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from math import comb
@@ -60,8 +59,7 @@ def test_subprocess_cpcv_smoke() -> None:
         folds = list(cv.split(np.zeros((24, 1))))
         assert len(folds) == comb(6, 2) == 15
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

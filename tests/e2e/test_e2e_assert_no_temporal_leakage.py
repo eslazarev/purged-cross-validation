@@ -69,8 +69,7 @@ def test_user_story_purge_horizon_audits_safety_buffer() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_diagnostic() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         import pandas as pd
         from purgedcv import diagnostics, TemporalLeakageError
@@ -89,8 +88,7 @@ def test_subprocess_fresh_interpreter_diagnostic() -> None:
         except TemporalLeakageError:
             pass
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

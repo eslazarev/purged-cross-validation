@@ -159,9 +159,9 @@ class TestPurgedGroupKFold:
         for k, (_, test_idx) in enumerate(cv.split(X)):
             test_groups = set(groups.iloc[test_idx].tolist())
             for g in test_groups:
-                assert g not in seen_groups, (
-                    f"group {g} appeared in fold {seen_groups[g]} AND fold {k}"
-                )
+                assert (
+                    g not in seen_groups
+                ), f"group {g} appeared in fold {seen_groups[g]} AND fold {k}"
                 seen_groups[g] = k
         assert set(seen_groups.keys()) == {0, 1, 2, 3, 4, 5}
 

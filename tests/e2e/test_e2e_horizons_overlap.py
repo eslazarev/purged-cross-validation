@@ -53,8 +53,7 @@ def test_user_story_touching_intervals_do_not_overlap() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_overlap_check() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import pandas as pd
         from purgedcv import horizons_overlap
         a = (pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-03"))
@@ -63,8 +62,7 @@ def test_subprocess_fresh_interpreter_overlap_check() -> None:
         c = (pd.Timestamp("2024-01-10"), pd.Timestamp("2024-01-11"))
         assert horizons_overlap(*a, *c) is False
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

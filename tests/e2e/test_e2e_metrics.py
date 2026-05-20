@@ -81,8 +81,7 @@ def test_user_story_min_track_record_length() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_metrics_smoke() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import numpy as np
         from purgedcv import (
             probabilistic_sharpe_ratio,
@@ -98,8 +97,7 @@ def test_subprocess_metrics_smoke() -> None:
         assert 0 <= dsr <= 1
         assert n_min > 0
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

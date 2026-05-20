@@ -62,16 +62,14 @@ def test_user_story_nat_values_rejected() -> None:
 
 @pytest.mark.e2e
 def test_subprocess_fresh_interpreter_validate_clean_path() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import pandas as pd
         from purgedcv import validate_times
         pred = pd.Series(pd.date_range("2024-01-01", periods=5, freq="D"))
         evalu = pred + pd.Timedelta(hours=12)
         validate_times(pred, evalu)
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,

@@ -69,8 +69,7 @@ def test_user_story_low_level_reconstruct_paths_with_precomputed_predictions() -
 
 @pytest.mark.e2e
 def test_subprocess_backtest_paths_smoke() -> None:
-    snippet = textwrap.dedent(
-        """\
+    snippet = textwrap.dedent("""\
         import warnings
         import numpy as np
         import pandas as pd
@@ -92,8 +91,7 @@ def test_subprocess_backtest_paths_smoke() -> None:
         # Verify reconstruct_paths is also importable as the lower-level function:
         assert reconstruct_paths is not None
         print("OK")
-        """
-    )
+        """)
     result = subprocess.run(
         [sys.executable, "-c", snippet],
         capture_output=True,
