@@ -1,0 +1,173 @@
+\begin{thebibliography}{}
+
+\bibitem[Bailey and L{\'o}pez~de Prado, 2012]{bailey2012psr}
+Bailey, D.~H. and L{\'o}pez~de Prado, M. (2012).
+\newblock The sharpe ratio efficient frontier.
+\newblock {\em Journal of Risk}, 15(2):3--44.
+
+\bibitem[Bailey and L{\'o}pez~de Prado, 2014]{bailey2014dsr}
+Bailey, D.~H. and L{\'o}pez~de Prado, M. (2014).
+\newblock The deflated sharpe ratio: Correcting for selection bias, backtest
+  overfitting, and non-normality.
+\newblock {\em Journal of Portfolio Management}, 40(5):94--107.
+
+\bibitem[De~Vito et~al., 2008]{devito2008airquality}
+De~Vito, S., Massera, E., Piga, M., Martinotto, L., and Di~Francia, G. (2008).
+\newblock On field calibration of an electronic nose for benzene estimation in
+  an urban pollution monitoring scenario.
+\newblock {\em Sensors and Actuators B: Chemical}, 129(2):750--757, DOI:
+  \href{https://dx.doi.org/10.1016/j.snb.2007.09.060}{\ttfamily
+  10.1016/j.snb.2007.09.060}.
+
+\bibitem[Goldberger et~al., 2000]{physionet2012goldberger}
+Goldberger, A.~L., Amaral, L. A.~N., Glass, L., Hausdorff, J.~M., Ivanov,
+  P.~C., Mark, R.~G., Mietus, J.~E., Moody, G.~B., Peng, C.-K., and Stanley,
+  H.~E. (2000).
+\newblock Physiobank, physiotoolkit, and physionet: Components of a new
+  research resource for complex physiologic signals.
+\newblock {\em Circulation}, 101(23):e215--e220, DOI:
+  \href{https://dx.doi.org/10.1161/01.CIR.101.23.e215}{\ttfamily
+  10.1161/01.CIR.101.23.e215}.
+
+\bibitem[Harris et~al., 2020]{harris2020numpy}
+Harris, C.~R., Millman, K.~J., van~der Walt, S.~J., Gommers, R., Virtanen, P.,
+  Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N.~J., Kern, R.,
+  Picus, M., Hoyer, S., van Kerkwijk, M.~H., Brett, M., Haldane, A.,
+  Del~R{\'i}o, J.~F., Wiebe, M., Peterson, P., G{\'e}rard-Marchant, P.,
+  Sheppard, K., Reddy, T., Weckesser, W., Abbasi, H., Gohlke, C., and Oliphant,
+  T.~E. (2020).
+\newblock Array programming with {NumPy}.
+\newblock {\em Nature}, 585(7825):357--362, DOI:
+  \href{https://dx.doi.org/10.1038/s41586-020-2649-2}{\ttfamily
+  10.1038/s41586-020-2649-2}.
+
+\bibitem[{Hudson and Thames}, 2026]{mlfinlab2026}
+{Hudson and Thames} (2026).
+\newblock \pkg{mlfinlab}: Financial machine learning package.
+\newblock Software product, \url{https://hudsonthames.org/mlfinlab/}.
+\newblock Accessed 2026-05-21.
+
+\bibitem[Kaufman et~al., 2012]{kaufman2012}
+Kaufman, S., Rosset, S., Perlich, C., and Stitelman, O. (2012).
+\newblock Leakage in data mining: Formulation, detection, and avoidance.
+\newblock {\em ACM Transactions on Knowledge Discovery from Data}, 6(4):1--21,
+  DOI: \href{https://dx.doi.org/10.1145/2382577.2382579}{\ttfamily
+  10.1145/2382577.2382579}.
+
+\bibitem[Lazarev, 2026a]{purgedcv2026}
+Lazarev, E. (2026a).
+\newblock \pkg{purgedcv}: scikit-learn-compatible purged and combinatorial
+  cross-validation for time-series and panel machine learning.
+\newblock Python package,
+  \url{https://github.com/eslazarev/purged-cross-validation}, DOI:
+  \href{https://dx.doi.org/10.5281/zenodo.20312695}{\ttfamily
+  10.5281/zenodo.20312695}.
+\newblock Software concept DOI; MIT license.
+
+\bibitem[Lazarev, 2026b]{binance_pricehub}
+Lazarev, E. (2026b).
+\newblock pricehub: Unified ohlc market-data fetcher.
+\newblock Python package, \url{https://pypi.org/project/pricehub/}.
+\newblock Binance public spot market data; subject to the exchange API terms.
+
+\bibitem[L{\'o}pez~de Prado, 2018]{lopezdeprado2018afml}
+L{\'o}pez~de Prado, M. (2018).
+\newblock {\em Advances in Financial Machine Learning}.
+\newblock Wiley, Hoboken, NJ, ISBN:
+  \href{https://openlibrary.org/search?isbn=9781119482086}{\ttfamily
+  9781119482086}.
+\newblock Purging and embargoing: chapter 7. Combinatorial Purged
+  Cross-Validation: chapter 12.
+
+\bibitem[McDermott et~al., 2021]{mcdermott2021}
+McDermott, M. B.~A., Wang, S., Marinsek, N., Ranganath, R., Foschini, L., and
+  Ghassemi, M. (2021).
+\newblock Reproducibility in machine learning for health research: Still a ways
+  to go.
+\newblock {\em Science Translational Medicine}, 13(586), DOI:
+  \href{https://dx.doi.org/10.1126/scitranslmed.abb1655}{\ttfamily
+  10.1126/scitranslmed.abb1655}.
+
+\bibitem[McKinney, 2010]{mckinney2010pandas}
+McKinney, W. (2010).
+\newblock Data structures for statistical computing in {Python}.
+\newblock In {\em Proceedings of the 9th Python in Science Conference}, pages
+  56--61. DOI: \href{https://dx.doi.org/10.25080/Majora-92bf1922-00a}{\ttfamily
+  10.25080/Majora-92bf1922-00a}.
+
+\bibitem[Menne et~al., 2012]{noaa_ghcnd}
+Menne, M.~J., Durre, I., Vose, R.~S., Gleason, B.~E., and Houston, T.~G.
+  (2012).
+\newblock An overview of the global historical climatology network-daily
+  database.
+\newblock {\em Journal of Atmospheric and Oceanic Technology}, 29(7):897--910,
+  DOI: \href{https://dx.doi.org/10.1175/JTECH-D-11-00103.1}{\ttfamily
+  10.1175/JTECH-D-11-00103.1}.
+
+\bibitem[Pedregosa et~al., 2011]{pedregosa2011sklearn}
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel,
+  O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J.,
+  Passos, A., Cournapeau, D., Brucher, M., Perrot, M., and Duchesnay, {\'E}.
+  (2011).
+\newblock Scikit-learn: Machine learning in python.
+\newblock {\em Journal of Machine Learning Research}, 12:2825--2830.
+
+\bibitem[{PJM Interconnection}, 2026]{pjm_load}
+{PJM Interconnection} (2026).
+\newblock Hourly metered load data.
+\newblock Public historical load data.
+\newblock Mirror used by the example; public domain dedication (CC0); accessed
+  2026-05-21.
+
+\bibitem[Saxena et~al., 2008]{nasa_cmapss}
+Saxena, A., Goebel, K., Simon, D., and Eklund, N. (2008).
+\newblock Damage propagation modeling for aircraft engine run-to-failure
+  simulation.
+\newblock In {\em International Conference on Prognostics and Health
+  Management}. DOI:
+  \href{https://dx.doi.org/10.1109/PHM.2008.4711414}{\ttfamily
+  10.1109/PHM.2008.4711414}.
+
+\bibitem[Silva et~al., 2012]{physionet2012silva}
+Silva, I., Moody, G., Scott, D.~J., Celi, L.~A., and Mark, R.~G. (2012).
+\newblock Predicting in-hospital mortality of icu patients: The
+  physionet/computing in cardiology challenge 2012.
+\newblock In {\em Computing in Cardiology}, volume~39, pages 245--248.
+
+\bibitem[{timeseriescv contributors}, 2018]{timeseriescv2018}
+{timeseriescv contributors} (2018).
+\newblock \pkg{timeseriescv}: scikit-learn style cross-validation for time
+  series.
+\newblock Python package, \url{https://pypi.org/project/timeseriescv/}.
+\newblock Version 0.2.
+
+\bibitem[{UK Power Networks}, 2014]{ukpn_lcl}
+{UK Power Networks} (2014).
+\newblock Smartmeter energy consumption data in london households (low carbon
+  london).
+\newblock London Datastore.
+\newblock Dataset \texttt{smartmeter-energy-use-data-in-london-households};
+  open terms.
+
+\bibitem[{U.S. Geological Survey}, 2026]{usgs_catalog}
+{U.S. Geological Survey} (2026).
+\newblock Earthquake catalog.
+\newblock USGS FDSN event web service.
+\newblock Public domain. \url{https://earthquake.usgs.gov/fdsnws/event/1/};
+  accessed 2026-05-21.
+
+\bibitem[Virtanen et~al., 2020]{virtanen2020scipy}
+Virtanen, P., Gommers, R., Oliphant, T.~E., Haberland, M., Reddy, T.,
+  Cournapeau, D., Burovski, E., Peterson, P., Weckesser, W., Bright, J.,
+  van~der Walt, S.~J., Brett, M., Wilson, J., Millman, K.~J., Mayorov, N.,
+  Nelson, A. R.~J., Jones, E., Kern, R., Larson, E., Carey, C.~J., Polat,
+  {\.I}., Feng, Y., Moore, E.~W., VanderPlas, J., Laxalde, D., Perktold, J.,
+  Cimrman, R., Henriksen, I., Quintero, E.~A., Harris, C.~R., Archibald, A.~M.,
+  Ribeiro, A.~H., Pedregosa, F., and van Mulbregt, P. (2020).
+\newblock {SciPy} 1.0: Fundamental algorithms for scientific computing in
+  {Python}.
+\newblock {\em Nature Methods}, 17:261--272, DOI:
+  \href{https://dx.doi.org/10.1038/s41592-019-0686-2}{\ttfamily
+  10.1038/s41592-019-0686-2}.
+
+\end{thebibliography}

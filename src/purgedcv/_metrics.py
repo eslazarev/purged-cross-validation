@@ -117,6 +117,8 @@ def deflated_sharpe_ratio(
         returns: 1-D array of returns (passed through to PSR).
         n_trials: Number of independent hyperparameter searches the user
             ran before reporting this strategy's Sharpe. Must be >= 1.
+            With ``n_trials == 1`` there is no correction to apply and
+            DSR reduces to ``probabilistic_sharpe_ratio(returns, 0.0)``.
         var_sharpe: Estimated variance of Sharpe ratios across the
             ``n_trials`` candidates. Caller supplies; we do not estimate
             it because that would require knowing the distribution of
@@ -145,9 +147,13 @@ def deflated_sharpe_ratio(
         raise ValueError(f"var_sharpe must be non-negative, got {var_sharpe}.")
 
     gamma_em = 0.5772156649015329  # Euler-Mascheroni constant
-    # Handle the n_trials=1 edge case: Phi_inv(0) = -inf.
+    # With a single trial there is no multiple-comparison correction: the
+    # expected maximum Sharpe under the null across one trial is 0, so
+    # SR* = 0 and DSR reduces to PSR against a zero benchmark. The
+    # extreme-value formula below is valid only for n_trials >= 2, where
+    # Phi_inv(1 - 1/n_trials) is finite (it diverges to -inf at n = 1).
     if n_trials == 1:
-        sr_star: float = -np.inf
+        sr_star: float = 0.0
     else:
         sr_star = float(
             np.sqrt(var_sharpe)

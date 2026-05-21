@@ -153,18 +153,27 @@ class TestProbabilisticSharpeRatio:
 
 class TestDeflatedSharpeRatio:
     def test_reduces_to_psr_when_n_trials_is_one(self) -> None:
-        """With only one trial (no multiple-comparison correction),
-        DSR should be very close to PSR at the same benchmark (the
-        deflated threshold SR* approaches the supplied benchmark)."""
+        """With a single trial there is no multiple-comparison
+        correction, so SR* = 0 and DSR must reduce exactly to
+        ``probabilistic_sharpe_ratio(returns, 0.0)`` -- for any input and
+        independently of ``var_sharpe``."""
         rng = np.random.default_rng(10)
-        returns = rng.normal(0.001, 0.01, 252)
-        var_sharpe = 0.1**2  # arbitrary variance estimate
-        dsr = deflated_sharpe_ratio(returns, n_trials=1, var_sharpe=var_sharpe)
-        # n_trials=1 -> ppf(1 - 1/1) = ppf(0) = -inf, so SR* -> -inf and
-        # DSR -> 1. Edge case: n_trials=1 is informationally vacuous;
-        # the function should either accept it and return ~1 or reject it.
-        # By our chosen contract, we accept and return ~1.
-        assert dsr > 0.99
+        winning = rng.normal(0.001, 0.01, 252)
+        losing = rng.normal(-0.05, 0.01, 252)
+        for returns in (winning, losing):
+            psr0 = probabilistic_sharpe_ratio(returns, benchmark_skill=0.0)
+            for var_sharpe in (0.0, 0.1**2, 1.0):
+                dsr = deflated_sharpe_ratio(returns, n_trials=1, var_sharpe=var_sharpe)
+                assert dsr == pytest.approx(psr0)
+
+    def test_losing_strategy_is_not_certain_skill_at_one_trial(self) -> None:
+        """Regression: a single-trial DSR must reflect the input. The old
+        implementation set SR* to -inf at n_trials=1 and returned 1.0 for
+        every strategy, including ones that lose money every period."""
+        rng = np.random.default_rng(12)
+        losing = rng.normal(-0.05, 0.01, 252)
+        dsr = deflated_sharpe_ratio(losing, n_trials=1, var_sharpe=0.04)
+        assert dsr < 0.01
 
     def test_decreases_with_more_trials(self) -> None:
         """More trials -> higher SR* threshold -> lower DSR."""

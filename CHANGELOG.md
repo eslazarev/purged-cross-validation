@@ -57,6 +57,11 @@ The next published release will be **v0.0.5**.
 
 ### Fixed
 
+- `deflated_sharpe_ratio` returned `1.0` for every input when
+  `n_trials=1`. The single-trial branch set the deflated benchmark SR\*
+  to `-inf`; it now uses SR\* = 0, so DSR reduces to
+  `probabilistic_sharpe_ratio(returns, 0.0)`. A losing strategy is no
+  longer reported as certain skill. Covered by a regression test.
 - Version desync between `pyproject.toml` and
   `src/purgedcv/__init__.py`. The release workflow now bumps both files
   (alpha-aware), and the new install-smoke test
