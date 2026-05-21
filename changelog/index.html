@@ -929,6 +929,11 @@ Plan is listed under the published version it shipped in.</p>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><code>deflated_sharpe_ratio</code> returned <code>1.0</code> for every input when
+  <code>n_trials=1</code>. The single-trial branch set the deflated benchmark SR*
+  to <code>-inf</code>; it now uses SR* = 0, so DSR reduces to
+  <code>probabilistic_sharpe_ratio(returns, 0.0)</code>. A losing strategy is no
+  longer reported as certain skill. Covered by a regression test.</li>
 <li>Version desync between <code>pyproject.toml</code> and
   <code>src/purgedcv/__init__.py</code>. The release workflow now bumps both files
   (alpha-aware), and the new install-smoke test

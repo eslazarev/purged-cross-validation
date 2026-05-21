@@ -3762,7 +3762,9 @@ deflated benchmark :math:<code>\text{SR}^\ast_n</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p>Number of independent hyperparameter searches the user
-ran before reporting this strategy's Sharpe. Must be &gt;= 1.</p>
+ran before reporting this strategy's Sharpe. Must be &gt;= 1.
+With <code>n_trials == 1</code> there is no correction to apply and
+DSR reduces to <code>probabilistic_sharpe_ratio(returns, 0.0)</code>.</p>
               </div>
             </td>
             <td>
