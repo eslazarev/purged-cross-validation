@@ -63,36 +63,37 @@ pip install git+https://github.com/eslazarev/purged-cross-validation.git
 
 ## Quickstart
 
-### 1. Foundation primitives: `purge`, `apply_embargo`, and diagnostics
+### 1. The core primitive: `purge`
 
-Build a manual split, clean it with the purge and embargo primitives, then audit it with the diagnostics submodule.
+`purge` removes training observations that share data with the test set. Here a model uses a 5-day sliding feature window to predict the next day, so every observation occupies a 5-day span and the spans of neighbours overlap. Any training observation whose window reaches into the test period has already seen test data and must be dropped.
 
 ```python
 import numpy as np
 import pandas as pd
-from purgedcv import purge, apply_embargo
-from purgedcv.diagnostics import assert_no_temporal_leakage, assert_embargo_respected
+from purgedcv import purge
 
-# 30 daily bars; each bar's label resolves 2 days later
-pred  = pd.Series(pd.date_range("2024-01-01", periods=30, freq="D"))
-evalu = pred + pd.Timedelta(days=2)
+WINDOW = 5  # feature look-back in days
 
-train_idx = np.arange(0, 20)
-test_idx  = np.arange(20, 30)
+# 16 days of data; each observation uses a 5-day window to predict the next day
+days        = pd.date_range("2024-01-01", periods=16, freq="D")
+predict_day = np.arange(WINDOW + 1, len(days) + 1)                    # 11 observations
+pred        = pd.Series([days[d - WINDOW - 1] for d in predict_day])  # first feature day
+evalu       = pd.Series([days[d - 1] for d in predict_day])           # label day
 
-# Remove training rows whose label horizon overlaps the test window
-clean_train = purge(train_idx, test_idx, pred, evalu)
+train_idx = np.arange(0, 7)    # observations predicting days 6..12
+test_idx  = np.arange(7, 11)   # observations predicting days 13..16
 
-# Drop the 3-day post-test buffer from training
-clean_train = apply_embargo(
-    clean_train, test_idx, pred, evalu, embargo=pd.Timedelta(days=3)
-)
+# Drop training observations whose 5-day feature window overlaps the test window
+kept_idx   = purge(train_idx, test_idx, pred, evalu)
+purged_idx = np.setdiff1d(train_idx, kept_idx)
 
-# Assert the split is now leak-free (raises TemporalLeakageError if not)
-assert_no_temporal_leakage(clean_train, test_idx, pred, evalu)
-assert_embargo_respected(clean_train, test_idx, pred, evalu, embargo="3D")
-print(f"Clean training rows: {len(clean_train)}")  # 19
+print(f"Kept:   {kept_idx.tolist()}")    # [0, 1, 2]    -> predict days 6, 7, 8
+print(f"Purged: {purged_idx.tolist()}")  # [3, 4, 5, 6] -> predict days 9, 10, 11, 12
 ```
+
+Each bar below is one observation's 5-day feature window. The four red bars cross into the test window (dashed line) — their features overlap the test period, so `purge` drops them. The three green bars stay fully before it; `→ day 8` only touches the boundary and is kept, because label horizons are half-open.
+
+![Purge on a 5-day sliding window: training observations whose feature window overlaps the test window are dropped, leaving a clean gap before the test block.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/purge_example.png)
 
 ---
 

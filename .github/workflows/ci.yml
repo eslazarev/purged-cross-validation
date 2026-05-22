@@ -44,15 +44,59 @@ jobs:
       - name: Mkdocs build (strict)
         run: mkdocs build --strict
 
+  # Decide whether this push touched anything outside the docs surface.
+  # Gates the release job below: a docs-only merge to main must not
+  # publish a PyPI release or bump the version. Docs still redeploy to
+  # GitHub Pages via the separate docs.yml workflow.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect non-docs changes
+        id: detect
+        run: |
+          before='${{ github.event.before }}'
+          after='${{ github.sha }}'
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            echo "Unknown base commit; allowing release."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$before" "$after")
+          echo "Changed files:"
+          echo "$changed"
+          if [ -z "$changed" ]; then
+            echo "No files changed; skipping release."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # A docs-only push touches nothing outside this set:
+          #   docs/**  paper/**  *.md (anywhere)  mkdocs.yml  context7.json
+          code=$(echo "$changed" | grep -Ev '^(docs/|paper/|mkdocs\.yml$|context7\.json$|.*\.md$)' || true)
+          if [ -n "$code" ]; then
+            echo "Non-docs files changed; release will run."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Docs-only push; release will be skipped."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Publish the current version, then bump the patch for next time.
   # Order is deliberate: file starts at 0.0.1, so the first automated
   # release is exactly 0.0.1; --skip-existing makes re-runs safe.
+  # Skipped for docs-only merges to main (see the changes job above).
   release:
-    needs: test
+    needs: [test, changes]
     if: >-
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
-      github.actor != 'github-actions[bot]'
+      github.actor != 'github-actions[bot]' &&
+      needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

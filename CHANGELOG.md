@@ -9,7 +9,22 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
-The next published release will be **v0.0.5**.
+The next published release will be **v0.0.8**.
+
+### Fixed
+
+- `deflated_sharpe_ratio` returned `1.0` for every input when
+  `n_trials=1`. The single-trial branch set the deflated benchmark SR\*
+  to `-inf`; it now uses SR\* = 0, so DSR reduces to
+  `probabilistic_sharpe_ratio(returns, 0.0)`. A losing strategy is no
+  longer reported as certain skill. Covered by a regression test.
+
+## [0.0.7] - 2026-05-20
+
+This project publishes a patch release automatically on every push to
+`main`. Versions 0.0.5 and 0.0.6 were intermediate same-day auto-release
+patches; this entry records the work delivered across 0.0.5 through
+0.0.7.
 
 ### Added
 
@@ -57,18 +72,13 @@ The next published release will be **v0.0.5**.
 
 ### Fixed
 
-- `deflated_sharpe_ratio` returned `1.0` for every input when
-  `n_trials=1`. The single-trial branch set the deflated benchmark SR\*
-  to `-inf`; it now uses SR\* = 0, so DSR reduces to
-  `probabilistic_sharpe_ratio(returns, 0.0)`. A losing strategy is no
-  longer reported as certain skill. Covered by a regression test.
 - Version desync between `pyproject.toml` and
   `src/purgedcv/__init__.py`. The release workflow now bumps both files
   (alpha-aware), and the new install-smoke test
   `test_packaging_metadata_versions_match_runtime` fails CI if they
   drift again.
 
-## [0.0.4] — 2026-05-17
+## [0.0.4] - 2026-05-17
 
 By v0.0.4 the cumulative feature set of Plans A through D below was
 delivered.
@@ -111,19 +121,20 @@ delivered.
   earthquakes, UCI air quality, Premier League matches, and a controlled
   synthetic leakage proof.
 
-## [0.0.3] — 2026-05-16
+## [0.0.3] - 2026-05-16
 
 Development patch release.
 
-## [0.0.2] — 2026-05-16
+## [0.0.2] - 2026-05-16
 
 Development patch release.
 
-## [0.0.1] — 2026-05-16
+## [0.0.1] - 2026-05-16
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.0.7...HEAD
+[0.0.7]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.7
 [0.0.4]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.4
 [0.0.3]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.3
 [0.0.2]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.2
