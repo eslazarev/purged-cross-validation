@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 from purgedcv._intervals import overlaps_any_half_open_interval
+from purgedcv._time import validate_times
+from purgedcv._validation import _validate_positional_indices
 
 from ._typing import NDArrayAny
 
@@ -59,6 +61,10 @@ def purge(
         raise ValueError("purge_horizon must be non-missing, got NaT.")
     if horizon < pd.Timedelta(0):
         raise ValueError(f"purge_horizon must be non-negative, got {horizon}.")
+    validate_times(prediction_times, evaluation_times, require_monotonic=False)
+    n_samples = len(prediction_times)
+    train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
+    test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
     if len(train_idx) == 0 or len(test_idx) == 0:
         return np.asarray(train_idx)
 

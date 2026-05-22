@@ -143,6 +143,11 @@ class TestProbabilisticSharpeRatio:
         with pytest.raises(ValueError, match="infinite"):
             probabilistic_sharpe_ratio(returns, benchmark_skill=0.0)
 
+    def test_rejects_returns_with_non_finite_moments(self) -> None:
+        returns = np.array([1e308, -1e308, 1e308, -1e308])
+        with pytest.raises(ValueError, match="non-finite"):
+            probabilistic_sharpe_ratio(returns, benchmark_skill=0.0)
+
     def test_rejects_non_finite_benchmark(self) -> None:
         returns = np.array([0.01, 0.02, 0.005])
         with pytest.raises(ValueError, match="benchmark_skill"):
@@ -366,6 +371,16 @@ class TestMinTrackRecordLength:
                 alpha=1e-100,
                 skew=0.0,
                 kurtosis=3.0,
+            )
+
+    def test_rejects_non_finite_track_record_length(self) -> None:
+        with pytest.raises(ValueError, match="non-finite"):
+            min_track_record_length(
+                observed_sharpe=0.5,
+                target_sharpe=0.2,
+                alpha=0.05,
+                skew=0.0,
+                kurtosis=1e308,
             )
 
     @pytest.mark.parametrize(

@@ -108,6 +108,21 @@ class TestHorizonsOverlap:
             is True
         )
 
+    def test_rejects_missing_endpoints(self) -> None:
+        with pytest.raises(ValueError, match="non-missing"):
+            horizons_overlap(
+                T("2024-01-01"),
+                pd.NaT,  # type: ignore[arg-type]
+                T("2024-01-01"),
+                T("2024-01-02"),
+            )
+
+    def test_rejects_reversed_intervals(self) -> None:
+        with pytest.raises(ValueError, match="a_end"):
+            horizons_overlap(T("2024-01-02"), T("2024-01-01"), T("2024-01-01"), T("2024-01-02"))
+        with pytest.raises(ValueError, match="b_end"):
+            horizons_overlap(T("2024-01-01"), T("2024-01-02"), T("2024-01-02"), T("2024-01-01"))
+
     def test_symmetric(self) -> None:
         a = horizons_overlap(T("2024-01-01"), T("2024-01-03"), T("2024-01-02"), T("2024-01-04"))
         b = horizons_overlap(T("2024-01-02"), T("2024-01-04"), T("2024-01-01"), T("2024-01-03"))
@@ -161,6 +176,12 @@ class TestValidateTimes:
         pred = pd.Series(pd.to_timedelta([0, 1, 2], unit="D"))
         evalu = pred + pd.Timedelta(days=1)
         validate_times(pred, evalu)
+
+    def test_rejects_mixed_datetime_and_timedelta_times(self) -> None:
+        pred = pd.Series(pd.date_range("2024-01-01", periods=3, freq="D"))
+        evalu = pd.Series(pd.to_timedelta([1, 2, 3], unit="D"))
+        with pytest.raises(ValueError, match="same temporal dtype"):
+            validate_times(pred, evalu)
 
     def test_rejects_evaluation_before_prediction(self) -> None:
         pred = pd.Series(pd.to_datetime(["2024-01-02"]))

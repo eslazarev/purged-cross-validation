@@ -193,3 +193,36 @@ class TestReconstructPaths:
                 n_test_groups,
                 n_samples,
             )
+
+    def test_rejects_non_integer_test_indices(self) -> None:
+        n_splits, n_test_groups, n_samples = 4, 2, 16
+        fold_test_indices = _cpcv_fold_test_indices(n_samples, n_splits, n_test_groups)
+        fold_predictions = [test_idx.astype(float) for test_idx in fold_test_indices]
+        bad_test_indices = [test_idx.copy() for test_idx in fold_test_indices]
+        bad_test_indices[0] = bad_test_indices[0].astype(float)
+
+        with pytest.raises(TypeError, match="integer"):
+            reconstruct_paths(
+                fold_predictions,
+                bad_test_indices,
+                n_splits,
+                n_test_groups,
+                n_samples,
+            )
+
+    def test_rejects_duplicate_test_indices(self) -> None:
+        n_splits, n_test_groups, n_samples = 4, 2, 16
+        fold_test_indices = _cpcv_fold_test_indices(n_samples, n_splits, n_test_groups)
+        fold_predictions = [test_idx.astype(float) for test_idx in fold_test_indices]
+        bad_test_indices = [test_idx.copy() for test_idx in fold_test_indices]
+        bad_test_indices[0] = bad_test_indices[0].copy()
+        bad_test_indices[0][1] = bad_test_indices[0][0]
+
+        with pytest.raises(ValueError, match="duplicate"):
+            reconstruct_paths(
+                fold_predictions,
+                bad_test_indices,
+                n_splits,
+                n_test_groups,
+                n_samples,
+            )

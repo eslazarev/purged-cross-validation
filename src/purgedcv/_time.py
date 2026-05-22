@@ -15,8 +15,12 @@ _AMBIGUOUS_OFFSETS = frozenset(
 )
 
 
-def _is_temporal_series(values: pd.Series) -> bool:
-    return bool(is_datetime64_any_dtype(values.dtype) or is_timedelta64_dtype(values.dtype))
+def _temporal_kind(values: pd.Series) -> str | None:
+    if is_datetime64_any_dtype(values.dtype):
+        return "datetime"
+    if is_timedelta64_dtype(values.dtype):
+        return "timedelta"
+    return None
 
 
 def parse_horizon(value: HorizonLike) -> pd.Timedelta:
@@ -100,6 +104,19 @@ def horizons_overlap(
         ... )
         False
     """
+    endpoints = {
+        "a_start": a_start,
+        "a_end": a_end,
+        "b_start": b_start,
+        "b_end": b_end,
+    }
+    for name, value in endpoints.items():
+        if pd.isna(value):
+            raise ValueError(f"{name} must be non-missing, got NaT.")
+    if a_end < a_start:
+        raise ValueError(f"a_end ({a_end}) must be greater than or equal to a_start ({a_start}).")
+    if b_end < b_start:
+        raise ValueError(f"b_end ({b_end}) must be greater than or equal to b_start ({b_start}).")
     return not (a_end <= b_start or b_end <= a_start)
 
 
@@ -129,10 +146,16 @@ def validate_times(
             f"length mismatch: prediction_times has {len(prediction_times)} rows, "
             f"evaluation_times has {len(evaluation_times)} rows."
         )
-    if not _is_temporal_series(prediction_times):
+    prediction_kind = _temporal_kind(prediction_times)
+    evaluation_kind = _temporal_kind(evaluation_times)
+    if prediction_kind is None:
         raise ValueError("prediction_times must have a datetime-like or timedelta-like dtype.")
-    if not _is_temporal_series(evaluation_times):
+    if evaluation_kind is None:
         raise ValueError("evaluation_times must have a datetime-like or timedelta-like dtype.")
+    if prediction_kind != evaluation_kind:
+        raise ValueError(
+            "prediction_times and evaluation_times must use the same temporal dtype family."
+        )
     if prediction_times.isna().any():
         raise ValueError("prediction_times contains NaT values.")
     if evaluation_times.isna().any():

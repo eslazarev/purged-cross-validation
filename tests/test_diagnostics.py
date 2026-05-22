@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from purgedcv._typing import NDArrayAny
 from purgedcv.diagnostics import (
     assert_embargo_respected,
     assert_groups_disjoint,
@@ -80,6 +81,28 @@ class TestAssertNoTemporalLeakage:
         pred, evalu = _make_horizon_dataset()
         assert_no_temporal_leakage(np.arange(10), np.array([], dtype=int), pred, evalu)
 
+    @pytest.mark.parametrize(
+        "train_idx",
+        [
+            np.array([-1]),
+            np.array([20]),
+            np.array([1.5]),
+            np.array([[1, 2]]),
+            np.array([True]),
+            np.array([1, 1]),
+        ],
+    )
+    def test_rejects_invalid_positional_indices(self, train_idx: NDArrayAny) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises((TypeError, ValueError)):
+            assert_no_temporal_leakage(train_idx, np.array([10]), pred, evalu)
+
+    def test_rejects_malformed_times(self) -> None:
+        pred = pd.Series([1, 2, 3])
+        evalu = pd.Series([2, 3, 4])
+        with pytest.raises(ValueError, match="datetime-like"):
+            assert_no_temporal_leakage(np.array([0]), np.array([1]), pred, evalu)
+
     def test_error_message_includes_horizon_bounds(self) -> None:
         """Helpful error message for debugging includes the offending interval."""
         pred, evalu = _make_horizon_dataset(horizon_days=2)
@@ -147,6 +170,11 @@ class TestAssertEmbargoRespected:
             embargo=pd.Timedelta(days=2),
         )
 
+    def test_rejects_invalid_positional_indices(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="negative"):
+            assert_embargo_respected(np.array([15]), np.array([-1]), pred, evalu, embargo="1D")
+
     def test_error_message_includes_window_bounds(self) -> None:
         pred, evalu = _make_horizon_dataset()
         train_idx = np.array([15])
@@ -206,6 +234,11 @@ class TestAssertGroupsDisjoint:
         groups = pd.Series([0, 0, 1, 1])
         assert_groups_disjoint(np.array([0, 1]), np.array([], dtype=int), groups)
 
+    def test_rejects_invalid_positional_indices(self) -> None:
+        groups = pd.Series([0, 0, 1, 1])
+        with pytest.raises(ValueError, match="out-of-bounds"):
+            assert_groups_disjoint(np.array([0]), np.array([4]), groups)
+
     def test_error_message_reports_overlap_count(self) -> None:
         """When multiple groups leak, the count is reported for triage."""
         groups = pd.Series([0, 1, 2, 3])
@@ -247,6 +280,11 @@ class TestComputeOverlapFraction:
         pred, evalu = _make_horizon_dataset()
         result = compute_overlap_fraction(np.arange(10), np.array([], dtype=int), pred, evalu)
         assert result == 0.0
+
+    def test_rejects_invalid_positional_indices(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(TypeError, match="integer"):
+            compute_overlap_fraction(np.array([0.5]), np.array([10]), pred, evalu)
 
     def test_non_raising(self) -> None:
         """compute_overlap_fraction is a diagnostic, never raises on leakage."""

@@ -13,7 +13,7 @@ from math import comb
 import numpy as np
 
 from ._typing import NDArrayAny
-from ._validation import _validate_integer
+from ._validation import _validate_integer, _validate_positional_indices
 
 
 def reconstruct_paths(
@@ -114,6 +114,11 @@ def reconstruct_paths(
     for f, (combo, preds, test_idx) in enumerate(
         zip(fold_combos, fold_predictions, fold_test_indices, strict=True)
     ):
+        test_idx = _validate_positional_indices(
+            f"fold {f} test_idx",
+            test_idx,
+            n_samples=n_samples,
+        )
         if len(preds) != len(test_idx):
             raise ValueError(
                 f"fold {f}: predictions length {len(preds)} does not match "

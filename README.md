@@ -97,7 +97,46 @@ Each bar below is one observation's 5-day feature window. The four red bars cros
 
 ---
 
-### 2. Splitters with scikit-learn: `PurgedKFold` inside `cross_val_score`
+### 2. Walk-forward CV: `WalkForwardSplit`
+
+`WalkForwardSplit` walks the train/test split forward in time: every fold trains only on data *before* its test block, the way a model is actually deployed. Purge and embargo are applied automatically on each fold. Use `window="expanding"` to keep all history, or `window="sliding"` to cap training at a fixed-size recent window.
+
+```python
+import numpy as np
+import pandas as pd
+from purgedcv import WalkForwardSplit
+
+# 24 daily rows; each label resolves 2 days later
+n     = 24
+pred  = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+evalu = pred + pd.Timedelta(days=2)
+X     = np.zeros((n, 1))
+
+# Expanding window: every fold trains on all data before its test block.
+# purge_horizon drops the training rows whose label overlaps each test fold.
+cv = WalkForwardSplit(
+    n_splits=3,
+    test_size=4,
+    window="expanding",          # or "sliding" with train_size=...
+    prediction_times=pred,
+    evaluation_times=evalu,
+    purge_horizon="2D",
+)
+
+for i, (train_idx, test_idx) in enumerate(cv.split(X), 1):
+    print(f"fold {i}: train {train_idx[0]}..{train_idx[-1]}  test {test_idx[0]}..{test_idx[-1]}")
+# fold 1: train 0..8   test 12..15
+# fold 2: train 0..12  test 16..19
+# fold 3: train 0..16  test 20..23
+```
+
+Three folds tile the end of the series. Each fold trains on the past and tests on the next block; the red purge gap right before each test is removed automatically. *Expanding* grows the training set every fold; *sliding* keeps it a fixed size and moves it forward.
+
+![WalkForwardSplit over 24 rows: three folds, each training before its test block, with the purge gap removed — shown for both the expanding and the sliding training window.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/walkforward_example.png)
+
+---
+
+### 3. Splitters with scikit-learn: `PurgedKFold` inside `cross_val_score`
 
 Drop-in replacement for `KFold` that applies purge and embargo automatically on every fold.
 
@@ -131,7 +170,7 @@ All four splitters (`WalkForwardSplit`, `PurgedKFold`, `PurgedGroupKFold`, `Comb
 
 ---
 
-### 3. CPCV + path reconstruction + metrics: the full workflow
+### 4. CPCV + path reconstruction + metrics: the full workflow
 
 Combinatorial Purged CV produces C(N, K) folds that tile into multiple out-of-sample backtest paths. Use PSR and DSR to evaluate them with corrections for non-normality and selection bias.
 

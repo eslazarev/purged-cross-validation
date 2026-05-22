@@ -198,6 +198,10 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         # Convert to ndarray once so per-fold indexing is uniform.
         X_arr = np.asarray(X)  # noqa: N806
         y_arr = np.asarray(y)
+        if y_arr.ndim == 0 or len(y_arr) != n_samples:
+            raise ValueError(
+                f"y length {len(y_arr) if y_arr.ndim else 0} does not match X length {n_samples}."
+            )
 
         fold_test_indices = list(self._iter_test_indices(n_samples))
         fold_predictions: list[NDArrayAny] = []

@@ -17,7 +17,8 @@ from __future__ import annotations
 import pandas as pd
 
 from purgedcv._intervals import overlaps_any_half_open_interval, points_in_any_closed_interval
-from purgedcv._time import HorizonLike, parse_horizon
+from purgedcv._time import HorizonLike, parse_horizon, validate_times
+from purgedcv._validation import _validate_positional_indices
 from purgedcv.exceptions import (
     EmbargoViolationError,
     GroupLeakageError,
@@ -69,10 +70,13 @@ def assert_no_temporal_leakage(
         >>> evalu = pred + pd.Timedelta(days=1)
         >>> assert_no_temporal_leakage(np.arange(5), np.arange(10, 15), pred, evalu)
     """
+    horizon = parse_horizon(purge_horizon) if purge_horizon is not None else pd.Timedelta(0)
+    validate_times(prediction_times, evaluation_times, require_monotonic=False)
+    n_samples = len(prediction_times)
+    train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
+    test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
-
-    horizon = parse_horizon(purge_horizon) if purge_horizon is not None else pd.Timedelta(0)
 
     train_pred = prediction_times.iloc[train_idx].to_numpy()
     train_eval = evaluation_times.iloc[train_idx].to_numpy()
@@ -116,10 +120,13 @@ def assert_embargo_respected(
         ...     np.array([18]), np.arange(5, 10), pred, evalu, embargo="2D"
         ... )
     """
+    emb = parse_horizon(embargo)
+    validate_times(prediction_times, evaluation_times, require_monotonic=False)
+    n_samples = len(prediction_times)
+    train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
+    test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
-
-    emb = parse_horizon(embargo)
     if emb == pd.Timedelta(0):
         return
 
@@ -157,6 +164,8 @@ def assert_groups_disjoint(
         >>> groups = pd.Series([0, 0, 1, 1, 2, 2])
         >>> assert_groups_disjoint(np.array([0, 1]), np.array([2, 3]), groups)
     """
+    train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=len(groups))
+    test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=len(groups))
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
     train_group_values = groups.iloc[train_idx]
@@ -201,6 +210,10 @@ def compute_overlap_fraction(
         ... )
         1.0
     """
+    validate_times(prediction_times, evaluation_times, require_monotonic=False)
+    n_samples = len(prediction_times)
+    train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
+    test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
     if len(train_idx) == 0 or len(test_idx) == 0:
         return 0.0
     train_pred = prediction_times.iloc[train_idx].to_numpy()

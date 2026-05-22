@@ -76,15 +76,20 @@ def probabilistic_sharpe_ratio(
         raise ValueError(f"benchmark_skill must be finite, got {benchmark_skill}.")
     arr = _validate_returns(returns)
     n = arr.size
-    mean = float(arr.mean())
-    std = float(arr.std(ddof=0))
+    with np.errstate(over="ignore", invalid="ignore"):
+        mean = float(arr.mean())
+        std = float(arr.std(ddof=0))
+    if not np.isfinite(mean) or not np.isfinite(std):
+        raise ValueError("returns produce non-finite mean or standard deviation.")
     if std == 0.0:
         raise ValueError("returns has zero variance; Sharpe ratio is undefined.")
     sr_hat = mean / std
     gamma3 = float(stats.skew(arr, bias=False))
     gamma4 = float(stats.kurtosis(arr, bias=False, fisher=False))  # NOT excess
+    if not np.isfinite(sr_hat) or not np.isfinite(gamma3) or not np.isfinite(gamma4):
+        raise ValueError("returns produce non-finite Sharpe-ratio moments.")
     denominator_sq = 1 - gamma3 * sr_hat + (gamma4 - 1) / 4 * sr_hat**2
-    if denominator_sq <= 0:
+    if not np.isfinite(denominator_sq) or denominator_sq <= 0:
         raise ValueError(
             f"PSR denominator is non-positive ({denominator_sq:.4g}); the "
             "input distribution's higher moments are too extreme for the "
@@ -253,11 +258,14 @@ def min_track_record_length(
     if z_target <= 0:
         return 2
     denom_sq = 1 - skew * observed_sharpe + (kurtosis - 1) / 4 * observed_sharpe**2
-    if denom_sq <= 0:
+    if not np.isfinite(denom_sq) or denom_sq <= 0:
         raise ValueError(
             f"PSR denominator is non-positive ({denom_sq:.4g}); the input "
             "moments are too extreme for the Gaussian approximation."
         )
     sr_diff = observed_sharpe - target_sharpe
-    n_minus_1 = (z_target * np.sqrt(denom_sq) / sr_diff) ** 2
+    with np.errstate(over="ignore", invalid="ignore"):
+        n_minus_1 = (z_target * np.sqrt(denom_sq) / sr_diff) ** 2
+    if not np.isfinite(n_minus_1):
+        raise ValueError("inputs imply a non-finite minimum track record length.")
     return int(np.ceil(n_minus_1) + 1)
