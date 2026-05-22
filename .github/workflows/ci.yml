@@ -44,10 +44,11 @@ jobs:
       - name: Mkdocs build (strict)
         run: mkdocs build --strict
 
-  # Decide whether this push touched anything outside the docs surface.
-  # Gates the release job below: a docs-only merge to main must not
-  # publish a PyPI release or bump the version. Docs still redeploy to
-  # GitHub Pages via the separate docs.yml workflow.
+  # Decide whether this push changed the shipped package itself
+  # (src/ or pyproject.toml). Gates the release job below: merges that
+  # only touch docs, CI, tooling, tests, or examples must not publish a
+  # PyPI release or bump the version. Docs still redeploy to GitHub
+  # Pages via the separate docs.yml workflow.
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -57,7 +58,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect non-docs changes
+      - name: Detect package changes
         id: detect
         run: |
           before='${{ github.event.before }}'
@@ -75,21 +76,22 @@ jobs:
             echo "code=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # A docs-only push touches nothing outside this set:
-          #   docs/**  paper/**  *.md (anywhere)  mkdocs.yml  context7.json
-          code=$(echo "$changed" | grep -Ev '^(docs/|paper/|mkdocs\.yml$|context7\.json$|.*\.md$)' || true)
+          # Release only when the shipped package changes: src/** or
+          # pyproject.toml. Docs, CI, tooling, tests, and examples do
+          # not change the wheel and must not bump the version.
+          code=$(echo "$changed" | grep -E '^(src/|pyproject\.toml$)' || true)
           if [ -n "$code" ]; then
-            echo "Non-docs files changed; release will run."
+            echo "Package files changed; release will run."
             echo "code=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Docs-only push; release will be skipped."
+            echo "No package changes; release will be skipped."
             echo "code=false" >> "$GITHUB_OUTPUT"
           fi
 
   # Publish the current version, then bump the patch for next time.
   # Order is deliberate: file starts at 0.0.1, so the first automated
   # release is exactly 0.0.1; --skip-existing makes re-runs safe.
-  # Skipped for docs-only merges to main (see the changes job above).
+  # Skipped when a merge changes no package files (see changes job above).
   release:
     needs: [test, changes]
     if: >-

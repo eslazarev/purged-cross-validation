@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype, is_timedelta64_dtype
 
 HorizonLike = str | pd.Timedelta | timedelta | np.timedelta64
 
@@ -14,14 +15,18 @@ _AMBIGUOUS_OFFSETS = frozenset(
 )
 
 
+def _is_temporal_series(values: pd.Series) -> bool:
+    return bool(is_datetime64_any_dtype(values.dtype) or is_timedelta64_dtype(values.dtype))
+
+
 def parse_horizon(value: HorizonLike) -> pd.Timedelta:
     """Coerce a horizon-like input to a non-negative ``pd.Timedelta``.
 
     Accepts pandas offset strings (``"2D"``, ``"6h"``, ``"30min"``),
     ``pd.Timedelta``, ``datetime.timedelta``, and ``numpy.timedelta64``.
-    Rejects negative durations and calendar-ambiguous offsets such as
-    ``"M"`` (month) or ``"Y"`` (year), which do not represent a fixed
-    duration in seconds.
+    Rejects missing/``NaT`` values, negative durations, and
+    calendar-ambiguous offsets such as ``"M"`` (month) or ``"Y"`` (year),
+    which do not represent a fixed duration in seconds.
 
     Args:
         value: The horizon to parse.
@@ -30,7 +35,8 @@ def parse_horizon(value: HorizonLike) -> pd.Timedelta:
         A non-negative ``pd.Timedelta``.
 
     Raises:
-        ValueError: if the input is negative or a calendar-ambiguous string.
+        ValueError: if the input is missing/``NaT``, negative, or a
+            calendar-ambiguous string.
         TypeError: if the input is not one of the supported types.
 
     Examples:
@@ -60,6 +66,8 @@ def parse_horizon(value: HorizonLike) -> pd.Timedelta:
             "expected str, pd.Timedelta, datetime.timedelta, or np.timedelta64."
         )
 
+    if pd.isna(td):
+        raise ValueError("Horizon must be non-missing, got NaT.")
     if td < pd.Timedelta(0):
         raise ValueError(f"Horizon must be non-negative, got {td}.")
 
@@ -104,10 +112,10 @@ def validate_times(
     """Validate that ``prediction_times`` and ``evaluation_times`` are well-formed.
 
     Raises:
-        ValueError: on length mismatch, NaT values, ``evaluation_times <
-            prediction_times`` at any row, or (when ``require_monotonic``)
-            non-monotonic prediction times. The error message names the
-            offending row index when applicable.
+        ValueError: on length mismatch, non-temporal dtype, NaT values,
+            ``evaluation_times < prediction_times`` at any row, or (when
+            ``require_monotonic``) non-monotonic prediction times. The
+            error message names the offending row index when applicable.
 
     Examples:
         >>> import pandas as pd
@@ -121,6 +129,10 @@ def validate_times(
             f"length mismatch: prediction_times has {len(prediction_times)} rows, "
             f"evaluation_times has {len(evaluation_times)} rows."
         )
+    if not _is_temporal_series(prediction_times):
+        raise ValueError("prediction_times must have a datetime-like or timedelta-like dtype.")
+    if not _is_temporal_series(evaluation_times):
+        raise ValueError("evaluation_times must have a datetime-like or timedelta-like dtype.")
     if prediction_times.isna().any():
         raise ValueError("prediction_times contains NaT values.")
     if evaluation_times.isna().any():

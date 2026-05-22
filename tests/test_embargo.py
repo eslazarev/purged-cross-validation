@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from purgedcv._embargo import apply_embargo
 
@@ -21,6 +22,28 @@ class TestApplyEmbargo:
         test_idx = np.arange(5, 10)
         result = apply_embargo(train_idx, test_idx, pred, evalu, embargo=pd.Timedelta(0))
         np.testing.assert_array_equal(result, train_idx)
+
+    def test_rejects_negative_embargo(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="non-negative"):
+            apply_embargo(
+                np.arange(20),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                embargo=pd.Timedelta(days=-1),
+            )
+
+    def test_rejects_missing_embargo(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="non-missing"):
+            apply_embargo(
+                np.arange(20),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                embargo=pd.NaT,  # type: ignore[arg-type]
+            )
 
     def test_drops_first_post_test_sample(self) -> None:
         """Closed window [eval_max, eval_max+embargo]. Test ends Jan 11

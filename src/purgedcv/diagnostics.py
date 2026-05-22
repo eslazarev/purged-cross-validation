@@ -159,8 +159,12 @@ def assert_groups_disjoint(
     """
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
-    train_groups = set(groups.iloc[train_idx].unique())
-    test_groups = set(groups.iloc[test_idx].unique())
+    train_group_values = groups.iloc[train_idx]
+    test_group_values = groups.iloc[test_idx]
+    if train_group_values.isna().any() or test_group_values.isna().any():
+        raise ValueError("groups contains missing values in train or test indices.")
+    train_groups = set(train_group_values.unique())
+    test_groups = set(test_group_values.unique())
     overlap = train_groups & test_groups
     if overlap:
         offender = next(iter(sorted(overlap, key=str)))

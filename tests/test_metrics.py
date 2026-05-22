@@ -138,6 +138,16 @@ class TestProbabilisticSharpeRatio:
         with pytest.raises(ValueError, match="NaN"):
             probabilistic_sharpe_ratio(returns, benchmark_skill=0.0)
 
+    def test_rejects_returns_with_infinity(self) -> None:
+        returns = np.array([0.01, 0.02, np.inf, 0.005])
+        with pytest.raises(ValueError, match="infinite"):
+            probabilistic_sharpe_ratio(returns, benchmark_skill=0.0)
+
+    def test_rejects_non_finite_benchmark(self) -> None:
+        returns = np.array([0.01, 0.02, 0.005])
+        with pytest.raises(ValueError, match="benchmark_skill"):
+            probabilistic_sharpe_ratio(returns, benchmark_skill=np.inf)
+
     def test_rejects_returns_below_minimum_length(self) -> None:
         """PSR requires n >= 2 (the formula has sqrt(n - 1))."""
         returns = np.array([0.01])
@@ -215,11 +225,25 @@ class TestDeflatedSharpeRatio:
         with pytest.raises(ValueError, match="n_trials"):
             deflated_sharpe_ratio(returns, n_trials=-5, var_sharpe=0.01)
 
+    def test_rejects_non_integer_n_trials(self) -> None:
+        rng = np.random.default_rng(13)
+        returns = rng.normal(0.001, 0.01, 100)
+        for n_trials in (1.5, True):
+            with pytest.raises(TypeError, match="integer"):
+                deflated_sharpe_ratio(returns, n_trials=n_trials, var_sharpe=0.01)  # type: ignore[arg-type]
+
     def test_rejects_negative_var_sharpe(self) -> None:
         rng = np.random.default_rng(14)
         returns = rng.normal(0.001, 0.01, 100)
         with pytest.raises(ValueError, match="var_sharpe"):
             deflated_sharpe_ratio(returns, n_trials=10, var_sharpe=-0.01)
+
+    def test_rejects_non_finite_var_sharpe(self) -> None:
+        rng = np.random.default_rng(14)
+        returns = rng.normal(0.001, 0.01, 100)
+        for var_sharpe in (np.nan, np.inf):
+            with pytest.raises(ValueError, match="finite"):
+                deflated_sharpe_ratio(returns, n_trials=10, var_sharpe=var_sharpe)
 
 
 class TestMinTrackRecordLength:
@@ -311,3 +335,57 @@ class TestMinTrackRecordLength:
                 skew=0.0,
                 kurtosis=3.0,
             )
+
+    def test_alpha_at_or_above_half_needs_minimum_track_record(self) -> None:
+        assert (
+            min_track_record_length(
+                observed_sharpe=0.5,
+                target_sharpe=0.2,
+                alpha=0.5,
+                skew=0.0,
+                kurtosis=3.0,
+            )
+            == 2
+        )
+        assert (
+            min_track_record_length(
+                observed_sharpe=0.5,
+                target_sharpe=0.2,
+                alpha=0.9,
+                skew=0.0,
+                kurtosis=3.0,
+            )
+            == 2
+        )
+
+    def test_rejects_too_small_alpha_for_float_quantile(self) -> None:
+        with pytest.raises(ValueError, match="too small"):
+            min_track_record_length(
+                observed_sharpe=0.5,
+                target_sharpe=0.2,
+                alpha=1e-100,
+                skew=0.0,
+                kurtosis=3.0,
+            )
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("observed_sharpe", np.nan),
+            ("target_sharpe", np.inf),
+            ("alpha", np.nan),
+            ("skew", np.inf),
+            ("kurtosis", np.nan),
+        ],
+    )
+    def test_rejects_non_finite_scalar_inputs(self, field: str, value: float) -> None:
+        kwargs = {
+            "observed_sharpe": 0.5,
+            "target_sharpe": 0.2,
+            "alpha": 0.05,
+            "skew": 0.0,
+            "kurtosis": 3.0,
+        }
+        kwargs[field] = value
+        with pytest.raises(ValueError, match=field):
+            min_track_record_length(**kwargs)

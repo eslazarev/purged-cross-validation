@@ -54,10 +54,14 @@ def purge(
         >>> purge(train_idx, test_idx, pred, evalu)
         array([0, 1, 2])
     """
+    horizon = purge_horizon if purge_horizon is not None else pd.Timedelta(0)
+    if pd.isna(horizon):
+        raise ValueError("purge_horizon must be non-missing, got NaT.")
+    if horizon < pd.Timedelta(0):
+        raise ValueError(f"purge_horizon must be non-negative, got {horizon}.")
     if len(train_idx) == 0 or len(test_idx) == 0:
         return np.asarray(train_idx)
 
-    horizon = purge_horizon if purge_horizon is not None else pd.Timedelta(0)
     train_pred = prediction_times.iloc[train_idx].to_numpy()
     train_eval = evaluation_times.iloc[train_idx].to_numpy()
     test_starts = (prediction_times.iloc[test_idx] - horizon).to_numpy()

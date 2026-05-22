@@ -231,3 +231,6 @@ tools/scratch/
 
 # User-managed curation stash (relocated docs awaiting triage)
 docstmp/
+
+# macOS
+.DS_Store

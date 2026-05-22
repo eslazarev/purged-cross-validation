@@ -193,6 +193,11 @@ class TestAssertGroupsDisjoint:
         with pytest.raises(GroupLeakageError, match="A"):
             assert_groups_disjoint(train_idx, test_idx, groups)
 
+    def test_rejects_missing_group_labels(self) -> None:
+        groups = pd.Series(["A", np.nan, "B"])
+        with pytest.raises(ValueError, match="missing"):
+            assert_groups_disjoint(np.array([0, 1]), np.array([2]), groups)
+
     def test_empty_train_silent(self) -> None:
         groups = pd.Series([0, 0, 1, 1])
         assert_groups_disjoint(np.array([], dtype=int), np.array([2, 3]), groups)

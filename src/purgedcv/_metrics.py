@@ -23,12 +23,12 @@ from ._typing import NDArrayAny
 
 
 def _validate_returns(returns: NDArrayAny) -> NDArrayAny:
-    """Coerce input to 1-D float ndarray, reject NaN and length < 2."""
+    """Coerce input to 1-D float ndarray, reject non-finite values and length < 2."""
     arr = np.asarray(returns, dtype=float).ravel()
     if arr.size < 2:
         raise ValueError(f"returns must have at least 2 observations, got {arr.size}.")
-    if np.isnan(arr).any():
-        raise ValueError("returns contains NaN; filter with np.isfinite before calling.")
+    if not np.isfinite(arr).all():
+        raise ValueError("returns contains NaN or infinite values; filter with np.isfinite first.")
     return arr
 
 
@@ -52,7 +52,7 @@ def probabilistic_sharpe_ratio(
     standard normal CDF.
 
     Args:
-        returns: 1-D array of returns, length >= 2, no NaN, non-zero
+        returns: 1-D array of returns, length >= 2, finite values, non-zero
             variance.
         benchmark_skill: The Sharpe-ratio threshold to test against. Use 0
             for "is this strategy better than holding cash."
@@ -61,7 +61,7 @@ def probabilistic_sharpe_ratio(
         Scalar probability in [0, 1].
 
     Raises:
-        ValueError: on length < 2, NaN, or zero variance.
+        ValueError: on length < 2, non-finite values, or zero variance.
 
     Examples:
         >>> import numpy as np
@@ -72,6 +72,8 @@ def probabilistic_sharpe_ratio(
         >>> 0.0 <= psr <= 1.0
         True
     """
+    if not np.isfinite(benchmark_skill):
+        raise ValueError(f"benchmark_skill must be finite, got {benchmark_skill}.")
     arr = _validate_returns(returns)
     n = arr.size
     mean = float(arr.mean())
@@ -128,7 +130,9 @@ def deflated_sharpe_ratio(
         Scalar probability in [0, 1].
 
     Raises:
-        ValueError: on invalid n_trials or negative var_sharpe.
+        TypeError: if ``n_trials`` is not an integer.
+        ValueError: on invalid ``n_trials`` or non-finite/negative
+            ``var_sharpe``.
 
     Examples:
         >>> import numpy as np
@@ -141,8 +145,12 @@ def deflated_sharpe_ratio(
     """
     from math import e
 
+    if isinstance(n_trials, bool) or not isinstance(n_trials, (int, np.integer)):
+        raise TypeError(f"n_trials must be an integer, got {type(n_trials).__name__}.")
     if n_trials < 1:
         raise ValueError(f"n_trials must be >= 1, got {n_trials}.")
+    if not np.isfinite(var_sharpe):
+        raise ValueError(f"var_sharpe must be finite, got {var_sharpe}.")
     if var_sharpe < 0:
         raise ValueError(f"var_sharpe must be non-negative, got {var_sharpe}.")
 
@@ -200,7 +208,8 @@ def min_track_record_length(
         Minimum integer sample size.
 
     Raises:
-        ValueError: if ``observed_sharpe <= target_sharpe`` or
+        ValueError: if any scalar input is non-finite, if
+            ``observed_sharpe <= target_sharpe``, or if
             ``alpha not in (0, 1)``.
 
     Examples:
@@ -212,6 +221,16 @@ def min_track_record_length(
         >>> n > 0
         True
     """
+    values = {
+        "observed_sharpe": observed_sharpe,
+        "target_sharpe": target_sharpe,
+        "alpha": alpha,
+        "skew": skew,
+        "kurtosis": kurtosis,
+    }
+    for name, value in values.items():
+        if not np.isfinite(value):
+            raise ValueError(f"{name} must be finite, got {value}.")
     if observed_sharpe <= target_sharpe:
         raise ValueError(
             f"observed_sharpe ({observed_sharpe}) must be strictly greater "
@@ -221,6 +240,18 @@ def min_track_record_length(
         raise ValueError(f"alpha must be in (0, 1), got {alpha}.")
 
     z_target = float(stats.norm.ppf(1 - alpha))
+    if not np.isfinite(z_target):
+        raise ValueError(
+            f"alpha={alpha} is too small to compute a finite normal quantile; "
+            "use a representable significance level."
+        )
+    # alpha >= 0.5 puts the 1 - alpha confidence target at or below 0.5.
+    # Any track record with observed_sharpe > target_sharpe already clears
+    # that at the smallest workable length (PSR needs n >= 2), so return
+    # that floor. Falling through would square a non-positive z and
+    # wrongly inflate the requirement.
+    if z_target <= 0:
+        return 2
     denom_sq = 1 - skew * observed_sharpe + (kurtosis - 1) / 4 * observed_sharpe**2
     if denom_sq <= 0:
         raise ValueError(

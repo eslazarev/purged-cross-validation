@@ -58,6 +58,8 @@ class BaseTemporalSplitter(ABC):
                     f"groups length {len(groups)} does not match "
                     f"prediction_times length {len(self._prediction_times)}."
                 )
+            if groups.isna().any():
+                raise ValueError("groups contains missing values.")
             self._groups = groups.reset_index(drop=True)
         else:
             self._groups = None

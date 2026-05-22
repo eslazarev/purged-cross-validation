@@ -12,6 +12,7 @@ import pandas as pd
 
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
+from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny
 
@@ -76,8 +77,7 @@ class PurgedKFold(BaseTemporalSplitter):
         Raises:
             ValueError: if ``n_splits < 2``.
         """
-        if n_splits < 2:
-            raise ValueError(f"n_splits must be at least 2, got {n_splits}.")
+        n_splits = _validate_integer("n_splits", n_splits, minimum=2)
         super().__init__(
             prediction_times=prediction_times,
             evaluation_times=evaluation_times,
@@ -177,8 +177,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
             ValueError: if ``n_splits < 2`` or
                 ``n_splits > len(groups.unique())``.
         """
-        if n_splits < 2:
-            raise ValueError(f"n_splits must be at least 2, got {n_splits}.")
+        n_splits = _validate_integer("n_splits", n_splits, minimum=2)
         super().__init__(
             prediction_times=prediction_times,
             evaluation_times=evaluation_times,

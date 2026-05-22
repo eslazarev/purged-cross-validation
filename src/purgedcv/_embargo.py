@@ -51,9 +51,13 @@ def apply_embargo(
         >>> apply_embargo(train_idx, test_idx, pred, evalu, pd.Timedelta(days=1))
         array([12, 13, 14])
     """
+    if pd.isna(embargo):
+        raise ValueError("embargo must be non-missing, got NaT.")
+    if embargo < pd.Timedelta(0):
+        raise ValueError(f"embargo must be non-negative, got {embargo}.")
     if len(train_idx) == 0 or len(test_idx) == 0:
         return np.asarray(train_idx)
-    if embargo <= pd.Timedelta(0):
+    if embargo == pd.Timedelta(0):
         return np.asarray(train_idx)
 
     train_pred = prediction_times.iloc[train_idx].to_numpy()

@@ -108,6 +108,32 @@ class TestWalkForwardSplit:
             )
             list(cv.split(np.zeros((10, 1))))
 
+    def test_rejects_non_integer_split_sizes(self) -> None:
+        pred, evalu = _times()
+        with pytest.raises(TypeError, match="n_splits"):
+            WalkForwardSplit(
+                n_splits=2.5,  # type: ignore[arg-type]
+                test_size=2,
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+        with pytest.raises(TypeError, match="test_size"):
+            WalkForwardSplit(
+                n_splits=2,
+                test_size=2.5,  # type: ignore[arg-type]
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+        with pytest.raises(TypeError, match="train_size"):
+            WalkForwardSplit(
+                n_splits=2,
+                test_size=2,
+                window="sliding",
+                train_size=2.5,  # type: ignore[arg-type]
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+
     def test_rejects_train_size_with_expanding_window(self) -> None:
         pred, evalu = _times()
         with pytest.raises(ValueError, match="train_size"):
@@ -144,3 +170,16 @@ class TestWalkForwardSplit:
                 prediction_times=pred,
                 evaluation_times=evalu,
             )
+
+    def test_rejects_non_positive_sliding_train_size(self) -> None:
+        pred, evalu = _times()
+        for train_size in (0, -1):
+            with pytest.raises(ValueError, match="train_size"):
+                WalkForwardSplit(
+                    n_splits=2,
+                    test_size=2,
+                    window="sliding",
+                    train_size=train_size,
+                    prediction_times=pred,
+                    evaluation_times=evalu,
+                )

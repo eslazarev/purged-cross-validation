@@ -90,6 +90,16 @@ class TestPurgedKFold:
                 evaluation_times=evalu,
             )
 
+    def test_rejects_non_integer_n_splits(self) -> None:
+        pred, evalu = _times()
+        for n_splits in (2.5, True):
+            with pytest.raises(TypeError, match="integer"):
+                PurgedKFold(
+                    n_splits=n_splits,  # type: ignore[arg-type]
+                    prediction_times=pred,
+                    evaluation_times=evalu,
+                )
+
     def test_zero_purge_retains_full_post_test_complement(self) -> None:
         """With zero horizons, fold 0's train must equal the full complement
         of test. This guards against future base-class regressions that
@@ -221,3 +231,16 @@ class TestPurgedGroupKFold:
                 evaluation_times=evalu,
                 groups=groups,
             )
+
+    def test_rejects_non_integer_n_splits(self) -> None:
+        pred = pd.Series(pd.date_range("2024-01-01", periods=10, freq="D"))
+        evalu = pred + pd.Timedelta(days=1)
+        groups = pd.Series([0, 0, 1, 1, 2, 2, 3, 3, 4, 4])
+        for n_splits in (2.5, True):
+            with pytest.raises(TypeError, match="integer"):
+                PurgedGroupKFold(
+                    n_splits=n_splits,  # type: ignore[arg-type]
+                    prediction_times=pred,
+                    evaluation_times=evalu,
+                    groups=groups,
+                )

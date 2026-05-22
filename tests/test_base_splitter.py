@@ -120,6 +120,16 @@ class TestBaseTemporalSplitterSkeleton:
                 groups=groups_wrong,
             )
 
+    def test_constructor_rejects_missing_group_labels(self) -> None:
+        pred, evalu = _times(n=10)
+        groups = pd.Series([0, 0, 1, 1, np.nan, 2, 2, 3, 3, 4])
+        with pytest.raises(ValueError, match="missing"):
+            _TwoFoldStub(
+                prediction_times=pred,
+                evaluation_times=evalu,
+                groups=groups,
+            )
+
     def test_constructor_resets_series_index(self) -> None:
         """Stored times must use a 0-based integer index regardless of input."""
         idx = pd.RangeIndex(start=5, stop=25)

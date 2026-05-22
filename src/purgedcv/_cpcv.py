@@ -17,6 +17,7 @@ from sklearn.base import clone
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._paths import reconstruct_paths
 from purgedcv._time import HorizonLike
+from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny
 
@@ -83,12 +84,13 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
                 ``None`` means no embargo.
 
         Raises:
-            ValueError: if ``n_splits < 2`` or
-                ``n_test_groups`` is not in ``[1, n_splits - 1]``.
+            ValueError: if ``n_splits < 2``, if ``n_splits`` exceeds the
+                number of samples, or if ``n_test_groups`` is not in
+                ``[1, n_splits - 1]``.
         """
-        if n_splits < 2:
-            raise ValueError(f"n_splits must be at least 2, got {n_splits}.")
-        if n_test_groups < 1 or n_test_groups >= n_splits:
+        n_splits = _validate_integer("n_splits", n_splits, minimum=2)
+        n_test_groups = _validate_integer("n_test_groups", n_test_groups, minimum=1)
+        if n_test_groups >= n_splits:
             raise ValueError(
                 f"n_test_groups must be in [1, n_splits-1] = [1, {n_splits - 1}], "
                 f"got {n_test_groups}."
@@ -99,6 +101,11 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
             purge_horizon=purge_horizon,
             embargo=embargo,
         )
+        if n_splits > len(self._prediction_times):
+            raise ValueError(
+                f"n_splits={n_splits} exceeds n_samples={len(self._prediction_times)}; "
+                "CPCV requires non-empty group blocks."
+            )
         self.n_splits = n_splits
         self.n_test_groups = n_test_groups
 

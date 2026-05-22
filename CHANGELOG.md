@@ -9,7 +9,21 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
-The next published release will be **v0.0.8**.
+### Changed
+
+- `validate_times` now requires a datetime-like or timedelta-like dtype
+  for `prediction_times` and `evaluation_times`. Numeric, string, and
+  object-dtype series are rejected; convert with `pd.to_datetime` first.
+- `parse_horizon` rejects `NaT` and other missing horizons.
+- The splitter constructors and `assert_groups_disjoint` reject missing
+  (`NaN`) group labels instead of grouping on `NaN`.
+- `purge` and `apply_embargo` validate the horizon before the
+  empty-index short-circuit, so a bad horizon fails fast even when the
+  train or test set is empty.
+- The automated release job now runs only when a merge changes the
+  shipped package (`src/` or `pyproject.toml`); documentation, CI,
+  tooling, test, and example changes no longer publish a release. This
+  generalises the documentation-only skip rule introduced in 0.0.9.
 
 ### Fixed
 
@@ -18,6 +32,46 @@ The next published release will be **v0.0.8**.
   to `-inf`; it now uses SR\* = 0, so DSR reduces to
   `probabilistic_sharpe_ratio(returns, 0.0)`. A losing strategy is no
   longer reported as certain skill. Covered by a regression test.
+- `WalkForwardSplit(window="sliding", train_size=0)` silently used the
+  entire history as the train window, because `arr[-0:]` selects the
+  whole array. `train_size` is now validated as a positive integer.
+- `purge` and `apply_embargo` silently accepted negative or `NaT`
+  horizons; they now raise `ValueError`.
+- `reconstruct_paths` accepted `fold_test_indices` that did not match
+  the canonical CPCV group layout and produced a wrong path matrix; it
+  now verifies the layout and rejects mismatches.
+- `CombinatorialPurgedCV` accepted `n_splits > n_samples`, which builds
+  empty group blocks; this is now rejected at construction.
+- The metrics functions accepted non-finite inputs (infinite or `NaN`
+  returns, `benchmark_skill`, `var_sharpe`, and the scalar arguments of
+  `min_track_record_length`) and non-integer `n_trials`, producing
+  meaningless probabilities. They now raise. `min_track_record_length`
+  with `alpha >= 0.5` no longer returns an inflated length.
+- The splitter integer parameters (`n_splits`, `test_size`,
+  `train_size`, `n_test_groups`) are validated at construction; floats
+  and booleans are rejected with `TypeError`.
+
+## [0.0.9] - 2026-05-22
+
+No library code changed in this release; the published wheel is
+identical to v0.0.7. The release carried CI and example tooling only.
+
+### Added
+
+- The CI workflow detects whether a push touched files outside the
+  documentation surface and skips the automated release job for
+  documentation-only merges to `main`, so editing documentation no
+  longer publishes a PyPI release or bumps the version.
+
+### Fixed
+
+- Import ordering in `examples/synthetic_leakage_proof.ipynb`
+  (ruff `I001`).
+
+## [0.0.8] - 2026-05-21
+
+Intermediate empty auto-release patch. No library, CI, or documentation
+changes.
 
 ## [0.0.7] - 2026-05-20
 
@@ -133,7 +187,9 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.0.9...HEAD
+[0.0.9]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.9
+[0.0.8]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.8
 [0.0.7]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.7
 [0.0.4]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.4
 [0.0.3]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.3
