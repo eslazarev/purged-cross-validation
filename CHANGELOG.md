@@ -20,6 +20,15 @@ Plan is listed under the published version it shipped in.
   Companion to `synthetic_leakage_proof.ipynb`: same library, opposite
   framing (negative proof of fabricated skill there; positive
   demonstration of selection regret here).
+- New example notebook `examples/selection_regret_crypto.ipynb`: same
+  selection-regret protocol on daily BTC/USDT 2021-2023. The naive
+  selector picks a deep RandomForest with apparent CV MAE 0.057; on
+  180 truly held-out bars it deploys at R² = -1.64 and Sharpe = -0.77.
+  `PurgedKFold` picks Ridge with `alpha=100` (R² = +0.01, Sharpe =
+  -0.26 on the same bars). Both strategies lose money over the
+  sideways-down deployment window, but the naive pick loses three to
+  five times more per unit of risk. The library's value on a no-edge
+  market is loss avoidance rather than gain.
 
 ### Changed
 
