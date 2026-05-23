@@ -9,6 +9,18 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Added
+
+- Python 3.13 and 3.14 are now part of the CI test matrix and listed
+  among the supported versions.
+- New example notebook `examples/selection_regret_lcl.ipynb`: on UK
+  Low Carbon London smart-meter data, `PurgedGroupKFold` picks a model
+  that deploys with 5 to 12% lower MAE on 12 truly unseen households
+  than naive shuffled `KFold` does. Holds across 5 random seeds.
+  Companion to `synthetic_leakage_proof.ipynb`: same library, opposite
+  framing (negative proof of fabricated skill there; positive
+  demonstration of selection regret here).
+
 ### Changed
 
 - `validate_times` now requires a datetime-like or timedelta-like dtype
