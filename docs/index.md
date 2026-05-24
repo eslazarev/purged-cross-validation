@@ -16,7 +16,7 @@ It drops straight into `cross_val_score`, `GridSearchCV`, and `Pipeline`.
 The algorithms are not new. They are Marcos López de Prado's (2018), with
 the statistical metrics from Bailey and López de Prado (2012, 2014). This
 library is an open, MIT-licensed, typed implementation, checked against
-the original papers and pinned by 285 tests.
+the original papers and pinned by 354 tests (98% line coverage).
 
 ## Where to start
 
