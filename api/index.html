@@ -1934,9 +1934,14 @@ compatibility but ignored.</p>
 <code>[start_k, start_k + size_k)</code> where <code>size_k</code> differs across folds
 by at most one due to integer division. Train = complement of the
 test fold, with D2 purge and D3 embargo applied by the base class.</p>
-<p>For zero <code>purge_horizon</code> and <code>embargo</code>, the test fold structure
-is identical to :class:<code>sklearn.model_selection.KFold(shuffle=False)</code>
-and the full complement of indices serves as training data per fold.</p>
+<p>For zero <code>purge_horizon</code> and <code>embargo</code> the test folds are
+identical to :class:<code>sklearn.model_selection.KFold(shuffle=False)</code>.
+Purge still drops any training row whose own label horizon
+<code>[prediction_time, evaluation_time)</code> overlaps the test labels, so
+the training set equals the full complement only when no two label
+horizons overlap (for instance when <code>evaluation_times</code> equals
+<code>prediction_times</code>). The splitter then degrades exactly to
+<code>KFold(shuffle=False)</code>.</p>
 <p>The first <code>n_samples % n_splits</code> folds receive
 <code>n_samples // n_splits + 1</code> rows; the remaining folds receive
 <code>n_samples // n_splits</code>. When <code>n_splits &gt; n_samples</code>, the
@@ -2592,8 +2597,9 @@ are dropped.
             </td>
             <td>
               <div class="doc-md-description">
-                <p>if <code>n_splits &lt; 2</code> or
-<code>n_test_groups</code> is not in <code>[1, n_splits - 1]</code>.</p>
+                <p>if <code>n_splits &lt; 2</code>, if <code>n_splits</code> exceeds the
+number of samples, or if <code>n_test_groups</code> is not in
+<code>[1, n_splits - 1]</code>.</p>
               </div>
             </td>
           </tr>
@@ -3362,9 +3368,9 @@ degenerate single-point windows.</p>
         <p>Coerce a horizon-like input to a non-negative <code>pd.Timedelta</code>.</p>
 <p>Accepts pandas offset strings (<code>"2D"</code>, <code>"6h"</code>, <code>"30min"</code>),
 <code>pd.Timedelta</code>, <code>datetime.timedelta</code>, and <code>numpy.timedelta64</code>.
-Rejects negative durations and calendar-ambiguous offsets such as
-<code>"M"</code> (month) or <code>"Y"</code> (year), which do not represent a fixed
-duration in seconds.</p>
+Rejects missing/<code>NaT</code> values, negative durations, and
+calendar-ambiguous offsets such as <code>"M"</code> (month) or <code>"Y"</code> (year),
+which do not represent a fixed duration in seconds.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3436,7 +3442,8 @@ duration in seconds.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>if the input is negative or a calendar-ambiguous string.</p>
+                <p>if the input is missing/<code>NaT</code>, negative, or a
+calendar-ambiguous string.</p>
               </div>
             </td>
           </tr>
@@ -3537,10 +3544,10 @@ is symmetric in its arguments.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>on length mismatch, NaT values, <code>evaluation_times &lt;
-prediction_times</code> at any row, or (when <code>require_monotonic</code>)
-non-monotonic prediction times. The error message names the
-offending row index when applicable.</p>
+                <p>on length mismatch, non-temporal dtype, NaT values,
+<code>evaluation_times &lt; prediction_times</code> at any row, or (when
+<code>require_monotonic</code>) non-monotonic prediction times. The
+error message names the offending row index when applicable.</p>
               </div>
             </td>
           </tr>
@@ -3608,7 +3615,7 @@ standard normal CDF.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>1-D array of returns, length &gt;= 2, no NaN, non-zero
+                <p>1-D array of returns, length &gt;= 2, finite values, non-zero
 variance.</p>
               </div>
             </td>
@@ -3675,7 +3682,7 @@ for "is this strategy better than holding cash."</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>on length &lt; 2, NaN, or zero variance.</p>
+                <p>on length &lt; 2, non-finite values, or zero variance.</p>
               </div>
             </td>
           </tr>
@@ -3828,11 +3835,22 @@ submitted strategies, which is private to the caller.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>n_trials</code> is not an integer.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
                   <code><span title="ValueError">ValueError</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>on invalid n_trials or negative var_sharpe.</p>
+                <p>on invalid <code>n_trials</code> or non-finite/negative
+<code>var_sharpe</code>.</p>
               </div>
             </td>
           </tr>
@@ -4015,7 +4033,8 @@ Must be strictly greater than <code>target_sharpe</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>if <code>observed_sharpe &lt;= target_sharpe</code> or
+                <p>if any scalar input is non-finite, if
+<code>observed_sharpe &lt;= target_sharpe</code>, or if
 <code>alpha not in (0, 1)</code>.</p>
               </div>
             </td>
