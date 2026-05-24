@@ -3,7 +3,7 @@
 **scikit-learn-compatible cross-validation for time-series machine learning: purging, embargoes, and combinatorial backtest paths.**
 
 [![CI](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml)
-![Coverage](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/refs/heads/main/.github/badges/coverage.svg)
+[![Coverage](https://codecov.io/gh/eslazarev/purged-cross-validation/branch/main/graph/badge.svg)](https://codecov.io/gh/eslazarev/purged-cross-validation)
 [![PyPI version](https://img.shields.io/pypi/v/purgedcv)](https://pypi.org/project/purgedcv/)
 [![PyPI downloads](https://static.pepy.tech/badge/purgedcv)](https://pepy.tech/project/purgedcv)
 [![PyPI wheel](https://img.shields.io/pypi/wheel/purgedcv)](https://pypi.org/project/purgedcv/#files)
