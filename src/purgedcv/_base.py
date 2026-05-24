@@ -12,6 +12,7 @@ import pandas as pd
 from purgedcv._embargo import apply_embargo
 from purgedcv._purge import purge
 from purgedcv._time import HorizonLike, parse_horizon, validate_times
+from purgedcv._validation import _validate_positional_indices
 from purgedcv.diagnostics import assert_groups_disjoint
 
 from ._typing import NDArrayAny
@@ -58,6 +59,8 @@ class BaseTemporalSplitter(ABC):
                     f"groups length {len(groups)} does not match "
                     f"prediction_times length {len(self._prediction_times)}."
                 )
+            if groups.isna().any():
+                raise ValueError("groups contains missing values.")
             self._groups = groups.reset_index(drop=True)
         else:
             self._groups = None
@@ -95,6 +98,7 @@ class BaseTemporalSplitter(ABC):
         n_samples = self._n_samples_or_check(X)
 
         for test_idx in self._iter_test_indices(n_samples):
+            test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
             train_idx = self._candidate_train_idx(n_samples, test_idx)
             train_idx = purge(
                 train_idx,

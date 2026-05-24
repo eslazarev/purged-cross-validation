@@ -13,6 +13,7 @@ from math import comb
 import numpy as np
 
 from ._typing import NDArrayAny
+from ._validation import _validate_integer, _validate_positional_indices
 
 
 def reconstruct_paths(
@@ -75,6 +76,20 @@ def reconstruct_paths(
         >>> paths.shape
         (3, 16)
     """
+    n_splits = _validate_integer("n_splits", n_splits, minimum=2)
+    n_test_groups = _validate_integer("n_test_groups", n_test_groups, minimum=1)
+    n_samples = _validate_integer("n_samples", n_samples, minimum=1)
+    if n_test_groups >= n_splits:
+        raise ValueError(
+            f"n_test_groups must be in [1, n_splits-1] = [1, {n_splits - 1}], "
+            f"got {n_test_groups}."
+        )
+    if n_samples < n_splits:
+        raise ValueError(
+            f"n_samples={n_samples} is smaller than n_splits={n_splits}; "
+            "CPCV path reconstruction requires non-empty group blocks."
+        )
+
     expected_folds = comb(n_splits, n_test_groups)
     if len(fold_predictions) != expected_folds:
         raise ValueError(
@@ -86,13 +101,6 @@ def reconstruct_paths(
             f"fold count mismatch: expected {expected_folds} test-index arrays, "
             f"got {len(fold_test_indices)}."
         )
-    for f, (preds, test_idx) in enumerate(zip(fold_predictions, fold_test_indices, strict=True)):
-        if len(preds) != len(test_idx):
-            raise ValueError(
-                f"fold {f}: predictions length {len(preds)} does not match "
-                f"test_idx length {len(test_idx)}."
-            )
-
     # Reconstruct the group blocks from n_samples + n_splits.
     group_size, remainder = divmod(n_samples, n_splits)
     cursor = 0
@@ -102,10 +110,27 @@ def reconstruct_paths(
         group_indices.append(np.arange(cursor, cursor + sz, dtype=np.int64))
         cursor += sz
 
+    fold_combos = list(combinations(range(n_splits), n_test_groups))
+    for f, (combo, preds, test_idx) in enumerate(
+        zip(fold_combos, fold_predictions, fold_test_indices, strict=True)
+    ):
+        test_idx = _validate_positional_indices(
+            f"fold {f} test_idx",
+            test_idx,
+            n_samples=n_samples,
+        )
+        if len(preds) != len(test_idx):
+            raise ValueError(
+                f"fold {f}: predictions length {len(preds)} does not match "
+                f"test_idx length {len(test_idx)}."
+            )
+        expected_test_idx = np.concatenate([group_indices[i] for i in combo])
+        if not np.array_equal(np.asarray(test_idx), expected_test_idx):
+            raise ValueError(f"fold {f}: test_idx does not match the canonical CPCV group layout.")
+
     # Map each group to the list of (fold_idx, prediction_slice) pairs in
     # fold-iteration order, where prediction_slice is the portion of that
     # fold's predictions corresponding to that group's rows.
-    fold_combos = list(combinations(range(n_splits), n_test_groups))
     group_to_fold_slices: dict[int, list[tuple[int, NDArrayAny]]] = {g: [] for g in range(n_splits)}
     for fold_idx, (combo, preds) in enumerate(zip(fold_combos, fold_predictions, strict=True)):
         cursor_in_fold = 0

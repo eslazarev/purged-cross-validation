@@ -12,6 +12,7 @@ import pandas as pd
 
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
+from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny
 
@@ -24,9 +25,14 @@ class PurgedKFold(BaseTemporalSplitter):
     by at most one due to integer division. Train = complement of the
     test fold, with D2 purge and D3 embargo applied by the base class.
 
-    For zero ``purge_horizon`` and ``embargo``, the test fold structure
-    is identical to :class:`sklearn.model_selection.KFold(shuffle=False)`
-    and the full complement of indices serves as training data per fold.
+    For zero ``purge_horizon`` and ``embargo`` the test folds are
+    identical to :class:`sklearn.model_selection.KFold(shuffle=False)`.
+    Purge still drops any training row whose own label horizon
+    ``[prediction_time, evaluation_time)`` overlaps the test labels, so
+    the training set equals the full complement only when no two label
+    horizons overlap (for instance when ``evaluation_times`` equals
+    ``prediction_times``). The splitter then degrades exactly to
+    ``KFold(shuffle=False)``.
 
     The first ``n_samples % n_splits`` folds receive
     ``n_samples // n_splits + 1`` rows; the remaining folds receive
@@ -76,8 +82,7 @@ class PurgedKFold(BaseTemporalSplitter):
         Raises:
             ValueError: if ``n_splits < 2``.
         """
-        if n_splits < 2:
-            raise ValueError(f"n_splits must be at least 2, got {n_splits}.")
+        n_splits = _validate_integer("n_splits", n_splits, minimum=2)
         super().__init__(
             prediction_times=prediction_times,
             evaluation_times=evaluation_times,
@@ -177,8 +182,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
             ValueError: if ``n_splits < 2`` or
                 ``n_splits > len(groups.unique())``.
         """
-        if n_splits < 2:
-            raise ValueError(f"n_splits must be at least 2, got {n_splits}.")
+        n_splits = _validate_integer("n_splits", n_splits, minimum=2)
         super().__init__(
             prediction_times=prediction_times,
             evaluation_times=evaluation_times,

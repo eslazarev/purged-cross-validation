@@ -116,6 +116,33 @@ class TestCombinatorialPurgedCV:
                 evaluation_times=evalu,
             )
 
+    def test_rejects_non_integer_parameters(self) -> None:
+        pred, evalu = _times()
+        with pytest.raises(TypeError, match="n_splits"):
+            CombinatorialPurgedCV(
+                n_splits=4.5,  # type: ignore[arg-type]
+                n_test_groups=1,
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+        with pytest.raises(TypeError, match="n_test_groups"):
+            CombinatorialPurgedCV(
+                n_splits=4,
+                n_test_groups=1.5,  # type: ignore[arg-type]
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+
+    def test_rejects_more_splits_than_samples(self) -> None:
+        pred, evalu = _times(n=3)
+        with pytest.raises(ValueError, match="n_samples"):
+            CombinatorialPurgedCV(
+                n_splits=4,
+                n_test_groups=1,
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+
     def test_purge_and_embargo_applied_per_fold(self) -> None:
         pred, evalu = _times(n=24, horizon_days=2)
         cv = CombinatorialPurgedCV(
@@ -224,3 +251,16 @@ class TestCombinatorialPurgedCVBacktestPathsAPI:
         y = np.zeros(16)
         with pytest.raises((AttributeError, TypeError)):
             cv.backtest_paths("not an estimator", X, y)
+
+    def test_y_length_must_match_x_length(self) -> None:
+        pred, evalu = _times(n=16)
+        cv = CombinatorialPurgedCV(
+            n_splits=4,
+            n_test_groups=2,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+        X = np.zeros((16, 1))  # noqa: N806
+        y = np.zeros(15)
+        with pytest.raises(ValueError, match="y length"):
+            cv.backtest_paths(DummyRegressor(strategy="mean"), X, y)

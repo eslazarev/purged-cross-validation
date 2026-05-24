@@ -12,7 +12,7 @@ with `pyproject.toml`, `CITATION.cff`, and `.zenodo.json`.
 | C4 | Legal Code License | MIT |
 | C5 | Code versioning system used | git |
 | C6 | Software code languages, tools, and services used | Python 3.10+; runtime dependencies: numpy ≥ 1.24, pandas ≥ 2.0, scikit-learn ≥ 1.3, scipy ≥ 1.10; development: pytest, hypothesis, ruff, mypy (strict), pandas-stubs, pre-commit; build: hatchling; docs: MkDocs Material, mkdocstrings; CI: GitHub Actions |
-| C7 | Compilation requirements, operating environments & dependencies | Pure Python; no compilation step. Tested on CPython 3.10, 3.11, 3.12 (ubuntu-latest). Cross-platform (Linux, macOS, Windows). |
+| C7 | Compilation requirements, operating environments & dependencies | Pure Python; no compilation step. Tested on CPython 3.10, 3.11, 3.12, 3.13, 3.14 (ubuntu-latest). Cross-platform (Linux, macOS, Windows). |
 | C8 | If available, Link to developer documentation/manual | <https://eslazarev.github.io/purged-cross-validation/> |
 | C9 | Support email for questions | <elazarev@gmail.com> |
 

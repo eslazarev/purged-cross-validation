@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from purgedcv._purge import purge
+from purgedcv._typing import NDArrayAny
 
 
 def _make_horizon_dataset(horizon_days: int = 2, n: int = 20) -> tuple[pd.Series, pd.Series]:
@@ -23,6 +25,28 @@ class TestPurgeBasic:
         test_idx = np.arange(10, 15)
         result = purge(train_idx, test_idx, pred, evalu)
         np.testing.assert_array_equal(result, train_idx)
+
+    def test_rejects_negative_purge_horizon(self) -> None:
+        pred, evalu = _make_horizon_dataset(horizon_days=1)
+        with pytest.raises(ValueError, match="non-negative"):
+            purge(
+                np.arange(0, 5),
+                np.arange(10, 15),
+                pred,
+                evalu,
+                purge_horizon=pd.Timedelta(days=-1),
+            )
+
+    def test_rejects_missing_purge_horizon(self) -> None:
+        pred, evalu = _make_horizon_dataset(horizon_days=1)
+        with pytest.raises(ValueError, match="non-missing"):
+            purge(
+                np.arange(0, 5),
+                np.arange(10, 15),
+                pred,
+                evalu,
+                purge_horizon=pd.NaT,  # type: ignore[arg-type]
+            )
 
     def test_adjacent_train_dropped_with_long_horizon(self) -> None:
         """2-day horizon: train row 9 [Jan 10, Jan 12) overlaps test starting Jan 11."""
@@ -67,6 +91,34 @@ class TestPurgeBasic:
         train = np.arange(0, 10)
         result = purge(train, np.array([], dtype=int), pred, evalu)
         np.testing.assert_array_equal(result, train)
+
+    def test_empty_python_lists_are_accepted(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        result = purge([], [], pred, evalu)  # type: ignore[arg-type]
+        assert result.size == 0
+        assert result.dtype == np.int64
+
+    @pytest.mark.parametrize(
+        "train_idx",
+        [
+            np.array([-1]),
+            np.array([20]),
+            np.array([1.5]),
+            np.array([[1, 2]]),
+            np.array([True]),
+            np.array([1, 1]),
+        ],
+    )
+    def test_rejects_invalid_positional_indices(self, train_idx: NDArrayAny) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises((TypeError, ValueError)):
+            purge(train_idx, np.array([5]), pred, evalu)
+
+    def test_rejects_malformed_times_on_direct_call(self) -> None:
+        pred = pd.Series([1, 2, 3])
+        evalu = pd.Series([2, 3, 4])
+        with pytest.raises(ValueError, match="datetime-like"):
+            purge(np.array([0]), np.array([1]), pred, evalu)
 
     def test_purged_train_passes_diagnostic(self) -> None:
         """The output of purge must satisfy assert_no_temporal_leakage."""

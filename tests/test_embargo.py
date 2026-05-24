@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from purgedcv._embargo import apply_embargo
+from purgedcv._typing import NDArrayAny
 
 
 def _make_horizon_dataset(horizon_days: int = 1, n: int = 20) -> tuple[pd.Series, pd.Series]:
@@ -21,6 +23,28 @@ class TestApplyEmbargo:
         test_idx = np.arange(5, 10)
         result = apply_embargo(train_idx, test_idx, pred, evalu, embargo=pd.Timedelta(0))
         np.testing.assert_array_equal(result, train_idx)
+
+    def test_rejects_negative_embargo(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="non-negative"):
+            apply_embargo(
+                np.arange(20),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                embargo=pd.Timedelta(days=-1),
+            )
+
+    def test_rejects_missing_embargo(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="non-missing"):
+            apply_embargo(
+                np.arange(20),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                embargo=pd.NaT,  # type: ignore[arg-type]
+            )
 
     def test_drops_first_post_test_sample(self) -> None:
         """Closed window [eval_max, eval_max+embargo]. Test ends Jan 11
@@ -75,6 +99,34 @@ class TestApplyEmbargo:
             train, np.array([], dtype=int), pred, evalu, embargo=pd.Timedelta(days=1)
         )
         np.testing.assert_array_equal(result, train)
+
+    def test_empty_python_lists_are_accepted(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        result = apply_embargo([], [], pred, evalu, embargo=pd.Timedelta(days=1))  # type: ignore[arg-type]
+        assert result.size == 0
+        assert result.dtype == np.int64
+
+    @pytest.mark.parametrize(
+        "test_idx",
+        [
+            np.array([-1]),
+            np.array([20]),
+            np.array([1.5]),
+            np.array([[1, 2]]),
+            np.array([False]),
+            np.array([1, 1]),
+        ],
+    )
+    def test_rejects_invalid_positional_indices(self, test_idx: NDArrayAny) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises((TypeError, ValueError)):
+            apply_embargo(np.array([0]), test_idx, pred, evalu, embargo=pd.Timedelta(days=1))
+
+    def test_rejects_malformed_times_on_direct_call(self) -> None:
+        pred = pd.Series(["2024-01-01", "2024-01-02"])
+        evalu = pd.Series(["2024-01-02", "2024-01-03"])
+        with pytest.raises(ValueError, match="datetime-like"):
+            apply_embargo(np.array([0]), np.array([1]), pred, evalu, embargo=pd.Timedelta(days=1))
 
     def test_embargoed_train_passes_diagnostic(self) -> None:
         """Output of apply_embargo must satisfy assert_embargo_respected."""

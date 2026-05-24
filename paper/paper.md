@@ -29,9 +29,9 @@ backtest-path reconstruction, and the Probabilistic Sharpe Ratio, Deflated
 Sharpe Ratio, and Minimum Track Record Length. Every splitter follows the
 scikit-learn splitter protocol, so it drops into `cross_val_score`,
 `GridSearchCV`, and `Pipeline` without glue code. The package is typed,
-ships `py.typed`, passes `mypy --strict`, and is pinned by 285 tests
-(unit, property-based, doctest, and end-to-end), reproducible with
-`pytest --collect-only -q`.
+ships `py.typed`, passes `mypy --strict`, and is pinned by 354 tests
+(unit, property-based, doctest, and end-to-end) at 98% line coverage,
+reproducible with `pytest --collect-only -q`.
 
 The algorithms are not new. They are Marcos López de Prado's, from
 *Advances in Financial Machine Learning* [@lopezdeprado2018afml], with the
@@ -165,13 +165,14 @@ is calibration drift rather than a headline accuracy gap.
 
 # AI usage disclosure
 
-Generative AI tools, including OpenAI Codex/ChatGPT from the GPT-5 family,
-were used as an assistant for code review, refactoring suggestions, test
-scaffolding, documentation drafting, copy-editing, and pre-submission
-checks. The author made the design decisions, reviewed and edited all
-AI-assisted changes, and validated the outputs with the unit, property,
-doctest, end-to-end, type-checking, linting, notebook-execution, and
-benchmark checks described above. No AI-generated claim was accepted without
+Generative AI tools, including OpenAI Codex and ChatGPT in the GPT-5
+family and Anthropic Claude in the Claude 4 family, were used as
+assistants for code review, refactoring suggestions, test scaffolding,
+documentation drafting, copy-editing, and pre-submission checks. The
+author made the design decisions, reviewed and edited all AI-assisted
+changes, and validated the outputs with the unit, property, doctest,
+end-to-end, type-checking, linting, notebook-execution, and benchmark
+checks described above. No AI-generated claim was accepted without
 source or executable verification.
 
 # Acknowledgements

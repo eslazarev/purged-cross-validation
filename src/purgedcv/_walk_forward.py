@@ -10,6 +10,7 @@ import pandas as pd
 
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
+from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny
 
@@ -107,10 +108,10 @@ class WalkForwardSplit(BaseTemporalSplitter):
                 "train_size is required when window='sliding'; "
                 "pass a positive integer or use window='expanding'."
             )
-        if n_splits < 1:
-            raise ValueError(f"n_splits must be positive, got {n_splits}.")
-        if test_size < 1:
-            raise ValueError(f"test_size must be positive, got {test_size}.")
+        n_splits = _validate_integer("n_splits", n_splits, minimum=1)
+        test_size = _validate_integer("test_size", test_size, minimum=1)
+        if window == "sliding" and train_size is not None:
+            train_size = _validate_integer("train_size", train_size, minimum=1)
         self.n_splits = n_splits
         self.test_size = test_size
         self.train_size = train_size

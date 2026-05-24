@@ -64,6 +64,21 @@ class _LeakyStub(BaseTemporalSplitter):
         return 1
 
 
+class _BadTestIndexStub(BaseTemporalSplitter):
+    """Emits malformed test indices to verify base-class validation."""
+
+    def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
+        return [np.array([-1])]
+
+    def get_n_splits(
+        self,
+        X: object = None,  # noqa: N803
+        y: object = None,
+        groups: object = None,
+    ) -> int:
+        return 1
+
+
 class TestBaseTemporalSplitterSkeleton:
     def test_constructor_stores_purge_and_embargo(self) -> None:
         pred, evalu = _times()
@@ -118,6 +133,16 @@ class TestBaseTemporalSplitterSkeleton:
                 prediction_times=pred,
                 evaluation_times=evalu,
                 groups=groups_wrong,
+            )
+
+    def test_constructor_rejects_missing_group_labels(self) -> None:
+        pred, evalu = _times(n=10)
+        groups = pd.Series([0, 0, 1, 1, np.nan, 2, 2, 3, 3, 4])
+        with pytest.raises(ValueError, match="missing"):
+            _TwoFoldStub(
+                prediction_times=pred,
+                evaluation_times=evalu,
+                groups=groups,
             )
 
     def test_constructor_resets_series_index(self) -> None:
@@ -176,6 +201,12 @@ class TestBaseTemporalSplitterSplit:
         X_wrong = np.zeros((15, 1))  # noqa: N806
         with pytest.raises(ValueError, match="length"):
             list(cv.split(X_wrong))
+
+    def test_split_rejects_malformed_subclass_test_indices(self) -> None:
+        pred, evalu = _times(n=10)
+        cv = _BadTestIndexStub(prediction_times=pred, evaluation_times=evalu)
+        with pytest.raises(ValueError, match="negative"):
+            list(cv.split(np.zeros((10, 1))))
 
     def test_split_works_when_no_purge_or_embargo_needed(self) -> None:
         """With zero purge_horizon and embargo, train and test are simply

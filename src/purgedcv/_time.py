@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype, is_timedelta64_dtype
 
 HorizonLike = str | pd.Timedelta | timedelta | np.timedelta64
 
@@ -14,14 +15,22 @@ _AMBIGUOUS_OFFSETS = frozenset(
 )
 
 
+def _temporal_kind(values: pd.Series) -> str | None:
+    if is_datetime64_any_dtype(values.dtype):
+        return "datetime"
+    if is_timedelta64_dtype(values.dtype):
+        return "timedelta"
+    return None
+
+
 def parse_horizon(value: HorizonLike) -> pd.Timedelta:
     """Coerce a horizon-like input to a non-negative ``pd.Timedelta``.
 
     Accepts pandas offset strings (``"2D"``, ``"6h"``, ``"30min"``),
     ``pd.Timedelta``, ``datetime.timedelta``, and ``numpy.timedelta64``.
-    Rejects negative durations and calendar-ambiguous offsets such as
-    ``"M"`` (month) or ``"Y"`` (year), which do not represent a fixed
-    duration in seconds.
+    Rejects missing/``NaT`` values, negative durations, and
+    calendar-ambiguous offsets such as ``"M"`` (month) or ``"Y"`` (year),
+    which do not represent a fixed duration in seconds.
 
     Args:
         value: The horizon to parse.
@@ -30,7 +39,8 @@ def parse_horizon(value: HorizonLike) -> pd.Timedelta:
         A non-negative ``pd.Timedelta``.
 
     Raises:
-        ValueError: if the input is negative or a calendar-ambiguous string.
+        ValueError: if the input is missing/``NaT``, negative, or a
+            calendar-ambiguous string.
         TypeError: if the input is not one of the supported types.
 
     Examples:
@@ -60,6 +70,8 @@ def parse_horizon(value: HorizonLike) -> pd.Timedelta:
             "expected str, pd.Timedelta, datetime.timedelta, or np.timedelta64."
         )
 
+    if pd.isna(td):
+        raise ValueError("Horizon must be non-missing, got NaT.")
     if td < pd.Timedelta(0):
         raise ValueError(f"Horizon must be non-negative, got {td}.")
 
@@ -92,6 +104,19 @@ def horizons_overlap(
         ... )
         False
     """
+    endpoints = {
+        "a_start": a_start,
+        "a_end": a_end,
+        "b_start": b_start,
+        "b_end": b_end,
+    }
+    for name, value in endpoints.items():
+        if pd.isna(value):
+            raise ValueError(f"{name} must be non-missing, got NaT.")
+    if a_end < a_start:
+        raise ValueError(f"a_end ({a_end}) must be greater than or equal to a_start ({a_start}).")
+    if b_end < b_start:
+        raise ValueError(f"b_end ({b_end}) must be greater than or equal to b_start ({b_start}).")
     return not (a_end <= b_start or b_end <= a_start)
 
 
@@ -104,10 +129,10 @@ def validate_times(
     """Validate that ``prediction_times`` and ``evaluation_times`` are well-formed.
 
     Raises:
-        ValueError: on length mismatch, NaT values, ``evaluation_times <
-            prediction_times`` at any row, or (when ``require_monotonic``)
-            non-monotonic prediction times. The error message names the
-            offending row index when applicable.
+        ValueError: on length mismatch, non-temporal dtype, NaT values,
+            ``evaluation_times < prediction_times`` at any row, or (when
+            ``require_monotonic``) non-monotonic prediction times. The
+            error message names the offending row index when applicable.
 
     Examples:
         >>> import pandas as pd
@@ -120,6 +145,16 @@ def validate_times(
         raise ValueError(
             f"length mismatch: prediction_times has {len(prediction_times)} rows, "
             f"evaluation_times has {len(evaluation_times)} rows."
+        )
+    prediction_kind = _temporal_kind(prediction_times)
+    evaluation_kind = _temporal_kind(evaluation_times)
+    if prediction_kind is None:
+        raise ValueError("prediction_times must have a datetime-like or timedelta-like dtype.")
+    if evaluation_kind is None:
+        raise ValueError("evaluation_times must have a datetime-like or timedelta-like dtype.")
+    if prediction_kind != evaluation_kind:
+        raise ValueError(
+            "prediction_times and evaluation_times must use the same temporal dtype family."
         )
     if prediction_times.isna().any():
         raise ValueError("prediction_times contains NaT values.")

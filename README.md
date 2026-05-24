@@ -8,7 +8,7 @@
 [![PyPI downloads](https://static.pepy.tech/badge/purgedcv)](https://pepy.tech/project/purgedcv)
 [![PyPI wheel](https://img.shields.io/pypi/wheel/purgedcv)](https://pypi.org/project/purgedcv/#files)
 
-[![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/downloads/)
+[![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
@@ -97,41 +97,117 @@ Each bar below is one observation's 5-day feature window. The four red bars cros
 
 ---
 
-### 2. Splitters with scikit-learn: `PurgedKFold` inside `cross_val_score`
+### 2. The post-test buffer: `apply_embargo`
 
-Drop-in replacement for `KFold` that applies purge and embargo automatically on every fold.
+`apply_embargo` is the second leakage guard. Where `purge` removes label overlap, embargo drops a fixed buffer of training rows right *after* the test fold — their features are still serially correlated with the test period, so they leak even when their labels do not. The buffer extends only after the test, never before it.
 
 ```python
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import Ridge
-from sklearn.model_selection import cross_val_score
-from purgedcv import PurgedKFold
+from purgedcv import apply_embargo
 
-rng   = np.random.default_rng(0)
-n     = 200
-pred  = pd.Series(pd.date_range("2022-01-01", periods=n, freq="D"))
-evalu = pred + pd.Timedelta(days=3)
-X     = rng.standard_normal((n, 5))
-y     = X @ rng.standard_normal(5) + rng.standard_normal(n) * 0.5
+# 16 daily rows; each label resolves 1 day later
+n     = 16
+pred  = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+evalu = pred + pd.Timedelta(days=1)
 
-cv = PurgedKFold(
-    n_splits=5,
-    prediction_times=pred,
-    evaluation_times=evalu,
-    purge_horizon="3D",   # matches label horizon
-    embargo="1D",         # 1-day post-test buffer
-)
+test_idx  = np.arange(6, 10)                                      # test block in the middle
+train_idx = np.concatenate([np.arange(0, 6), np.arange(10, 16)])  # train before and after
 
-scores = cross_val_score(Ridge(), X, y, cv=cv, scoring="r2")
-print(f"R² per fold: {scores.round(3)}")
+# Drop training rows whose prediction time falls in the post-test buffer
+kept_idx      = apply_embargo(train_idx, test_idx, pred, evalu, embargo=pd.Timedelta(days=3))
+embargoed_idx = np.setdiff1d(train_idx, kept_idx)
+
+print(f"Kept:      {kept_idx.tolist()}")       # [0, 1, 2, 3, 4, 5, 14, 15]
+print(f"Embargoed: {embargoed_idx.tolist()}")  # [10, 11, 12, 13]
 ```
 
-All four splitters (`WalkForwardSplit`, `PurgedKFold`, `PurgedGroupKFold`, `CombinatorialPurgedCV`) satisfy the sklearn splitter protocol and work inside `GridSearchCV` and `Pipeline`.
+Each bar below is one row's label horizon. Every training row whose start falls inside the orange `+3d` buffer after the test is dropped; rows before the test are untouched. The 1-day label horizon leaves `purge` nothing to do here, so the split is cleaned by embargo alone.
+
+![apply_embargo on a mid-series test block: training rows whose prediction time falls inside the post-test buffer are dropped, while rows before the test are kept.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/embargo_example.png)
 
 ---
 
-### 3. CPCV + path reconstruction + metrics: the full workflow
+### 3. Walk-forward CV: `WalkForwardSplit`
+
+`WalkForwardSplit` walks the train/test split forward in time: every fold trains only on data *before* its test block, the way a model is actually deployed. Purge and embargo are applied automatically on each fold. Use `window="expanding"` to keep all history, or `window="sliding"` to cap training at a fixed-size recent window.
+
+```python
+import numpy as np
+import pandas as pd
+from purgedcv import WalkForwardSplit
+
+# 24 daily rows; each label resolves 2 days later
+n     = 24
+pred  = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+evalu = pred + pd.Timedelta(days=2)
+X     = np.zeros((n, 1))
+
+# Expanding window: every fold trains on all data before its test block.
+# purge_horizon drops the training rows whose label overlaps each test fold.
+cv = WalkForwardSplit(
+    n_splits=3,
+    test_size=4,
+    window="expanding",          # or "sliding" with train_size=...
+    prediction_times=pred,
+    evaluation_times=evalu,
+    purge_horizon="2D",
+)
+
+for i, (train_idx, test_idx) in enumerate(cv.split(X), 1):
+    print(f"fold {i}: train {train_idx[0]}..{train_idx[-1]}  test {test_idx[0]}..{test_idx[-1]}")
+# fold 1: train 0..8   test 12..15
+# fold 2: train 0..12  test 16..19
+# fold 3: train 0..16  test 20..23
+```
+
+Three folds tile the end of the series. Each fold trains on the past and tests on the next block; the red purge gap right before each test is removed automatically. *Expanding* grows the training set every fold; *sliding* keeps it a fixed size and moves it forward.
+
+![WalkForwardSplit over 24 rows: three folds, each training before its test block, with the purge gap removed — shown for both the expanding and the sliding training window.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/walkforward_example.png)
+
+---
+
+### 4. Purged k-fold: `PurgedKFold`
+
+A drop-in replacement for `KFold` for time-series data. Test folds tile the whole series contiguously, so most folds sit inside the data and the training set wraps around them on both sides. Purge and embargo are applied automatically on every fold.
+
+```python
+import numpy as np
+import pandas as pd
+from purgedcv import PurgedKFold
+
+# 24 daily rows; each label resolves 2 days later
+n     = 24
+pred  = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+evalu = pred + pd.Timedelta(days=2)
+X     = np.zeros((n, 1))
+
+# 4 contiguous test folds; purge + embargo applied automatically per fold
+cv = PurgedKFold(
+    n_splits=4,
+    prediction_times=pred,
+    evaluation_times=evalu,
+    purge_horizon="2D",
+    embargo="2D",
+)
+
+for i, (train_idx, test_idx) in enumerate(cv.split(X), 1):
+    print(f"fold {i}: test {test_idx[0]}..{test_idx[-1]}  train rows {len(train_idx)}")
+# fold 1: test 0..5    train rows 14
+# fold 2: test 6..11   train rows 11
+# fold 3: test 12..17  train rows 11
+# fold 4: test 18..23  train rows 15
+```
+
+Each test fold is a contiguous block. A middle fold trains on data both before and after it; the red purge gap before the test and the orange purge + embargo buffer after it are removed automatically, so no training row leaks into the fold.
+
+![PurgedKFold over 24 rows: four contiguous test folds, the training set wrapping around each, with the purge gap before and the embargo buffer after removed.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/purgedkfold_example.png)
+
+All four splitters (`WalkForwardSplit`, `PurgedKFold`, `PurgedGroupKFold`, `CombinatorialPurgedCV`) satisfy the sklearn splitter protocol and work inside `cross_val_score`, `GridSearchCV`, and `Pipeline`.
+
+---
+
+### 5. CPCV + path reconstruction + metrics: the full workflow
 
 Combinatorial Purged CV produces C(N, K) folds that tile into multiple out-of-sample backtest paths. Use PSR and DSR to evaluate them with corrections for non-normality and selection bias.
 
