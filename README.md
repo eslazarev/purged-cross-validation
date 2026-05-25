@@ -12,10 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
-[![Development status: alpha](https://img.shields.io/badge/status-alpha-orange)](https://pypi.org/project/purgedcv/)
-[![Docs](https://img.shields.io/badge/docs-mkdocs--material-526CFE?logo=materialformkdocs)](https://eslazarev.github.io/purged-cross-validation/)
-[![DOI](https://zenodo.org/badge/1239914629.svg)](https://doi.org/10.5281/zenodo.20312695)
+[![CodeFactor](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation/badge)](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation)
 
 **[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** — purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 
@@ -46,6 +43,39 @@ Train/test label overlap: **100% under naive → 0% under PurgedKFold**.
 ![Out-of-sample R² on an unpredictable target: naive shuffled KFold scores far above zero (fabricated), PurgedKFold collapses below it.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/synthetic_leakage_proof.png)
 
 Naive CV reports R² ≈ 0.83–0.91 on a target nothing can predict. That is pure leakage from the overlap. `PurgedKFold` removes the overlap and the fabricated skill collapses below a predict-the-mean baseline. The negative number is not the point; *no positive skill* is the correct answer, and only the purged split reports it. The library does not make models look better; it stops them looking better than they are.
+
+---
+
+## Does an honest CV deploy better?
+
+Same kind of question, opposite framing: on a partially predictable real task, does `PurgedGroupKFold` pick a model that deploys better than naive shuffled `KFold`? UK Low Carbon London smart meters, 48 households for model selection, 12 truly held-out households for deployment ([examples/selection_regret_lcl.ipynb](examples/selection_regret_lcl.ipynb)):
+
+| selection method     | picked model  | deployment MAE | deployment R² |
+|----------------------|---------------|---------------:|--------------:|
+| naive shuffled KFold | RF d=None     | 2.638 kWh      | +0.759        |
+| PurgedGroupKFold     | Ridge α=0.01  | **2.464 kWh**  | **+0.783**    |
+
+The honest-selected model deploys at **6.6% lower MAE** on the 12 unseen households. Holds across 5 random seeds; honest wins all five with a median improvement of 7.7%.
+
+![Honest CV deploys better on new LCL households: naive shuffled KFold picks deep RandomForest and deploys at 2.638 kWh; PurgedGroupKFold picks Ridge and deploys at 2.464 kWh.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/selection_regret_lcl.png)
+
+The naive selector picks deep RandomForest because the household-identifier feature lets it memorise per-household baselines inside the shuffled CV. On truly unseen households that feature is useless and the model collapses. An ablation that removes the identifier flattens the gap to zero, confirming the mechanism.
+
+---
+
+## What about a market with no real edge?
+
+On a task where no honest model has predictive power (daily BTC/USDT 2021-2023 with ordinary technical features), the question changes from "does honest CV pick a better model" to "does honest CV stop me from picking a worse one" ([examples/selection_regret_crypto.ipynb](examples/selection_regret_crypto.ipynb)):
+
+|                                    | naive shuffled KFold | PurgedKFold      |
+|------------------------------------|----------------------|------------------|
+| picked model                       | RF d=None            | Ridge α=100      |
+| deployment R² (180 held-out bars)  | -1.64                | +0.011           |
+| deployment Sharpe                  | **-0.77**            | **-0.26**        |
+
+Both strategies lose money over the sideways-down deployment window; the naive pick loses three to five times more per unit of risk. Direction stable across 5 seeds. The library's value on a no-edge market is loss avoidance rather than gain.
+
+![Honest CV avoids the overfitter on crypto: cumulative log-return curves for naive-selected RandomForest, PurgedKFold-selected Ridge, and buy-and-hold over a 180-bar held-out window.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/selection_regret_crypto.png)
 
 ---
 
