@@ -5,7 +5,7 @@
 %   pdflatex forecasting_selection_regret_mdpi
 %   bibtex   forecasting_selection_regret_mdpi
 %   pdflatex forecasting_selection_regret_mdpi  (x2)
-% The standalone, always-compilable version is forecasting_selection_regret.tex.
+% For arXiv upload, include the Definitions/ folder and uncomment \pdfoutput=1 below.
 %=================================================================
 \documentclass[forecasting,article,submit,oneauthor,pdftex]{Definitions/mdpi}
 
@@ -34,7 +34,7 @@ $^{1}$ \quad Independent Researcher; elazarev@gmail.com}
 
 \corres{Correspondence: elazarev@gmail.com}
 
-\abstract{Cross-validation does two jobs at once. It estimates out-of-sample error, and it ranks candidate models so that the top-ranked one is the model that ships. The second job is rarely audited. On panel data with repeated entities, shuffled k-fold can rank a model that memorizes entity identity above a simpler model that actually generalizes, because the test fold contains rows from the same entities as the training fold. The selected model then underperforms on entities it has never seen. We measure this effect on a real, partially predictable task: next-day household electricity demand from the UK Low Carbon London smart-meter trial. We select a model from a fixed eight-candidate grid (k-nearest neighbors, Ridge, and Random Forest) twice, once under naive shuffled k-fold and once under group-aware purged cross-validation, then deploy each selected model on twelve households held out entirely from selection. Naive cross-validation selects an unconstrained Random Forest that splits on a household-identifier feature and deploys at 2.638 kWh mean absolute error; group-aware cross-validation selects Ridge and deploys at 2.464 kWh, a 6.6\% reduction with higher coefficient of determination. Across 30 random partitions of the 60-household sample the group-aware selection deploys better in every partition (median gap 0.28 kWh, interquartile range 0.18 to 0.52). Measured against the best-deploying candidate in the grid, the group-aware selector's model-selection regret is essentially zero, while the naive selector's regret has a median of 0.28 kWh. The same selection is obtained with the ordinary GroupKFold splitter, and a leakage-aware encoding of the customer's average load reproduces the gap, so the effect is a property of group-aware validation rather than of any one feature or package. The practical message is that the cross-validation unit should match the deployment unit: forecasting for new customers calls for holding out customers, not rows.}
+\abstract{Cross-validation both estimates error and ranks candidate models, so it decides which model gets deployed. On panel data with repeated entities, shuffled k-fold can rank a model that memorizes entity identity above a simpler model that generalizes, because the same entities appear in training and test folds, and the chosen model then fails on unseen entities. We measure this on next-day household electricity demand from the UK Low Carbon London smart-meter trial. From a fixed eight-candidate grid of k-nearest neighbors, Ridge, and Random Forest, we select once under naive shuffled k-fold and once under group-aware purged cross-validation, then deploy each choice on twelve households held out from selection. Naive cross-validation selects an unconstrained Random Forest that deploys at 2.638 kWh mean absolute error; group-aware cross-validation selects Ridge and deploys at 2.464 kWh, 6.6\% lower. Across 30 partitions the group-aware choice deploys better every time (median gap 0.28 kWh), and its model-selection regret against the best-deploying candidate is essentially zero while the naive selector's is not. Plain GroupKFold and a leakage-aware average-load encoding reproduce the effect. The practical rule: match the cross-validation unit to the deployment unit, holding out customers, not rows.}
 
 \keyword{cross-validation; model selection; data leakage; load forecasting; smart meters; generalization}
 
@@ -271,17 +271,21 @@ household still appears on both sides, so its test rows receive its own mean;
 under group-aware folds the test households are imputed with the global mean,
 exactly as at deployment. This variant uses the same grid, schemes, deployment
 protocol, and 30 partitions as the main experiment, and is reproduced by
-\code{examples/selection_regret_lcl_targetenc.py}.
+\path{examples/selection_regret_lcl_targetenc.py}.
 
 \subsection{Computational environment}
 
-The reported numbers were produced with \pcv{} 0.0.11, Python 3.12.7,
+The selection-regret experiments reported here, including the 30-partition sweep
+and the innocent-feature variant, were produced with \pcv{} 0.0.11, Python 3.12.7,
 \pkg{numpy} 1.26.4, \pkg{pandas} 2.3.3, \pkg{scikit-learn} 1.8.0, and \pkg{scipy}
-1.17.1 on macOS 26.3.1 (\code{arm64}). The full study is a single script,
-\code{examples/selection_regret_lcl_seeds.py}, the innocent-feature variant is
-\code{examples/selection_regret_lcl_targetenc.py}, and a companion notebook,
-\code{examples/selection_regret_lcl.ipynb}, reproduces the single-seed walk
-through and the headline figure.
+1.17.1 on macOS 26.3.1 (\code{arm64}). They are reproduced by the script
+\path{examples/selection_regret_lcl_seeds.py}, the innocent-feature variant
+\path{examples/selection_regret_lcl_targetenc.py}, and the companion notebook
+\path{examples/selection_regret_lcl.ipynb}, which reproduces the single-seed walk
+through and the headline figure. The full-population benchmark of
+Section~\ref{subsec:population} was run separately, on a larger compute job and an
+earlier software environment, so its figures should be read as independent
+corroboration rather than as output of the environment above.
 
 \section{Results}
 
@@ -362,7 +366,7 @@ RF (\code{max_depth=4})    & 2.5769 & \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.72\textwidth]{../.github/images/selection_regret_lcl.png}
+\includegraphics[width=0.72\textwidth]{figures/selection_regret_lcl.png}
 \caption{Deployment mean absolute error on the 12 held-out households for the
 model each scheme selects, seed 0. Same grid, same data, same held-out
 households; the honest selection deploys at 6.6\% lower error.}
@@ -374,15 +378,14 @@ households; the honest selection deploys at 6.6\% lower error.}
 A single household partition is one draw, and \citet{teodorescu2025regret} warn
 that the partition itself is the dominant source of regret variance. We therefore
 repeat the full pipeline over 30 partitions, reading them as correlated resamples
-of the fixed 60-household sample as explained in the methods. The selection is
-strikingly stable: naive cross-validation selects the unconstrained Random Forest
-in all 30 partitions, and group-aware cross-validation selects Ridge with
-$\alpha = 0.01$ in all 30. The ordinary \code{GroupKFold} control selects the
-same model as the purged splitter in all 30, confirming that the effect is a
-property of group-aware validation rather than of a specific package. The honest
-pick is the best-deploying candidate $M^{\mathrm{OOS}}$ in 24 of 30 partitions,
-and in the other six it is beaten only by a neighbouring Ridge setting by at most
-0.007 kWh.
+of the fixed 60-household sample as explained in the methods. The selection does
+not waver. Naive cross-validation selects the unconstrained Random Forest in all
+30 partitions, and group-aware cross-validation selects Ridge with $\alpha = 0.01$
+in all 30. The ordinary \code{GroupKFold} control selects the same model as the
+purged splitter in all 30, which puts the effect on group-aware validation itself
+rather than on a specific package. In 24 of the 30 partitions the honest pick is
+also the best-deploying candidate $M^{\mathrm{OOS}}$; in the other six a
+neighbouring Ridge setting beats it by at most 0.007 kWh.
 
 The two selectors are therefore very different in regret. The honest selector's
 regret has a median of 0.0000 kWh (interquartile range 0.0000 to 0.0000): it is
@@ -422,7 +425,7 @@ Naive minus honest MAE, median relative  & $13.3\%$ \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../.github/images/selection_regret_lcl_seeds.png}
+\includegraphics[width=\textwidth]{figures/selection_regret_lcl_seeds.png}
 \caption{Left: deployment mean absolute error for the naive and honest selections
 in each of the 30 partitions; every paired line falls. Right: distribution of the
 naive minus honest deployment-error gap; all of the mass is positive, meaning the
@@ -447,8 +450,8 @@ A reviewer may object that a skilled practitioner would never feed a raw
 identifier to a tree, so the gap could be an artifact of a contrived feature. The
 innocent-feature variant answers this. Replacing the identifier with a
 leakage-aware target-mean encoding of the household, the customer's average daily
-consumption built per fold with cold-start imputation, reproduces the result and
-in fact sharpens it. Across the 30 partitions, naive cross-validation again
+consumption built per fold with cold-start imputation, reproduces the result. The
+gap is larger, not smaller. Across the 30 partitions, naive cross-validation again
 selects the unconstrained Random Forest in all 30, while group-aware
 cross-validation selects Ridge in 29 and the shallow Random Forest once. The
 honest selector picks the best-deploying candidate in all 30 partitions, so its
@@ -503,18 +506,18 @@ regret source is reducible: it is entity leakage, and a validation scheme matche
 to the deployment unit removes it. We also answer their explicit open question.
 They observe that decisions between model \emph{classes} taken on
 cross-validation performance are often wrong and call for further investigation;
-here a cross-class decision (Ridge versus Random Forest) is wrong under naive
-cross-validation in every one of 30 partitions and right under group-aware
-cross-validation in every one of them.
+here the cross-class decision (Ridge versus Random Forest) is wrong under naive
+cross-validation in every one of 30 partitions, while under group-aware
+cross-validation the chosen model deploys better than the naive choice in all 30
+and is at or near the deployment optimum.
 
-The mechanism is a textbook case of the leakage that \citet{kapoor2023leakage}
-and \citet{roberts2021pitfalls} identify as a recurrent cause of irreproducible
-models, here expressed specifically as entity leakage in panel data and traced to
-its effect on \emph{selection} rather than on the reported score alone. The
-energy-forecasting literature has separately established that load models
-generalize poorly to unseen households \citep{pirbazari2020generalization}; our
-contribution is to show that the standard validation default actively rewards the
-model that generalizes worst, and that a group-aware split fixes the selection.
+This is the leakage that \citet{kapoor2023leakage} and \citet{roberts2021pitfalls}
+identify as a recurrent cause of irreproducible models, here in its
+entity-leakage form on panel data and traced to its effect on \emph{selection}
+rather than on the reported score alone. That load models generalize poorly to
+unseen households is itself established \citep{pirbazari2020generalization}. What
+we add is that the standard validation default actively rewards the model that
+generalizes worst, and that a group-aware split repairs the selection.
 We expect the same pattern wherever a repeated-entity panel is validated by
 shuffled folds, for example patients, devices, stores, or sensors, although we
 have demonstrated it on one dataset and treat that broader claim as a hypothesis
@@ -562,6 +565,12 @@ performed at the granularity of the entity the model will actually face.
 
 \vspace{6pt}
 
+\supplementary{The following supporting information is provided with this article:
+the per-partition selection-regret results \path{selection_regret_lcl_seeds.csv}
+(main experiment) and \path{selection_regret_lcl_targetenc.csv} (innocent-feature
+variant), and the full-population benchmark summary
+\path{lcl_full_benchmark_summary.md}.}
+
 \authorcontributions{Conceptualization, methodology, software, validation, formal
 analysis, investigation, data curation, writing---original draft, writing---review
 and editing, and visualization were all carried out by E.L. The author has read
@@ -569,23 +578,31 @@ and agreed to the published version of the manuscript.}
 
 \funding{This research received no external funding.}
 
+\institutionalreview{Not applicable.}
+
+\informedconsent{Not applicable.}
+
 \dataavailability{The Low Carbon London smart-meter data are publicly available
 from UK Power Networks and the London Datastore \citep{ukpn_lcl}. The
 cross-validation splitter is provided by the open-source \pcv{} package, available
 at \url{https://github.com/eslazarev/purged-cross-validation} and on PyPI as
 \pkg{purgedcv} \citep{purgedcv2026}; the software is MIT licensed and archived on
-Zenodo with DOI \doi{10.5281/zenodo.20312695}. The repository includes the cached
-60-household subset, the experiment script
-\code{examples/selection_regret_lcl_seeds.py}, the innocent-feature variant
-\code{examples/selection_regret_lcl_targetenc.py}, the seed-sweep output, and the
-notebook \code{examples/selection_regret_lcl.ipynb} needed to reproduce every
-reported number and figure.}
+Zenodo with DOI \doi{10.5281/zenodo.20312695}. The repository contains the
+experiment scripts and notebook that regenerate every reported number and figure
+from the public data: \path{examples/selection_regret_lcl_seeds.py}, the
+innocent-feature variant \path{examples/selection_regret_lcl_targetenc.py}, and
+the single-seed walk-through \path{examples/selection_regret_lcl.ipynb}. The cached
+60-household extract (about 68~MB) and the derived seed-level result files are not
+redistributed in the repository owing to size; they are regenerated by these
+scripts from the public dataset, and the small derived result tables are provided
+as Supplementary Materials.}
 
-\acknowledgments{During the preparation of this manuscript the author used large
-language model tools for code review, refactoring suggestions, and copy-editing.
-The author has reviewed and edited the output and takes full responsibility for
-the content of this publication; no numerical claim was accepted without
-executable verification against the experiment script.}
+\acknowledgments{During the preparation of this manuscript the author used OpenAI
+Codex and ChatGPT (GPT-5 family) and Anthropic Claude (Claude 4 family) for code
+review, refactoring suggestions, and copy-editing. The author has reviewed and
+edited the output and takes full responsibility for the content of this
+publication; no numerical claim was accepted without executable verification
+against the experiment script.}
 
 \conflictsofinterest{The author declares no conflicts of interest.}
 

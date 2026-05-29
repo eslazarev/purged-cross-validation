@@ -4,10 +4,10 @@
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
 \bibstyle{Definitions/mdpi}
+\citation{teodorescu2025regret}
 \def\@LN@column{1}
 \newmarginnote{note.1.1}{{1}{10945661sp}}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
-\citation{teodorescu2025regret}
 \citation{kaufman2012}
 \citation{mcdermott2021}
 \citation{kapoor2023leakage}
@@ -17,9 +17,9 @@
 \citation{purgedcv2026,pedregosa2011sklearn}
 \citation{ukpn_lcl}
 \def\@LN@column{1}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Materials and Methods}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Data}{2}{subsection.2.1}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Materials and Methods}{3}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Data}{3}{subsection.2.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Features}{3}{subsection.2.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Candidate grid}{3}{subsection.2.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Cross-validation schemes}{3}{subsection.2.4}\protected@file@percent }
@@ -29,8 +29,8 @@
 \newlabel{eq:regret}{{1}{4}{Selection-regret protocol}{equation.1}{}}
 \newlabel{eq:regret@cref}{{[equation][1][]1}{[1][4][]4}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Ablation}{4}{subsection.2.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Innocent-feature variant}{4}{subsection.2.7}\protected@file@percent }
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Innocent-feature variant}{5}{subsection.2.7}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.8}Computational environment}{5}{subsection.2.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Results}{5}{section.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}The two schemes select different model classes}{5}{subsection.3.1}\protected@file@percent }
@@ -43,7 +43,7 @@
 \def\@LN@column{1}
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Deployment mean absolute error (kWh) on the 12 held-out households for every candidate, seed 0. $M^{\mathrm  {OOS}}$ marks the best-deploying candidate; regret is each selector's deployment error minus that of $M^{\mathrm  {OOS}}$.}}{6}{table.caption.2}\protected@file@percent }
 \newlabel{tab:deploy}{{2}{6}{Deployment mean absolute error (kWh) on the 12 held-out households for every candidate, seed 0. $M^{\mathrm {OOS}}$ marks the best-deploying candidate; regret is each selector's deployment error minus that of $M^{\mathrm {OOS}}$}{table.caption.2}{}}
-\newlabel{tab:deploy@cref}{{[table][2][]2}{[1][6][]6}{}{}{}}
+\newlabel{tab:deploy@cref}{{[table][2][]2}{[1][5][]6}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Deployment mean absolute error on the 12 held-out households for the model each scheme selects, seed 0. Same grid, same data, same held-out households; the honest selection deploys at 6.6\% lower error.}}{6}{figure.caption.3}\protected@file@percent }
 \newlabel{fig:headline}{{1}{6}{Deployment mean absolute error on the 12 held-out households for the model each scheme selects, seed 0. Same grid, same data, same held-out households; the honest selection deploys at 6.6\% lower error}{figure.caption.3}{}}
 \newlabel{fig:headline@cref}{{[figure][1][]1}{[1][6][]6}{}{}{}}
@@ -51,25 +51,25 @@
 \def\@LN@column{1}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Robustness over 30 correlated partitions of the 60-household sample. Spreads are descriptive (interquartile range, IQR), not population confidence intervals; see the statistical caveat in the methods. Regret is computed against the best-deploying candidate by Equation~\eqref  {eq:regret}.}}{7}{table.caption.4}\protected@file@percent }
 \newlabel{tab:robust}{{3}{7}{Robustness over 30 correlated partitions of the 60-household sample. Spreads are descriptive (interquartile range, IQR), not population confidence intervals; see the statistical caveat in the methods. Regret is computed against the best-deploying candidate by Equation~\eqref {eq:regret}}{table.caption.4}{}}
-\newlabel{tab:robust@cref}{{[table][3][]3}{[1][7][]7}{}{}{}}
+\newlabel{tab:robust@cref}{{[table][3][]3}{[1][6][]7}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Left: deployment mean absolute error for the naive and honest selections in each of the 30 partitions; every paired line falls. Right: distribution of the naive minus honest deployment-error gap; all of the mass is positive, meaning the honest selection deploys better in every partition.}}{7}{figure.caption.5}\protected@file@percent }
 \newlabel{fig:robust}{{2}{7}{Left: deployment mean absolute error for the naive and honest selections in each of the 30 partitions; every paired line falls. Right: distribution of the naive minus honest deployment-error gap; all of the mass is positive, meaning the honest selection deploys better in every partition}{figure.caption.5}{}}
 \newlabel{fig:robust@cref}{{[figure][2][]2}{[1][7][]7}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Removing the identifier erases the gap}{7}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}An innocent, best-practice feature reproduces the effect}{7}{subsection.3.5}\protected@file@percent }
 \citation{teodorescu2025regret}
-\def\@LN@column{1}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}An innocent, best-practice feature reproduces the effect}{8}{subsection.3.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Household structure carries a large generalization penalty at scale}{8}{subsection.3.6}\protected@file@percent }
-\newlabel{subsec:population}{{3.6}{8}{Household structure carries a large generalization penalty at scale}{subsection.3.6}{}}
-\newlabel{subsec:population@cref}{{[subsection][6][3]3.6}{[1][8][]8}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion}{8}{section.4}\protected@file@percent }
 \citation{kapoor2023leakage}
 \citation{roberts2021pitfalls}
 \citation{pirbazari2020generalization}
 \def\@LN@column{1}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions}{9}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Household structure carries a large generalization penalty at scale}{8}{subsection.3.6}\protected@file@percent }
+\newlabel{subsec:population}{{3.6}{8}{Household structure carries a large generalization penalty at scale}{subsection.3.6}{}}
+\newlabel{subsec:population@cref}{{[subsection][6][3]3.6}{[1][8][]8}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion}{8}{section.4}\protected@file@percent }
 \citation{ukpn_lcl}
 \citation{purgedcv2026}
+\def\@LN@column{1}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions}{9}{section.5}\protected@file@percent }
 \bibdata{paper}
 \bibcite{teodorescu2025regret}{{1}{2025}{{Teodorescu and Obreja~Bra{\c {s}}oveanu}}{{}}}
 \bibcite{kaufman2012}{{2}{2012}{{Kaufman et~al.}}{{Kaufman, Rosset, Perlich, and Stitelman}}}

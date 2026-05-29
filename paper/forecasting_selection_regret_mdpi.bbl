@@ -78,8 +78,8 @@ Pedregosa, F.; Varoquaux, G.; Gramfort, A.; Michel, V.; Thirion, B.; Grisel,
 \newblock SmartMeter Energy Consumption Data in London Households (Low Carbon
   London).
 \newblock London Datastore,  2014.
-\newblock Dataset \texttt{smartmeter-energy-use-data-in-london-households};
-  open terms.
+\newblock Dataset \path{smartmeter-energy-use-data-in-london-households}; open
+  terms.
 
 \bibitem[Pirbazari et~al.(2020)Pirbazari, Farmanbar, Chakravorty, and
   Rong]{pirbazari2020generalization}
