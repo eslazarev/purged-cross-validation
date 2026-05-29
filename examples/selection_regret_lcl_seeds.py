@@ -1,12 +1,22 @@
 """Multi-seed robustness sweep for the LCL selection-regret experiment.
 
 Companion to ``selection_regret_lcl.ipynb``. The notebook reports a single
-48/12 household split plus a five-seed preview. A single split is one
-realisation, and the dominant source of model-selection regret is known to be
-the train/test split itself (Teodorescu and Obreja Brasoveanu, 2025). To turn
-one number into a distribution, this script repeats the full pipeline over
-many seeds and reports the deployment-regret delta with a 95% confidence
-interval, the win rate, and which model each cross-validator picks.
+48/12 household split plus a five-seed preview. This script repeats the full
+pipeline over many partitions and, for each one, records:
+
+  * the model each cross-validator selects under three schemes: naive shuffled
+    KFold, sklearn GroupKFold, and purgedcv PurgedGroupKFold;
+  * the deployment MAE of *every* candidate on the held-out households, so the
+    best-deploying candidate (M_OOS) is known and model-selection regret can be
+    computed directly, regret(selector) = deployMAE(selected) - deployMAE(M_OOS),
+    following Teodorescu and Obreja Brasoveanu (2025).
+
+Important statistical caveat: every seed is a different 48/12 partition of the
+*same* fixed 60-household sample. These are correlated resamples without
+replacement, not independent draws from the household population, so we report
+descriptive spread (median, IQR, range) and a win rate rather than a population
+confidence interval. Population-level inference is left to the independent
+20-subsample full-population benchmark.
 
 Outputs:
   - examples/data/selection_regret_lcl_seeds.csv
@@ -21,12 +31,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
 from sklearn.base import clone
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, r2_score
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import GroupKFold, KFold, cross_val_score
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -40,6 +49,8 @@ YEAR_START, YEAR_END = "2013-01-01", "2014-01-01"
 DATA_DIR = Path("data") if Path("data").exists() else Path("examples/data")
 IMG_DIR = Path("../.github/images") if Path("../.github/images").is_dir() else Path(".github/images")
 FEATURES = ["lag_1", "lag_7", "hh_int"] + [f"dow_{d}" for d in range(7)]
+MODEL_NAMES = ["kNN(k=1)", "kNN(k=5)", "kNN(k=50)", "Ridge a=.01",
+               "Ridge a=1", "Ridge a=100", "RF d=None", "RF d=4"]
 
 
 def load_daily() -> pd.DataFrame:
@@ -86,18 +97,18 @@ def run_one(clean: pd.DataFrame, all_hh: list, seed: int) -> dict:
     p_s = sel["date"].reset_index(drop=True)
 
     grid = build_grid(seed)
+    picks_models = dict(grid)
     naive_cv = KFold(n_splits=5, shuffle=True, random_state=seed)
+    group_cv = GroupKFold(n_splits=5)
     honest_cv = PurgedGroupKFold(n_splits=5, prediction_times=p_s, evaluation_times=p_s, groups=g_s)
 
-    def score(cv_obj, model):
+    def score(cv_obj, model, **kw):
         return -cross_val_score(model, x_s, y_s, cv=cv_obj,
-                                scoring="neg_mean_absolute_error", n_jobs=1).mean()
+                                scoring="neg_mean_absolute_error", n_jobs=1, **kw).mean()
 
     naive = {nm: score(naive_cv, m) for nm, m in grid}
+    group = {nm: score(group_cv, m, groups=g_s) for nm, m in grid}
     honest = {nm: score(honest_cv, m) for nm, m in grid}
-    nw = min(naive, key=naive.get)
-    hw = min(honest, key=honest.get)
-    picks = dict(grid)
 
     def deploy(model):
         mm = clone(model)
@@ -105,27 +116,47 @@ def run_one(clean: pd.DataFrame, all_hh: list, seed: int) -> dict:
         p = mm.predict(x_d)
         return mean_absolute_error(y_d, p), r2_score(y_d, p)
 
-    nmae, nr2 = deploy(picks[nw])
-    hmae, hr2 = deploy(picks[hw])
+    dep_mae, dep_r2 = {}, {}
+    for nm, m in grid:
+        dep_mae[nm], dep_r2[nm] = deploy(m)
+
+    nw = min(naive, key=naive.get)
+    gw = min(group, key=group.get)
+    hw = min(honest, key=honest.get)
+    best = min(dep_mae, key=dep_mae.get)  # M_OOS: best-deploying candidate
+
     return {
         "seed": seed,
-        "naive_pick": nw, "naive_dep_mae": nmae, "naive_dep_r2": nr2,
-        "honest_pick": hw, "honest_dep_mae": hmae, "honest_dep_r2": hr2,
-        "delta_mae": nmae - hmae,
-        "delta_pct": (nmae - hmae) / nmae * 100.0,
+        "naive_pick": nw, "group_pick": gw, "honest_pick": hw, "best_deploy_pick": best,
+        "naive_dep_mae": dep_mae[nw], "naive_dep_r2": dep_r2[nw],
+        "honest_dep_mae": dep_mae[hw], "honest_dep_r2": dep_r2[hw],
+        "group_dep_mae": dep_mae[gw],
+        "best_dep_mae": dep_mae[best],
+        "regret_naive": dep_mae[nw] - dep_mae[best],
+        "regret_honest": dep_mae[hw] - dep_mae[best],
+        "delta_mae": dep_mae[nw] - dep_mae[hw],
+        "delta_pct": (dep_mae[nw] - dep_mae[hw]) / dep_mae[nw] * 100.0,
+        "group_eq_honest": gw == hw,
+        **{f"dep_mae[{nm}]": dep_mae[nm] for nm in MODEL_NAMES},
     }
+
+
+def quart(a: np.ndarray) -> tuple:
+    return float(np.percentile(a, 25)), float(np.median(a)), float(np.percentile(a, 75))
 
 
 def main() -> None:
     clean = load_daily()
     all_hh = sorted(clean["LCLid"].unique())
+    print(f"households in cached sample: {len(all_hh)}")
     rows = []
     for s in range(N_SEEDS):
         r = run_one(clean, all_hh, s)
         rows.append(r)
         print(f"seed {s:>2}: naive {r['naive_pick']:<11} {r['naive_dep_mae']:.4f}  "
               f"honest {r['honest_pick']:<11} {r['honest_dep_mae']:.4f}  "
-              f"delta {r['delta_mae']:+.4f} ({r['delta_pct']:+.1f}%)")
+              f"best {r['best_deploy_pick']:<11} {r['best_dep_mae']:.4f}  "
+              f"delta {r['delta_mae']:+.4f}  reg_n {r['regret_naive']:.4f} reg_h {r['regret_honest']:.4f}")
 
     df = pd.DataFrame(rows)
     out_csv = DATA_DIR / "selection_regret_lcl_seeds.csv"
@@ -133,29 +164,40 @@ def main() -> None:
 
     d = df["delta_mae"].to_numpy()
     dp = df["delta_pct"].to_numpy()
+    rn = df["regret_naive"].to_numpy()
+    rh = df["regret_honest"].to_numpy()
     n = len(d)
-    win_rate = float((d > 0).mean()) * 100.0
-    mean_d, sem_d = float(d.mean()), float(stats.sem(d))
-    tcrit = float(stats.t.ppf(0.975, n - 1))
-    lo, hi = mean_d - tcrit * sem_d, mean_d + tcrit * sem_d
-    mean_p, sem_p = float(dp.mean()), float(stats.sem(dp))
-    lo_p, hi_p = mean_p - tcrit * sem_p, mean_p + tcrit * sem_p
-    naive_rf = float((df["naive_pick"] == "RF d=None").mean()) * 100.0
-    honest_ridge = float((df["honest_pick"] == "Ridge a=.01").mean()) * 100.0
+    win_rate = int((d > 0).sum())
+    q1, med, q3 = quart(d)
+    q1p, medp, q3p = quart(dp)
+    naive_rf = int((df["naive_pick"] == "RF d=None").sum())
+    honest_ridge = int((df["honest_pick"] == "Ridge a=.01").sum())
+    group_eq = int(df["group_eq_honest"].sum())
+    honest_is_best = int((df["honest_pick"] == df["best_deploy_pick"]).sum())
+    rn_q1, rn_med, rn_q3 = quart(rn)
+    rh_q1, rh_med, rh_q3 = quart(rh)
 
     summary = (
-        f"# Selection-regret robustness across {n} seeds (LCL, N=60, 48/12 split)\n\n"
+        f"# Selection-regret robustness across {n} partitions (LCL, fixed N=60 sample, 48/12 split)\n\n"
         f"Generated by `examples/selection_regret_lcl_seeds.py`.\n\n"
-        f"- Naive shuffled KFold picks `RF d=None` in {naive_rf:.0f}% of seeds.\n"
-        f"- PurgedGroupKFold picks `Ridge a=.01` in {honest_ridge:.0f}% of seeds.\n"
-        f"- Honest pick deploys at lower MAE in {win_rate:.0f}% of seeds "
-        f"({int((d > 0).sum())}/{n}).\n"
-        f"- Deployment-regret delta (naive minus honest MAE): "
-        f"mean {mean_d:+.4f} kWh (95% CI {lo:+.4f} to {hi:+.4f}), "
-        f"median {float(np.median(d)):+.4f} kWh, "
-        f"range {d.min():+.4f} to {d.max():+.4f}.\n"
-        f"- Relative regret: mean {mean_p:+.2f}% (95% CI {lo_p:+.2f} to {hi_p:+.2f}%), "
-        f"median {float(np.median(dp)):+.2f}%.\n"
+        f"Each seed is a different 48/12 partition of the *same* 60-household cached sample. "
+        f"These are correlated resamples without replacement, not independent draws from the "
+        f"household population, so figures below are descriptive spread plus a win rate, not a "
+        f"population confidence interval.\n\n"
+        f"## Model selection\n"
+        f"- Naive shuffled KFold selects `RF d=None` in {naive_rf}/{n} partitions.\n"
+        f"- PurgedGroupKFold selects `Ridge a=.01` in {honest_ridge}/{n} partitions.\n"
+        f"- sklearn GroupKFold selects the same model as PurgedGroupKFold in {group_eq}/{n} "
+        f"partitions (instantaneous labels reduce the purged split to a group-disjoint split).\n"
+        f"- The honest pick is the best-deploying candidate (M_OOS) in {honest_is_best}/{n} partitions.\n\n"
+        f"## Deployment-regret (deploy MAE of selected minus deploy MAE of best candidate)\n"
+        f"- Naive selector regret: median {rn_med:.4f} kWh (IQR {rn_q1:.4f} to {rn_q3:.4f}).\n"
+        f"- Honest selector regret: median {rh_med:.4f} kWh (IQR {rh_q1:.4f} to {rh_q3:.4f}).\n\n"
+        f"## Naive minus honest deployment MAE (the practitioner-visible gap)\n"
+        f"- Honest deploys at lower MAE in {win_rate}/{n} partitions.\n"
+        f"- Gap: median {med:.4f} kWh (IQR {q1:.4f} to {q3:.4f}), range {d.min():.4f} to {d.max():.4f}.\n"
+        f"- Relative gap: median {medp:.2f}% (IQR {q1p:.2f} to {q3p:.2f}%), "
+        f"range {dp.min():.2f} to {dp.max():.2f}%.\n"
     )
     (DATA_DIR / "selection_regret_lcl_seeds_summary.md").write_text(summary)
     print("\n" + summary)
@@ -184,16 +226,15 @@ def main() -> None:
 
     ax2.hist(d, bins=12, color="#3a9d6e", edgecolor="white", zorder=3)
     ax2.axvline(0, color="#e0564c", ls="--", lw=1.4, zorder=4)
-    ax2.set_xlabel("deployment-regret delta: naive minus honest MAE (kWh)",
-                   fontsize=10, color="#444444")
-    ax2.set_ylabel("seeds", fontsize=10, color="#444444")
+    ax2.set_xlabel("naive minus honest deployment MAE (kWh)", fontsize=10, color="#444444")
+    ax2.set_ylabel("partitions", fontsize=10, color="#444444")
     ax2.tick_params(colors="#666666", labelsize=9)
     ax2.grid(axis="y", ls=":", color="#dddddd", alpha=0.8, zorder=0)
 
-    fig.text(0.5, 0.97, f"Honest CV deploys better in {win_rate:.0f}% of {n} seeds",
+    fig.text(0.5, 0.97, f"Honest CV deploys better in {win_rate} of {n} partitions",
              ha="center", fontsize=13, fontweight="bold", color="#222222")
     fig.text(0.5, 0.92,
-             f"mean regret {mean_d:+.3f} kWh (95% CI {lo:+.3f} to {hi:+.3f}); "
+             f"median gap {med:.3f} kWh (IQR {q1:.3f} to {q3:.3f}); "
              f"positive means honest deploys better",
              ha="center", fontsize=9.5, color="#777777")
     fig.subplots_adjust(top=0.86, bottom=0.14, left=0.08, right=0.97, wspace=0.25)

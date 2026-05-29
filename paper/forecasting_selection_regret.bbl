@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{11}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -29,6 +29,21 @@ Matthew B.~A. McDermott, Shirly Wang, Nikki Marinsek, Rajesh Ranganath, Luca
   to go.
 \newblock \emph{Science Translational Medicine}, 13\penalty0 (586), 2021.
 \newblock \doi{10.1126/scitranslmed.abb1655}.
+
+\bibitem[Kapoor and Narayanan(2023)]{kapoor2023leakage}
+Sayash Kapoor and Arvind Narayanan.
+\newblock Leakage and the reproducibility crisis in machine-learning-based
+  science.
+\newblock \emph{Patterns}, 4\penalty0 (9):\penalty0 100804, 2023.
+\newblock \doi{10.1016/j.patter.2023.100804}.
+
+\bibitem[Roberts et~al.(2021)Roberts, Driggs, Thorpe,
+  et~al.]{roberts2021pitfalls}
+Michael Roberts, Derek Driggs, Matthew Thorpe, et~al.
+\newblock Common pitfalls and recommendations for using machine learning to
+  detect and prognosticate for covid-19 using chest radiographs and ct scans.
+\newblock \emph{Nature Machine Intelligence}, 3:\penalty0 199--217, 2021.
+\newblock \doi{10.1038/s42256-021-00307-0}.
 
 \bibitem[L{\'o}pez~de Prado(2018)]{lopezdeprado2018afml}
 Marcos L{\'o}pez~de Prado.
@@ -69,5 +84,14 @@ Fabian Pedregosa, Ga{\"e}l Varoquaux, Alexandre Gramfort, Vincent Michel,
 \newblock London Datastore, 2014.
 \newblock Dataset \texttt{smartmeter-energy-use-data-in-london-households};
   open terms.
+
+\bibitem[Pirbazari et~al.(2020)Pirbazari, Farmanbar, Chakravorty, and
+  Rong]{pirbazari2020generalization}
+Aida~Mehdipour Pirbazari, Mina Farmanbar, Antorweep Chakravorty, and Chunming
+  Rong.
+\newblock Short-term load forecasting using smart meter data: A generalization
+  analysis.
+\newblock \emph{Processes}, 8\penalty0 (4):\penalty0 484, 2020.
+\newblock \doi{10.3390/pr8040484}.
 
 \end{thebibliography}
