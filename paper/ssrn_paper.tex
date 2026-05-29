@@ -1,0 +1,599 @@
+\documentclass[10pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{fancyvrb}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\pcv}{\textsf{purgedcv}}
+\newcommand{\pkg}[1]{\textsf{#1}}
+\DeclareRobustCommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\doi}[1]{\href{https://doi.org/#1}{\nolinkurl{#1}}}
+
+\hypersetup{
+  pdftitle={Label-aware cross-validation for overlapping-horizon prediction},
+  pdfauthor={Evgenii Lazarev},
+  pdfsubject={Leakage-aware cross-validation for time-series and panel prediction},
+  pdfkeywords={cross-validation, data leakage, time series, panel data, model validation, reproducible software}
+}
+
+\DefineVerbatimEnvironment{Code}{Verbatim}{fontsize=\small,frame=single}
+
+\title{Label-aware cross-validation for overlapping-horizon prediction}
+
+\author{
+Evgenii Lazarev\textsuperscript{1,*}\\
+\textsuperscript{1}Independent Researcher\\
+\textsuperscript{*}\href{mailto:elazarev@gmail.com}{elazarev@gmail.com}\\
+\href{https://orcid.org/0009-0000-1398-7842}{ORCID: 0009-0000-1398-7842}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Cross-validation is routinely used to estimate out-of-sample performance in
+statistical learning, but standard shuffled or blocked folds can be invalid when
+responses are measured over future intervals. A label such as the mean demand
+over the next twelve half-hours, the next-day rainfall amount, or the return
+over the next twenty bars overlaps the labels of nearby rows. If overlapping
+label intervals are split between training and test sets, the validation score
+partly measures information reuse rather than generalization. This study
+formalizes split-level conditions for leakage-aware validation in
+overlapping-label time-series and panel data, and evaluates them through
+\pcv, an open-source Python implementation of purging, embargoing,
+walk-forward validation, group-purged folds, and combinatorial purged
+cross-validation. A controlled experiment with an unpredictable target shows
+that shuffled k-fold can report a mean out-of-sample $R^2$ of 0.918 while
+admitting complete train/test label overlap. A full-population benchmark on Low
+Carbon London smart-meter data shows a more nuanced case: the temporal leakage
+gap is small but measurable, whereas the larger issue is household-level
+generalization. The results show that validation choice is a scientific
+measurement decision, not only a software parameter.
+\end{abstract}
+
+\noindent\textbf{Keywords:} cross-validation; data leakage; time series; panel
+data; model validation; reproducible software
+
+\section{Introduction}
+
+Cross-validation is often treated as a neutral measurement device: choose a
+splitter, fit the same estimator on each training fold, and average the test
+scores. That view depends on an independence assumption that is not satisfied by
+many time-indexed prediction tasks. In a forecasting or backtesting problem, row
+$i$ is usually not just an instantaneous observation. Its response may be
+defined by an evaluation interval that starts at the prediction time and ends
+after a future horizon. Nearby rows can therefore share part of the same future
+outcome window. Standard shuffled k-fold cross-validation can place one row in
+the test fold and another row whose label interval overlaps it in the training
+fold. The resulting score is then contaminated by information that would not be
+available when the model is used prospectively.
+
+Data leakage is a well-known source of inflated performance estimates in
+machine learning \citep{kaufman2012}. It is especially damaging in scientific
+applications where a model is selected or reported after many iterations, since
+the optimistic score becomes part of the published evidence rather than merely a
+development mistake \citep{mcdermott2021}. In financial machine learning,
+\citet{lopezdeprado2018afml} proposed purging and embargoing as practical
+guards against leakage from overlapping labels and serial dependence, and
+Combinatorial Purged Cross-Validation (CPCV) as a way to obtain multiple
+out-of-sample backtest paths. Bailey and Lopez de Prado's Probabilistic Sharpe
+Ratio and Deflated Sharpe Ratio address the related problem of selection bias
+after trying multiple strategies \citep{bailey2012psr,bailey2014dsr}.
+
+The same validation problem appears outside finance. Household electricity
+demand, equipment degradation, rainfall, clinical monitoring, and air-quality
+forecasting all contain future-horizon labels or repeated entities. What matters
+is whether any training-label window overlaps a test-label window, whether a
+post-test serial-dependence buffer has been respected, and whether the
+deployment target involves unseen entities rather than future observations from
+already-seen entities.
+
+This study makes three contributions. First, it states a directly checkable
+interval condition for overlapping-label validation. Second, it presents \pcv,
+an open Python implementation of purging, embargoing, walk-forward validation,
+group-purged k-fold, and CPCV path reconstruction through the
+\pkg{scikit-learn} cross-validation interface, together with leakage
+diagnostics for auditing splits \citep{pedregosa2011sklearn,purgedcv2026}.
+Third, it reports reproducible experiments that show both dramatic and
+undramatic outcomes: a synthetic task where leakage fabricates strong skill, and
+a real smart-meter benchmark where the larger issue is not temporal leakage but
+household-level generalization.
+
+\section{Results}
+
+\subsection{Overlapping labels define a split-level invariant}
+
+Let a supervised learning data set contain observations
+\[
+  z_i = (x_i, y_i, p_i, e_i, g_i), \quad i = 1,\ldots,n,
+\]
+where $x_i$ is the feature vector, $y_i$ is the response, $p_i$ is the
+prediction time, $e_i$ is the evaluation time at which the response is fully
+known, and $g_i$ is an optional group identifier such as a household, patient,
+engine, or season. The label interval for row $i$ is
+\[
+  I_i = [p_i, e_i).
+\]
+The interval is half-open: a label window ending exactly where another begins
+is not counted as overlapping. For a train/test split $(A, B)$,
+label-overlap leakage is present when
+\[
+  \exists i \in A, \exists j \in B
+  \quad \text{such that} \quad I_i \cap I_j \ne \emptyset .
+\]
+A leakage-aware split must remove such training rows before fitting the
+estimator. In practice, a second guard is often needed after a test block. If the
+process remains serially correlated after the test interval, training
+immediately after the test block can still reuse information tied to that test
+period. An embargo removes training rows whose prediction time lies inside a
+post-test buffer of fixed duration or fixed fraction of the sample.
+
+For panel data there is a separate deployment question. If the intended use is
+prediction on new entities, a chronological split that mixes the same entity
+across training and test sets may answer the wrong question even when no label
+intervals overlap. In that case the split must also satisfy
+\[
+  \{g_i: i \in A\} \cap \{g_j: j \in B\} = \emptyset .
+\]
+Thus validation has at least three distinct requirements: interval disjointness,
+post-test embargo, and group disjointness. They are not interchangeable. A fixed
+integer gap may remove leakage for a single constant horizon, but it does not
+express variable horizons, time-duration embargoes, CPCV test blocks, or
+entity-level generalization.
+
+\subsection{The software makes validation contracts executable}
+
+\pcv{} implements the interval operations and splitters needed to make these
+requirements executable. The package is written in Python, is MIT licensed, and
+follows the \pkg{scikit-learn} splitter protocol, so the same objects can be
+passed to \code{cross_val_score}, \code{GridSearchCV}, and \code{Pipeline}.
+Runtime dependencies are intentionally small: \pkg{numpy}, \pkg{pandas},
+\pkg{scikit-learn}, and \pkg{scipy}
+\citep{harris2020numpy,mckinney2010pandas,pedregosa2011sklearn,virtanen2020scipy}.
+Table~\ref{tab:api} summarizes the public components exposed by the package.
+
+\begin{table}[htbp]
+\centering
+\caption{Main public API in \pcv.}
+\label{tab:api}
+\footnotesize
+\begin{tabular}{p{0.16\textwidth}p{0.34\textwidth}p{0.42\textwidth}}
+\toprule
+Component & Function or class & Purpose \\
+\midrule
+Primitive & \code{purge} & Drop training rows whose label intervals overlap test labels \\
+Primitive & \code{apply_embargo} & Drop post-test training rows inside an embargo buffer \\
+Splitter & \code{WalkForwardSplit} & Expanding or rolling chronological validation \\
+Splitter & \code{PurgedKFold} & Contiguous folds with label-aware purging and embargo \\
+Splitter & \code{PurgedGroupKFold} & Purged folds with disjoint held-out groups \\
+Splitter & \code{CombinatorialPurgedCV} & CPCV folds with multiple test-block combinations \\
+Paths & \code{reconstruct_paths} & Assemble CPCV folds into backtest paths \\
+Metrics & \code{probabilistic_sharpe_ratio} & Probability that skill exceeds a benchmark \\
+Metrics & \code{deflated_sharpe_ratio} & Sharpe-ratio inference corrected for selection bias \\
+Metrics & \code{min_track_record_length} & Minimum observations needed to establish a Sharpe ratio \\
+Diagnostics & \code{assert_*} functions & Check temporal, embargo, and group-leakage invariants \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The implementation separates interval arithmetic from splitter orchestration.
+For each fold, test label intervals are sorted and merged once, and candidate
+training intervals are tested against the merged set. This avoids duplicating
+boundary logic across splitters and is particularly important for CPCV, where
+the test set may contain several non-adjacent blocks. In such a fold, purging
+must apply to the union of test label intervals, not to the convex hull between
+the first and last test block.
+
+The diagnostic functions are deliberately independent of the package's own
+splitters. They accept training indices, test indices, prediction times, and
+evaluation times, and can audit a split produced by any library or by hand. This
+turns the validation contract into an assertion that can be placed in tests.
+
+\subsection{A controlled task exposes complete validation failure}
+
+The controlled task is designed so that no feature has genuine predictive
+content. Let $\epsilon_t$ be independent noise and define the response at row
+$t$ as the mean of the next $H$ future noise values. The only feature is a
+monotone clock. A model cannot forecast the future noise, but shuffled k-fold
+can exploit overlap between adjacent future-horizon labels. Large positive
+$R^2$ is therefore evidence of validation leakage, not model skill.
+
+Table~\ref{tab:controlled} reports a Random Forest experiment with $n=1500$,
+$H=20$, five outer folds, and seed 0. The overlap column is the mean fraction of
+training rows whose label window overlaps any test label window, averaged across
+folds.
+
+\begin{table}[htbp]
+\centering
+\caption{Controlled leakage task. Positive $R^2$ is fabricated because the
+target is unpredictable by construction.}
+\label{tab:controlled}
+\small
+\begin{tabular}{p{0.19\textwidth}p{0.36\textwidth}rrr}
+\toprule
+Library & Splitter & Mean $R^2$ & Mean overlap & Folds \\
+\midrule
+\pkg{scikit-learn} & \code{KFold(shuffle=True)} & 0.918 & 1.000 & 5 \\
+\pkg{scikit-learn} & \code{KFold(shuffle=False)} & -1.017 & 0.025 & 5 \\
+\pkg{scikit-learn} & \code{TimeSeriesSplit} & -2.506 & 0.035 & 5 \\
+\pkg{scikit-learn} & \code{TimeSeriesSplit(gap=20)} & -1.430 & 0.000 & 5 \\
+\pcv{} & \code{PurgedKFold} & -0.870 & 0.000 & 5 \\
+\pcv{} & \code{WalkForwardSplit} & -1.899 & 0.000 & 5 \\
+\pcv{} & \code{CombinatorialPurgedCV} & -1.471 & 0.000 & 15 \\
+\pkg{tscv} & \code{GapKFold(gap_before=20, gap_after=20)} & -1.217 & 0.000 & 5 \\
+\pkg{timeseriescv} & \code{CombPurgedKFoldCV} & -0.894 & 0.004 & 15 \\
+\pkg{timeseriescv} & \code{PurgedWalkForwardCV} & -1.543 & 0.000 & 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The shuffled k-fold score of 0.918 is not a small optimism effect. It is a
+complete failure of the validation design. The blocked and chronological
+baselines remove most of the effect but still admit small amounts of overlap
+unless a suitable gap is supplied. A fixed \code{TimeSeriesSplit} gap can solve
+this particular constant-horizon toy problem, but it does not provide
+label-aware intervals, variable horizons, group-purged folds, diagnostics, or
+CPCV paths. The \pcv{} splitters remove the overlap by construction and return
+negative $R^2$, which is the expected outcome for an unpredictable target
+evaluated out of sample.
+
+\subsection{A real smart-meter benchmark separates temporal leakage from entity generalization}
+
+The second experiment uses the Low Carbon London smart-meter data set from UK
+Power Networks and the London Datastore \citep{ukpn_lcl}. The prediction task is
+half-hourly household electricity demand forecasting. Features include calendar
+and lagged-load information, and the target is a forward-horizon mean. The
+validation schemes compare pooled shuffled k-fold, blocked k-fold, walk-forward
+validation, and held-out-household validation.
+
+The full-population benchmark scans 167,932,474 raw rows, identifies 4,284
+eligible Standard-tariff households with at least one year of data, draws 20
+seeded subsamples of 60 households, and evaluates each validation scheme with
+the same modeling harness. Table~\ref{tab:lcl} reports mean WAPE and 95\%
+t-intervals. WAPE is $\sum |\hat{y}-y| / \sum |y|$, reported in percent.
+
+\begin{table}[htbp]
+\centering
+\caption{Low Carbon London benchmark over 20 seeded subsamples of 60
+households. Lower WAPE is better.}
+\label{tab:lcl}
+\begin{tabular}{lrrr}
+\toprule
+Metric & Mean & 95\% CI low & 95\% CI high \\
+\midrule
+Naive shuffled k-fold WAPE & 41.68 & 40.37 & 42.99 \\
+Blocked k-fold WAPE & 42.43 & 41.07 & 43.80 \\
+\code{WalkForwardSplit} WAPE & 42.36 & 41.01 & 43.71 \\
+\code{GroupKFold} household WAPE & 44.92 & 43.38 & 46.45 \\
+Temporal gap, WAPE points & 0.68 & 0.53 & 0.83 \\
+Temporal gap, relative percent & 1.60 & 1.27 & 1.94 \\
+Household gap, WAPE points & 2.56 & 2.08 & 3.03 \\
+Household gap, relative percent & 6.03 & 4.93 & 7.12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+By design, the result is less dramatic than the synthetic example. The temporal
+leakage gap between shuffled k-fold and walk-forward validation is measurable
+but small: 0.68 WAPE points, or 1.60\% relative to walk-forward WAPE. The
+larger effect is the household gap. Scoring on unseen households is 2.56 WAPE
+points worse than the pooled temporal estimate, or 6.03\% relative. This is the
+more important conclusion for deployment: if the model will be used for
+customers not seen during training, a purely temporal split answers a different
+question.
+
+\subsection{Cross-domain examples show that leakage-aware validation can also return negative results}
+
+The repository also contains notebooks that exercise the same validation logic
+on other public data sets. Table~\ref{tab:examples} summarizes the role of each
+example. Some are designed to expose a large leakage effect; others show that a
+leakage-aware split can correctly report a small or absent gap. The
+``0.83--0.91'' range in the first row refers to the companion notebook's two
+models, k-nearest neighbors and Random Forest, rather than to multiple random
+seeds; the Random Forest-only benchmark in Table~\ref{tab:controlled} reports
+0.918.
+
+\begin{table}[htbp]
+\centering
+\caption{Reproducible examples included with the package.}
+\label{tab:examples}
+\small
+\begin{tabular}{p{0.20\textwidth}p{0.24\textwidth}p{0.48\textwidth}}
+\toprule
+Example & Data source & Main validation lesson \\
+\midrule
+Synthetic leakage proof & Generated & k-nearest neighbors and Random Forest report $R^2$ of 0.83--0.91 on noise \\
+Air quality & UCI air-quality data & A clock feature plus overlapping labels fabricates $R^2$ near 0.99 \\
+Earthquakes & USGS catalogue & Magnitude history has no skill; purged splits reject the illusion \\
+Smart meters & Low Carbon London & Household generalization dominates temporal leakage \\
+Clinical mortality & PhysioNet Challenge 2012 & Whole-patient group holds are needed for patient-level inference \\
+Predictive maintenance & NASA C-MAPSS & Walk-forward validation matches run-to-failure deployment \\
+Rainfall & NOAA GHCN-Daily & One-day-ahead labels need purge and embargo buffers \\
+Electricity load & PJM hourly load & CPCV paths expose score dispersion across backtest paths \\
+Model comparison & Binance public bars & DSR prevents selecting an apparent edge after multiple trials \\
+Sports prediction & Premier League matches & Honest validation shows calibration drift rather than a headline gap \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The examples deliberately include negative results. In the model-comparison
+notebook, several models are tried on the same public price data. Once the
+Deflated Sharpe Ratio corrects for the number of trials, no model clears a DSR
+threshold of 0.95. In the PJM electricity-load notebook, CPCV produces five
+paths whose DSR values range from 0.0011 to 0.7761 after correction for 20
+trials. These are not failures of the software. They show that the validation
+pipeline is capable of reporting that no reliable edge survived.
+
+\section{Discussion}
+
+The experiments show that leakage-aware validation is not a single recipe. In
+the controlled task, randomization is catastrophic because every test label has
+overlapping training labels. In the smart-meter benchmark, the temporal effect
+is small but statistically visible, while the larger operational issue is
+whether the model is expected to generalize to new households. In other domains,
+the required split can be driven by patients, engines, seasons, stations, or
+market regimes. The validation object should encode that deployment question
+rather than being chosen only for convenience.
+
+\pcv{} therefore treats diagnostics as first-class objects. A user can
+construct a split with this package, with another package, or by hand, and then
+check the interval and group invariants directly. This matters for
+reproducibility. A reported model score is only as meaningful as the split that
+created it, and the split should be auditable from code rather than described
+informally in prose.
+
+Several packages overlap with part of this problem. \pkg{scikit-learn} provides
+\code{TimeSeriesSplit}; its \code{gap} argument is a fixed integer count rather
+than a label-aware interval, and it does not provide group-purged folds, CPCV
+paths, or split-level diagnostics. \pkg{tscv} provides fixed-gap splits, which
+are useful when the required buffer is known and constant, but it does not
+represent variable label horizons or grouped deployment targets.
+\pkg{timeseriescv} implements purged and combinatorial time-series
+cross-validation, but it does not unify variable-horizon label intervals,
+group-purged folds, post-test embargoes, CPCV path reconstruction, and
+independent diagnostic assertions in a typed \pkg{scikit-learn}-compatible
+package \citep{timeseriescv2018}. \pkg{mlfinlab} is the best-known
+implementation associated with the financial machine-learning literature, but
+it is distributed as a commercial product and therefore cannot serve as a
+permissive dependency for open scientific software \citep{mlfinlab2026}. The
+companion benchmark also records two non-tabulated open alternatives:
+\pkg{mlfinpy} did not run on the modern \pkg{pandas} stack used here, and
+\pkg{RiskLabAI} failed because a plotting dependency was unavailable. Those
+failures are recorded with exact exception messages rather than imputed scores.
+
+\pcv{} is therefore not differentiated by claiming new purging mathematics. Its
+contribution is integration and auditability. Unlike fixed-gap splitters or
+single-purpose CPCV implementations, \pcv{} unifies variable-horizon label
+intervals, group-purged folds, post-test embargoes, CPCV path reconstruction,
+and split-level diagnostics as assertions that can be run on third-party or
+hand-written splits. This combination is what lets the same validation contract
+be used in ordinary \pkg{scikit-learn} model selection, in notebook examples,
+and in automated tests.
+
+There are limitations. Purging and embargoing remove a specific class of
+validation leakage; they do not solve all forms of leakage. Feature engineering
+can still use future data, target transformations can still be computed
+globally, preprocessing can still be fit outside the training fold, and entity
+leakage can still occur if the wrong group identifier is supplied. The package
+does not claim that every chronological split is optimal. In highly
+non-stationary settings, any historical validation estimate can be unstable. The
+role of the package is narrower: when labels are interval-valued, it makes the
+no-overlap condition explicit and executable.
+
+Another limitation is maturity. The package is new, even though the underlying
+methods are established. The open repository contains tests, type checks,
+documentation, notebooks, and reproducible benchmarks, but wider external use
+will be needed to discover edge cases in unfamiliar data layouts. For this
+reason the software should be treated as validation infrastructure whose outputs
+remain the analyst's responsibility, not as an automatic guarantee of scientific
+validity.
+
+Overlapping-label prediction problems require more than a chronological split.
+The validation design must remove training labels that overlap test labels,
+respect any post-test dependence buffer, and match the entity structure of the
+deployment target. The practical contribution is not that the package makes
+models better, but that it makes their validation harder to fool.
+
+\section{Methods}
+
+\subsection{Purging, embargoing, and group separation}
+
+The implementation follows the half-open interval convention $I_i = [p_i,e_i)$.
+A training row is purged from a fold if its label interval intersects any test
+label interval. Boundary-touching intervals are not purged: if $e_i=p_j$ or
+$e_j=p_i$, the intersection is empty under the half-open convention. This
+matches common time-series indexing practice and prevents unnecessary deletion
+when one forecast horizon ends exactly at the next prediction time.
+
+Embargoing is applied after purging. It removes training rows whose prediction
+times fall inside a post-test buffer. The buffer can be expressed as a duration
+for timestamped data or as a fraction of the sample. In grouped validation,
+group-purged splitters additionally require disjoint train and test groups, so
+that deployment to unseen entities can be evaluated directly.
+
+\subsection{Combinatorial purged cross-validation}
+
+CPCV divides the ordered sample into $N$ contiguous blocks and holds out $k$
+blocks at a time, producing $\binom{N}{k}$ test-block combinations. Each
+combination defines a fold whose training side is purged and embargoed against
+the union of its held-out test label intervals. Because the held-out blocks can
+be non-adjacent, purging is performed against merged test intervals rather than
+against the convex hull spanning all held-out blocks. The resulting fold
+predictions can be recombined into several out-of-sample paths, giving a
+distribution of validation trajectories rather than a single historical path.
+
+\subsection{Implementation and diagnostics}
+
+The package separates low-level interval operations from splitter orchestration.
+The same interval functions are used by \code{PurgedKFold},
+\code{PurgedGroupKFold}, \code{WalkForwardSplit}, and
+\code{CombinatorialPurgedCV}. Diagnostic assertions accept train indices, test
+indices, prediction times, evaluation times, and optional group labels. They can
+therefore audit splits produced by \pcv{}, by another library, or by custom
+code.
+
+The package is maintained as a public open-source project with continuous
+integration, strict static typing, and an extensive test suite covering split
+invariants, numerical metrics, end-to-end reproducibility, notebook-derived
+fixtures, and packaging quality gates. The repository accepts issues and pull
+requests, and the core validation behavior is protected by tests rather than by
+example output alone.
+
+\subsection{Controlled leakage benchmark}
+
+The controlled benchmark uses $n=1500$ observations and a horizon of $H=20$.
+For each row $t$, the response is the mean of the next $H$ independent noise
+values. The feature matrix contains only a monotone time index. Random Forest
+regression is evaluated with five outer folds for ordinary k-fold,
+time-series splits, fixed-gap baselines, and \pcv{} splitters. The reported
+overlap metric is the mean fraction of training rows whose label window
+overlaps any test label window. Competitor rows are generated by the repository
+script \code{tools/competitor_benchmark.py}; unavailable competitors are
+recorded as \code{NOT RUN} with exact exception messages.
+
+\subsection{Low Carbon London benchmark}
+
+The Low Carbon London benchmark uses the public smart-meter corpus released by
+UK Power Networks and the London Datastore \citep{ukpn_lcl}. The benchmark
+script scans the raw CSV files, retains Standard-tariff households with at
+least one year of data, and samples 20 independent groups of 60 households. For
+each subsample, the same feature builder, estimator, and scoring code are used
+across pooled shuffled k-fold, blocked k-fold, walk-forward validation, and
+held-out-household validation. The primary score is WAPE,
+$\sum |\hat{y}-y| / \sum |y|$, reported in percent. Confidence intervals are
+ordinary 95\% t-intervals across the 20 seeded subsamples.
+
+\subsection{Cross-domain notebooks and statistical metrics}
+
+The companion notebooks apply the same validation checks to public data from
+earthquake catalogues, air-quality monitoring, smart meters, clinical mortality
+prediction, engine run-to-failure simulation, rainfall records, electricity
+load, public market bars, and sports prediction. The financial-statistical
+metrics in \pcv{} implement the Probabilistic Sharpe Ratio, Deflated Sharpe
+Ratio, and Minimum Track Record Length following Bailey, Lopez de Prado, and
+coauthors \citep{bailey2012psr,bailey2014dsr}. These metrics are included
+because model selection after many trials can itself create optimistic evidence,
+even when a split is temporally valid.
+
+\subsection{Computational environment and reproducibility}
+
+The benchmark tables reported here were produced with \pcv{} 0.0.6, Python
+3.12.7, \pkg{numpy} 2.4.5, \pkg{pandas} 3.0.3, \pkg{scikit-learn} 1.8.0, and
+\pkg{scipy} 1.17.1 on macOS 26.3.1 (\code{arm64}). The current released
+version of \pcv{} at the time of this manuscript is 0.0.10; the change set from
+0.0.6 to 0.0.10 is limited to input-validation hardening, CI tooling, and
+documentation, with no changes to the cross-validation algorithms or to the
+numerical paths exercised by the reported computations. The package supports
+Python 3.10 through 3.14; runtime dependency lower bounds are \pkg{numpy} 1.24,
+\pkg{pandas} 2.0, \pkg{scikit-learn} 1.3, and \pkg{scipy} 1.10.
+
+A split-generation microbenchmark is tracked as \code{tools/microbench.py}. It
+uses 1,000,000 timestamped rows, five folds, one feature, a constant 20-second
+label horizon, and no estimator fitting. In the recorded local run,
+\code{PurgedKFold} generated the five folds in 1.898 seconds best-of-three
+(mean 1.911 seconds), and wrote the environment details to
+\path{paper/microbench_summary.md}. The full Low Carbon London benchmark
+scanned 167,932,474 raw rows and ran 20 seeded 60-household subsamples in 53.8
+minutes on the author's local machine.
+
+The main local reproduction commands are:
+
+\begin{Code}
+pip install -e ".[dev,examples]"
+pip install tscv timeseriescv
+pytest -q
+python tools/microbench.py
+python tools/competitor_benchmark.py --out-dir examples/data
+python tools/lcl_full_benchmark.py --k 20 --n 60 --seed 0
+\end{Code}
+
+The competitor command above reproduces the reported Table~\ref{tab:controlled}
+rows when \pkg{tscv} and \pkg{timeseriescv} are installed. For a fast core-only
+smoke check, use \code{--core-only}. The Low Carbon London command expects the
+raw CSV files to be present locally. For faster checks, the repository includes
+end-to-end tests with synthetic fixtures that exercise the same parser, feature
+builder, and benchmark output format.
+
+\subsection{Use of generative AI tools}
+
+Large language model tools, including OpenAI Codex and ChatGPT in the GPT-5
+family and Anthropic Claude in the Claude 4 family, were used as assistants for
+code review, refactoring suggestions, test scaffolding, documentation drafting,
+copy-editing, and pre-submission checks. These tools were not treated as
+authors. All design decisions, AI-assisted changes, and outputs were reviewed
+and validated by the author through unit, property, doctest, end-to-end,
+type-checking, linting, and benchmark tests; no claim was accepted without
+source or executable verification.
+
+\section*{Data availability}
+
+The synthetic benchmark data are generated by scripts included in the public
+repository. The Low Carbon London raw smart-meter files are publicly available
+from UK Power Networks and the London Datastore; they are not redistributed in
+this repository because of their size. The repository contains the benchmark
+scripts, derived summaries, and notebook fixtures needed to reproduce the
+reported tables once the raw public files are available locally. The other
+examples use public data sources identified in the notebooks and reference
+list, including the U.S. Geological Survey catalogue \citep{usgs_catalog}, UCI
+air-quality data \citep{devito2008airquality}, NOAA GHCN-Daily
+\citep{noaa_ghcnd}, NASA C-MAPSS \citep{nasa_cmapss}, PhysioNet
+\citep{physionet2012goldberger,physionet2012silva}, PJM hourly load data
+\citep{pjm_load}, and Binance public market data via \pkg{pricehub}
+\citep{binance_pricehub}.
+
+\section*{Code availability}
+
+The software is available from the project repository at
+\url{https://github.com/eslazarev/purged-cross-validation} and distributed on
+PyPI as \pkg{purgedcv} at \url{https://pypi.org/project/purgedcv/}. The source
+distribution contains the examples and benchmark tools; the wheel contains the
+importable \pcv{} package. The software is MIT licensed and archived on Zenodo
+with DOI \doi{10.5281/zenodo.20312695}. The current released version at the
+time of this manuscript is 0.0.10.
+
+\bibliographystyle{unsrtnat}
+\bibliography{paper}
+
+\section*{Acknowledgements}
+
+The author thanks the maintainers of the open data sets used in the
+reproducible examples and the maintainers of the scientific Python ecosystem.
+The purging, embargoing, CPCV, PSR, DSR, and MinTRL methods implemented in
+\pcv{} are due to Lopez de Prado, Bailey, and colleagues; any implementation
+errors are the author's.
+
+\section*{Author contributions}
+
+E.L. conceived the study, implemented the software, designed and ran the
+experiments, analyzed the results, wrote the manuscript, prepared the
+reproducibility materials, and approved the final version.
+
+\section*{Additional information}
+
+\subsection*{Competing interests}
+
+The author declares no competing interests.
+
+\subsection*{Funding}
+
+No external funding was received for this work.
+
+\subsection*{Ethics declarations}
+
+This study did not involve new experiments with human participants, human
+tissue, live vertebrates, or higher invertebrates. The empirical examples use
+publicly released or synthetic data; the Low Carbon London data are used in the
+public anonymized form released by the original data providers.
+
+\end{document}
