@@ -34,7 +34,7 @@ $^{1}$ \quad Independent Researcher; elazarev@gmail.com}
 
 \corres{Correspondence: elazarev@gmail.com}
 
-\abstract{Cross-validation both estimates error and ranks candidate models, so it decides which model gets deployed. On panel data with repeated entities, shuffled k-fold can rank a model that memorizes entity identity above a simpler model that generalizes, because the same entities appear in training and test folds, and the chosen model then fails on unseen entities. We measure this on next-day household electricity demand from the UK Low Carbon London smart-meter trial. From a fixed eight-candidate grid of k-nearest neighbors, Ridge, and Random Forest, we select once under naive shuffled k-fold and once under group-aware purged cross-validation, then deploy each choice on twelve households held out from selection. Naive cross-validation selects an unconstrained Random Forest that deploys at 2.638 kWh mean absolute error; group-aware cross-validation selects Ridge and deploys at 2.464 kWh, 6.6\% lower. Across 30 partitions the group-aware choice deploys better every time (median gap 0.28 kWh), and its model-selection regret against the best-deploying candidate is essentially zero while the naive selector's is not. Plain GroupKFold and a leakage-aware average-load encoding reproduce the effect. The practical rule: match the cross-validation unit to the deployment unit, holding out customers, not rows.}
+\abstract{Cross-validation both estimates error and ranks candidate models, so it decides which model gets deployed. On panel data with repeated entities, shuffled k-fold can rank a model that memorizes entity identity above a simpler model that generalizes, because the same entities appear in training and test folds, and the chosen model then fails on unseen entities. We measure this on next-day household electricity demand from the UK Low Carbon London smart-meter trial. From a fixed eight-candidate grid of k-nearest neighbors, Ridge, and Random Forest, we select once under naive shuffled k-fold and once under group-aware purged cross-validation, then deploy each choice on twelve households held out from selection. Naive cross-validation selects an unconstrained Random Forest that deploys at 2.638 kWh mean absolute error; group-aware cross-validation selects Ridge and deploys at 2.464 kWh, 6.6\% lower. Across 30 partitions the group-aware choice deploys better every time (median gap 0.28 kWh; median relative reduction 13.3\%), and its model-selection regret against the best-deploying candidate is exactly zero while the naive selector's median regret is 0.28 kWh. Plain GroupKFold and a leakage-aware average-load encoding reproduce the effect. The practical rule: match the cross-validation unit to the deployment unit, holding out customers, not rows.}
 
 \keyword{cross-validation; model selection; data leakage; load forecasting; smart meters; generalization}
 
@@ -415,13 +415,17 @@ Honest selects Ridge ($\alpha=0.01$)     & 30 / 30 \\
 \code{GroupKFold} selects same as honest & 30 / 30 \\
 Honest pick is best-deploying $M^{\mathrm{OOS}}$ & 24 / 30 \\
 Honest deploys better than naive         & 30 / 30 \\
-Naive selector regret, median (IQR), kWh & $0.2831$ ($0.1831$ to $0.5157$) \\
+Naive selector regret, median (IQR), kWh & $0.2831^\dagger$ ($0.1831$ to $0.5157$) \\
 Honest selector regret, median (IQR), kWh & $0$ (exactly zero) \\
-Naive minus honest MAE, median (IQR), kWh & $0.2831$ ($0.1826$ to $0.5157$) \\
+Naive minus honest MAE, median (IQR), kWh & $0.2831^\dagger$ ($0.1826$ to $0.5157$) \\
 \quad range, kWh                         & $0.1084$ to $1.7851$ \\
 Naive minus honest MAE, median relative  & $13.3\%$ \\
 \bottomrule
 \end{tabularx}
+\noindent\small $^\dagger$ The two medians coincide numerically (0.2831 kWh) because in 24 of 30
+partitions the honest pick equals $M^{\mathrm{OOS}}$, so the naive selector's regret and the
+naive-minus-honest gap are the same quantity in those cases; the IQR bounds differ because the
+denominators are not identical in the remaining partitions.
 \end{table}
 
 \begin{figure}[H]
@@ -476,15 +480,14 @@ substantial generalization penalty well beyond that sample, and it does so with
 genuinely independent subsamples, which the 30 partitions deliberately are not.
 Scanning 167{,}932{,}474 raw rows and drawing 20 independent seeded subsamples of
 60 households each from the 4{,}284 eligible households, scoring on entirely
-unseen households is 6.03\% worse in weighted absolute percentage error than a
-pooled temporal estimate (95\% confidence interval 4.93\% to 7.12\%), whereas the
-purely temporal leakage gap is only 1.60\%. The metric there is weighted absolute
-percentage error rather than the mean absolute error used above, and the
-estimator is a single gradient-boosted model rather than a selection grid, so the
-two studies are complementary rather than directly comparable; what they share is
-the conclusion that the dominant operational risk in this corpus is household
-generalization rather than temporal leakage, which is exactly the risk that
-group-aware selection is built to measure.
+unseen households is 6.03\% worse in weighted absolute percentage error (WAPE,
+not the MAE used above) than a pooled temporal estimate (95\% confidence interval
+4.93\% to 7.12\%), whereas the purely temporal leakage gap is only 1.60\%. The
+estimator there is a single gradient-boosted model rather than a selection grid,
+so the two studies are complementary rather than directly comparable; what they
+share is the conclusion that the dominant operational risk in this corpus is
+household generalization rather than temporal leakage, which is exactly the risk
+that group-aware selection is built to measure.
 
 \section{Discussion}
 
