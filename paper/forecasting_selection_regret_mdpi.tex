@@ -387,10 +387,11 @@ rather than on a specific package. In 24 of the 30 partitions the honest pick is
 also the best-deploying candidate $M^{\mathrm{OOS}}$; in the other six a
 neighbouring Ridge setting beats it by at most 0.007 kWh.
 
-The two selectors are therefore very different in regret. The honest selector's
-regret has a median of 0.0000 kWh (interquartile range 0.0000 to 0.0000): it is
-at the deployment optimum in almost every partition. The naive selector's regret
-has a median of 0.2831 kWh (interquartile range 0.1831 to 0.5157). The
+The two selectors differ sharply in regret. Because the honest pick is the
+best-deploying candidate, or within 0.007 kWh of it, its regret is exactly zero in
+those 24 partitions and negligible in the rest, so its median and interquartile
+range are both zero. The naive selector's regret has a median of 0.2831 kWh
+(interquartile range 0.1831 to 0.5157). The
 practitioner-visible gap, naive minus honest deployment error, is positive in all
 30 partitions, with a median of 0.2831 kWh (interquartile range 0.1826 to 0.5157,
 range 0.1084 to 1.7851) and a median relative reduction of 13.3\% (interquartile
@@ -415,7 +416,7 @@ Honest selects Ridge ($\alpha=0.01$)     & 30 / 30 \\
 Honest pick is best-deploying $M^{\mathrm{OOS}}$ & 24 / 30 \\
 Honest deploys better than naive         & 30 / 30 \\
 Naive selector regret, median (IQR), kWh & $0.2831$ ($0.1831$ to $0.5157$) \\
-Honest selector regret, median (IQR), kWh & $0.0000$ ($0.0000$ to $0.0000$) \\
+Honest selector regret, median (IQR), kWh & $0$ (exactly zero) \\
 Naive minus honest MAE, median (IQR), kWh & $0.2831$ ($0.1826$ to $0.5157$) \\
 \quad range, kWh                         & $0.1084$ to $1.7851$ \\
 Naive minus honest MAE, median relative  & $13.3\%$ \\
@@ -455,10 +456,10 @@ gap is larger, not smaller. Across the 30 partitions, naive cross-validation aga
 selects the unconstrained Random Forest in all 30, while group-aware
 cross-validation selects Ridge in 29 and the shallow Random Forest once. The
 honest selector picks the best-deploying candidate in all 30 partitions, so its
-median regret is 0.0000 kWh; the naive selector's regret has a median of 0.3645
-kWh (interquartile range 0.2998 to 0.4285). The honest selection deploys better
+regret is exactly zero throughout; the naive selector's regret has a median of
+0.3645 kWh (interquartile range 0.2998 to 0.4285). The honest selection deploys better
 in all 30 partitions, with a median gap of 0.3645 kWh (range 0.1754 to 0.8028)
-and a median relative reduction of 15.7\%. On the seed-0 partition the naive
+and a median relative reduction of 15.6\%. On the seed-0 partition the naive
 Random Forest deploys at 3.1048 kWh and the honest Ridge at 2.5011 kWh, a gap of
 0.6038 kWh. The mechanism is therefore not specific to a raw identifier: any
 feature that encodes entity identity, even one engineered with correct per-fold
