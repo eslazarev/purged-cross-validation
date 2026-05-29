@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99e (TeX Live 2026)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: forecasting_selection_regret_mdpi.aux
+The style file: Definitions/mdpi.bst
+Database file #1: paper.bib
+You've used 11 entries,
+            2887 wiz_defined-function locations,
+            637 strings with 6701 characters,
+and the built_in function-call counts, 4336 in all, are:
+= -- 357
+> -- 297
+< -- 6
++ -- 130
+- -- 81
+* -- 379
+:= -- 695
+add.period$ -- 41
+call.type$ -- 11
+change.case$ -- 11
+chr.to.int$ -- 11
+cite$ -- 11
+duplicate$ -- 186
+empty$ -- 335
+format.name$ -- 106
+if$ -- 895
+int.to.chr$ -- 1
+int.to.str$ -- 11
+missing$ -- 9
+newline$ -- 66
+num.names$ -- 33
+pop$ -- 98
+preamble$ -- 0
+purify$ -- 11
+quote$ -- 0
+skip$ -- 131
+stack$ -- 0
+substring$ -- 130
+swap$ -- 36
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 74
+warning$ -- 0
+while$ -- 31
+width$ -- 0
+write$ -- 153
