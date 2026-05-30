@@ -76,15 +76,16 @@ def probabilistic_sharpe_ratio(
 
     Formula (Bailey & Lopez de Prado 2012, Eq. 7):
 
-    .. math::
-        \\text{PSR}(\\text{SR}^\\ast) = \\Phi\\!\\left(
-            \\frac{(\\widehat{\\text{SR}} - \\text{SR}^\\ast)\\sqrt{n - 1}}
-            {\\sqrt{1 - \\widehat{\\gamma}_3\\,\\widehat{\\text{SR}}
-                    + \\frac{\\widehat{\\gamma}_4 - 1}{4}\\,\\widehat{\\text{SR}}^{\\,2}}}
-        \\right)
+    $$
+    \\text{PSR}(\\text{SR}^\\ast) = \\Phi\\!\\left(
+    \\frac{(\\widehat{\\text{SR}} - \\text{SR}^\\ast)\\sqrt{n - 1}}
+    {\\sqrt{1 - \\widehat{\\gamma}_3\\,\\widehat{\\text{SR}}
+    + \\frac{\\widehat{\\gamma}_4 - 1}{4}\\,\\widehat{\\text{SR}}^{\\,2}}}
+    \\right)
+    $$
 
-    where :math:`\\widehat{\\gamma}_3` is sample skew, :math:`\\widehat{\\gamma}_4`
-    is sample kurtosis (NOT excess kurtosis), and :math:`\\Phi` is the
+    where $\\widehat{\\gamma}_3$ is sample skew, $\\widehat{\\gamma}_4$
+    is sample kurtosis (NOT excess kurtosis), and $\\Phi$ is the
     standard normal CDF.
 
     Args:
@@ -192,15 +193,16 @@ def deflated_sharpe_ratio(
 
     Formula (Bailey & Lopez de Prado 2014):
 
-    .. math::
-        \\text{SR}^\\ast_{n} = \\sqrt{V[\\text{SR}]} \\left[
-            (1 - \\gamma) \\Phi^{-1}\\!\\left(1 - \\frac{1}{n_{\\text{trials}}}\\right)
-            + \\gamma \\Phi^{-1}\\!\\left(1 - \\frac{1}{n_{\\text{trials}} \\cdot e}\\right)
-        \\right]
+    $$
+    \\text{SR}^\\ast_{n} = \\sqrt{V[\\text{SR}]} \\left[
+    (1 - \\gamma) \\Phi^{-1}\\!\\left(1 - \\frac{1}{n_{\\text{trials}}}\\right)
+    + \\gamma \\Phi^{-1}\\!\\left(1 - \\frac{1}{n_{\\text{trials}} \\cdot e}\\right)
+    \\right]
+    $$
 
-    where :math:`\\gamma \\approx 0.5772` is the Euler-Mascheroni constant.
+    where $\\gamma \\approx 0.5772$ is the Euler-Mascheroni constant.
     DSR is then :func:`probabilistic_sharpe_ratio` evaluated at the
-    deflated benchmark :math:`\\text{SR}^\\ast_n`.
+    deflated benchmark $\\text{SR}^\\ast_n$.
 
     Args:
         returns: 1-D array of returns (passed through to PSR).
@@ -377,14 +379,15 @@ def min_track_record_length(
 
     Inverts the :func:`probabilistic_sharpe_ratio` formula for ``n``:
 
-    .. math::
-        n^\\ast = 1 + \\left\\lceil
-            \\left(\\frac{\\Phi^{-1}(1 - \\alpha) \\cdot
-                   \\sqrt{1 - \\gamma_3 \\widehat{\\text{SR}}
-                          + \\frac{\\gamma_4 - 1}{4} \\widehat{\\text{SR}}^2}}
-                  {\\widehat{\\text{SR}} - \\text{SR}^\\ast}
-            \\right)^2
-        \\right\\rceil
+    $$
+    n^\\ast = 1 + \\left\\lceil
+    \\left(\\frac{\\Phi^{-1}(1 - \\alpha) \\cdot
+    \\sqrt{1 - \\gamma_3 \\widehat{\\text{SR}}
+    + \\frac{\\gamma_4 - 1}{4} \\widehat{\\text{SR}}^2}}
+    {\\widehat{\\text{SR}} - \\text{SR}^\\ast}
+    \\right)^2
+    \\right\\rceil
+    $$
 
     Bailey & Lopez de Prado (2012, Eq. 11).
 
