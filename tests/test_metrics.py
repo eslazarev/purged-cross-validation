@@ -251,6 +251,64 @@ class TestDeflatedSharpeRatio:
                 deflated_sharpe_ratio(returns, n_trials=10, var_sharpe=var_sharpe)
 
 
+class TestDeflatedSharpeRatioFull:
+    def test_dsr_field_matches_scalar_function(self) -> None:
+        """The ``dsr`` field must equal ``deflated_sharpe_ratio`` exactly."""
+        rng = np.random.default_rng(20)
+        returns = rng.normal(0.001, 0.01, 252)
+        for n_trials, var_sharpe in [(1, 0.04), (10, 0.01**2), (500, 0.02**2)]:
+            from purgedcv._metrics import deflated_sharpe_ratio_full
+
+            diag = deflated_sharpe_ratio_full(returns, n_trials=n_trials, var_sharpe=var_sharpe)
+            scalar = deflated_sharpe_ratio(returns, n_trials=n_trials, var_sharpe=var_sharpe)
+            assert diag["dsr"] == pytest.approx(scalar)
+
+    def test_reports_consistent_intermediate_quantities(self) -> None:
+        """sr_star = sqrt(var_sharpe) * expected_max_z, and the moments match
+        what PSR computes internally."""
+        from purgedcv._metrics import deflated_sharpe_ratio_full
+
+        rng = np.random.default_rng(21)
+        returns = rng.normal(0.002, 0.01, 300)
+        var_sharpe = 0.03**2
+        diag = deflated_sharpe_ratio_full(returns, n_trials=200, var_sharpe=var_sharpe)
+        assert diag["n_obs"] == 300
+        assert diag["n_trials"] == 200
+        assert diag["var_sharpe"] == pytest.approx(var_sharpe)
+        assert diag["sr_star"] == pytest.approx(np.sqrt(var_sharpe) * diag["expected_max_z"])
+        # observed_sr, skew, kurt match the population-std Sharpe moments.
+        observed_sr = float(returns.mean() / returns.std(ddof=0))
+        assert diag["observed_sr"] == pytest.approx(observed_sr)
+        assert diag["skew"] == pytest.approx(float(stats.skew(returns, bias=False)))
+        assert diag["kurt"] == pytest.approx(
+            float(stats.kurtosis(returns, bias=False, fisher=False))
+        )
+
+    def test_single_trial_has_zero_benchmark(self) -> None:
+        """With one trial there is no deflation: sr_star and expected_max_z
+        are both 0, and dsr reduces to PSR against zero."""
+        from purgedcv._metrics import deflated_sharpe_ratio_full
+
+        rng = np.random.default_rng(22)
+        returns = rng.normal(0.001, 0.01, 252)
+        diag = deflated_sharpe_ratio_full(returns, n_trials=1, var_sharpe=0.5)
+        assert diag["sr_star"] == 0.0
+        assert diag["expected_max_z"] == 0.0
+        assert diag["dsr"] == pytest.approx(probabilistic_sharpe_ratio(returns, 0.0))
+
+    def test_validates_like_scalar_form(self) -> None:
+        from purgedcv._metrics import deflated_sharpe_ratio_full
+
+        rng = np.random.default_rng(23)
+        returns = rng.normal(0.001, 0.01, 100)
+        with pytest.raises(ValueError, match="n_trials"):
+            deflated_sharpe_ratio_full(returns, n_trials=0, var_sharpe=0.01)
+        with pytest.raises(TypeError, match="integer"):
+            deflated_sharpe_ratio_full(returns, n_trials=1.5, var_sharpe=0.01)  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match="var_sharpe"):
+            deflated_sharpe_ratio_full(returns, n_trials=10, var_sharpe=-1.0)
+
+
 class TestMinTrackRecordLength:
     def test_inversion_with_psr(self) -> None:
         """min_track_record_length(SR_hat, target, alpha, ...) returns n*
@@ -303,10 +361,14 @@ class TestMinTrackRecordLength:
         )
         assert n_close > n_far
 
-    def test_rejects_observed_at_or_below_target(self) -> None:
-        """If you haven't beaten the benchmark yet, no n can make PSR
-        statistically meaningful — function refuses."""
-        with pytest.raises(ValueError, match="observed_sharpe"):
+    def test_returns_inf_when_observed_at_or_below_target(self) -> None:
+        """If you haven't beaten the benchmark yet, no finite track record
+        can make PSR(target) reach 1 - alpha. The well-defined answer is
+        infinity, returned rather than raised so callers can branch on it."""
+        import math
+
+        # Equal: observed exactly at target.
+        assert math.isinf(
             min_track_record_length(
                 observed_sharpe=0.1,
                 target_sharpe=0.1,
@@ -314,11 +376,38 @@ class TestMinTrackRecordLength:
                 skew=0.0,
                 kurtosis=3.0,
             )
-        with pytest.raises(ValueError, match="observed_sharpe"):
+        )
+        # Strictly below target.
+        assert math.isinf(
             min_track_record_length(
                 observed_sharpe=0.05,
                 target_sharpe=0.1,
                 alpha=0.05,
+                skew=0.0,
+                kurtosis=3.0,
+            )
+        )
+
+    def test_returns_float_for_finite_case(self) -> None:
+        """The finite answer is a float; wrapping in int() recovers a count."""
+        n = min_track_record_length(
+            observed_sharpe=0.5,
+            target_sharpe=0.2,
+            alpha=0.05,
+            skew=0.0,
+            kurtosis=3.0,
+        )
+        assert isinstance(n, float)
+        assert n == int(n)  # integral value, float-typed
+
+    def test_invalid_alpha_still_raises_even_when_unreachable(self) -> None:
+        """Input validation (alpha range) takes precedence over the
+        unreachable-track-record short circuit."""
+        with pytest.raises(ValueError, match="alpha"):
+            min_track_record_length(
+                observed_sharpe=0.05,
+                target_sharpe=0.1,
+                alpha=1.5,
                 skew=0.0,
                 kurtosis=3.0,
             )

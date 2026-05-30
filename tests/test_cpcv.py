@@ -11,7 +11,8 @@ import pytest
 from sklearn.dummy import DummyRegressor
 from sklearn.exceptions import FitFailedWarning
 
-from purgedcv._cpcv import CombinatorialPurgedCV
+from purgedcv import reconstruct_paths
+from purgedcv._cpcv import CombinatoriallySymmetricCV, CombinatorialPurgedCV
 from purgedcv.diagnostics import (
     assert_embargo_respected,
     assert_no_temporal_leakage,
@@ -264,3 +265,70 @@ class TestCombinatorialPurgedCVBacktestPathsAPI:
         y = np.zeros(15)
         with pytest.raises(ValueError, match="y length"):
             cv.backtest_paths(DummyRegressor(strategy="mean"), X, y)
+
+
+class TestCombinatorialPurgedCVReconstructPathsMethod:
+    def test_method_matches_free_function(self) -> None:
+        """cv.reconstruct_paths(preds) must equal the free function called
+        with the splitter's own n_splits/n_test_groups/test-index layout."""
+        pred, evalu = _times(n=16, horizon_days=1)
+        cv = CombinatorialPurgedCV(
+            n_splits=4,
+            n_test_groups=2,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+        X = np.zeros((16, 1))  # noqa: N806
+        folds = list(cv.split(X))
+        fold_preds = [np.full(len(test), float(i)) for i, (_, test) in enumerate(folds)]
+        via_method = cv.reconstruct_paths(fold_preds)
+
+        fold_test_indices = [test for _, test in folds]
+        via_function = reconstruct_paths(fold_preds, fold_test_indices, 4, 2, 16)
+        assert np.array_equal(via_method, via_function, equal_nan=True)
+        assert via_method.shape == (3, 16)
+
+    def test_method_propagates_fold_count_mismatch(self) -> None:
+        pred, evalu = _times(n=16, horizon_days=1)
+        cv = CombinatorialPurgedCV(
+            n_splits=4,
+            n_test_groups=2,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+        with pytest.raises(ValueError, match="fold count mismatch"):
+            cv.reconstruct_paths([np.zeros(8)])  # 1 fold given, 6 expected
+
+
+class TestCombinatoriallySymmetricCV:
+    def test_n_test_groups_is_half(self) -> None:
+        pred, evalu = _times(n=24)
+        cv = CombinatoriallySymmetricCV(
+            n_splits=6,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+        assert cv.n_test_groups == 3
+        assert cv.get_n_splits() == comb(6, 3) == 20
+
+    def test_rejects_odd_n_splits(self) -> None:
+        pred, evalu = _times(n=24)
+        with pytest.raises(ValueError, match="even"):
+            CombinatoriallySymmetricCV(
+                n_splits=5,
+                prediction_times=pred,
+                evaluation_times=evalu,
+            )
+
+    def test_is_a_combinatorial_purged_cv(self) -> None:
+        pred, evalu = _times(n=24)
+        cv = CombinatoriallySymmetricCV(
+            n_splits=4,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+        assert isinstance(cv, CombinatorialPurgedCV)
+        # Each fold splits the 24 rows into two equal halves (12 / 12) before purge.
+        X = np.zeros((24, 1))  # noqa: N806
+        for _, test_idx in cv.split(X):
+            assert len(test_idx) == 12

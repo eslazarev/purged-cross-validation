@@ -21,14 +21,19 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "apply_embargo",
         "BaseTemporalSplitter",
         "CombinatorialPurgedCV",
+        "CombinatoriallySymmetricCV",
+        "default_backtest_metrics",
         "deflated_sharpe_ratio",
+        "deflated_sharpe_ratio_full",
         "diagnostics",
         "EmbargoViolationError",
         "GroupLeakageError",
         "horizons_overlap",
         "min_track_record_length",
         "parse_horizon",
+        "path_metrics",
         "probabilistic_sharpe_ratio",
+        "probability_of_backtest_overfitting",
         "purge",
         "PurgedGroupKFold",
         "reconstruct_paths",
@@ -75,7 +80,7 @@ class TestTopLevelAPI:
         # explicitly-imported submodule "diagnostics" and tolerate
         # implementation-detail submodules that are accessible via dotted
         # paths but not listed in __all__.
-        allowed_extras = {"exceptions"}
+        allowed_extras = {"exceptions", "optuna_integration"}
         truly_unexpected = unexpected - allowed_extras
         assert not truly_unexpected, f"unexpected public names: {sorted(truly_unexpected)}"
 

@@ -11,6 +11,35 @@ Plan is listed under the published version it shipped in.
 
 ### Added
 
+- `probability_of_backtest_overfitting` (PBO): estimates how often the
+  configuration chosen as best in-sample lands below the median
+  out-of-sample, using Combinatorially Symmetric Cross-Validation (CSCV).
+  Returns the PBO value, the per-combination logits, the IS-versus-OOS
+  performance-degradation slope, and the IS/OOS performance pairs. When
+  prediction and evaluation times are supplied it cleans every IS/OOS
+  boundary with the existing purge and embargo machinery. Implements
+  Bailey, Borwein, Lopez de Prado & Salehipour (2017) and AFML Chapter 11.
+- `CombinatoriallySymmetricCV`: the CSCV splitter that PBO is built on,
+  exposed directly. It is `CombinatorialPurgedCV` with
+  `n_test_groups = n_splits // 2` (even `n_splits` required).
+- `deflated_sharpe_ratio_full`: returns the Deflated Sharpe probability
+  alongside the quantities that explain it (observed Sharpe, deflated
+  benchmark `sr_star`, the standardized expected-maximum multiplier
+  `expected_max_z`, `var_sharpe`, `n_trials`, track-record length, skew,
+  and kurtosis). The scalar `deflated_sharpe_ratio` is unchanged.
+- `path_metrics` and `default_backtest_metrics`: reduce an
+  `(n_paths, n_samples)` CPCV path matrix to a per-path DataFrame of
+  Sharpe, Calmar, max drawdown, and total return in one call.
+- `CombinatorialPurgedCV.reconstruct_paths(fold_predictions)`: an
+  instance method that assembles per-fold predictions into backtest paths
+  without the caller restating `n_splits`, `n_test_groups`, or
+  `n_samples`. Complements the existing free `reconstruct_paths` function.
+- `purgedcv.optuna_integration.TrialSharpeRecorder`: an Optuna study
+  callback that collects per-trial Sharpe ratios and reports the
+  `var_sharpe` and trial count that `deflated_sharpe_ratio` needs.
+  Importing the module does not require Optuna; the `optuna` optional
+  extra (`pip install purgedcv[optuna]`) installs it for the surrounding
+  optimisation loop.
 - Python 3.13 and 3.14 are now part of the CI test matrix and listed
   among the supported versions.
 - New example notebook `examples/selection_regret_lcl.ipynb`: on UK
@@ -32,6 +61,11 @@ Plan is listed under the published version it shipped in.
 
 ### Changed
 
+- `min_track_record_length` now returns `math.inf` instead of raising when
+  `observed_sharpe <= target_sharpe`: no finite track record can establish
+  a gap that is not there, and infinity is the well-defined answer. The
+  return type is now `float` (wrap in `int(...)` for a count when finite).
+  Other input validation (`alpha` range, non-finite inputs) still raises.
 - `validate_times` now requires a datetime-like or timedelta-like dtype
   for `prediction_times` and `evaluation_times`. Numeric, string, and
   object-dtype series are rejected; convert with `pd.to_datetime` first.

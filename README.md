@@ -313,10 +313,15 @@ print(f"MinTRL: {int(n_min)} observations")
 | `PurgedKFold` | D5.2 | Contiguous test folds with purge + embargo |
 | `PurgedGroupKFold` | D5.3 | Group-aware purged k-fold |
 | `CombinatorialPurgedCV` | D5.4 | C(N,K) combinatorial folds |
+| `CombinatoriallySymmetricCV` | D5.4 | CSCV: symmetric IS/OOS folds, the PBO substrate |
 | `reconstruct_paths` | D6 | Assemble CPCV folds into backtest paths |
+| `path_metrics` | D6 | Per-path Sharpe / Calmar / drawdown / return table |
 | `probabilistic_sharpe_ratio` | D7 | PSR: P(true SR > benchmark) |
 | `deflated_sharpe_ratio` | D7 | DSR: PSR corrected for multiple testing |
+| `deflated_sharpe_ratio_full` | D7 | DSR plus the intermediate deflation quantities |
+| `probability_of_backtest_overfitting` | D7 | PBO via CSCV: how often in-sample selection overfits |
 | `min_track_record_length` | D7 | Minimum observations to establish SR |
+| `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance for DSR |
 | `diagnostics.*` | D8 | Leakage and embargo audit functions |
 
 ---

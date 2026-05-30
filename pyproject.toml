@@ -80,6 +80,9 @@ examples = [
     "matplotlib>=3.7",
     "pricehub>=0.0.7",
 ]
+optuna = [
+    "optuna>=3.0",
+]
 docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.24",
