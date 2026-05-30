@@ -318,3 +318,34 @@ walk-forward log-loss is slightly worse than naive shuffled k-fold and still
 does not beat the bookmaker. It is a useful counterexample to the dramatic
 leakage notebooks: when the target has little usable signal, honest CV may
 report a small calibration gap rather than a headline accuracy collapse.
+
+---
+
+### 11. `backtest_overfitting_audit.ipynb` — Did the Optuna Search Overfit?
+
+**Dataset:** Binance spot BTC/USDT daily candles, pinned window
+2021-01-01 to 2023-09-28 (1001 bars), same cached file as notebook 5.
+
+**Source:** the [`pricehub`](https://pypi.org/project/pricehub/) package; the
+notebook also needs the `optuna` extra (`pip install purgedcv[examples,optuna]`).
+
+**Files cached:**
+- `btcusdt_1d_binance_spot_2021_2023.csv` (~0.1 MB) — shared with notebook 5
+
+**License:** Binance public market data; subject to the exchange's API terms
+
+**Download size:** ~0.1 MB on first run (or zero if notebook 5 already cached it)
+
+The metrics showcase. A seeded Optuna TPE search tunes a four-knob Ridge
+strategy to an in-sample Sharpe of +2.5, then the winner is audited with every
+backtest-overfitting tool the library ships. `probability_of_backtest_overfitting`
+returns 0.55 with a negative degradation slope: picking the in-sample best is
+barely better than a coin flip out of sample. `effective_n_trials` reads the
+correlated TPE trajectory and reports that the 400 trials were about 25
+independent bets, which lifts the deflated Sharpe of the champion from 0.10 to
+0.23. `CombinatorialPurgedCV.backtest_paths` plus `path_metrics` show the model
+family does carry real structure on this trending window (every path is
+positive), so the honest verdict is nuanced: a genuine effect that the search
+nonetheless failed to pin to a uniquely good champion. Exercises
+`TrialSharpeRecorder`, `deflated_sharpe_ratio_full`, the `bars_per_year` unit
+conversion, PBO, and per-path metrics in one workflow.

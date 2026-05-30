@@ -57,6 +57,16 @@ Plan is listed under the published version it shipped in.
   Optuna + Deflated Sharpe pattern (record per-trial Sharpe, deflate by the
   effective trial count, convert annualised `var_sharpe` via `bars_per_year`)
   that most users will write.
+- New example notebook `examples/backtest_overfitting_audit.ipynb`: a seeded
+  Optuna TPE search over a Ridge strategy on real BTC/USDT daily data, audited
+  end to end with PBO, `effective_n_trials`, `deflated_sharpe_ratio_full`
+  (with `bars_per_year`), and `CombinatorialPurgedCV.backtest_paths` plus
+  `path_metrics`. The search reaches an in-sample Sharpe of +2.5; the audit
+  shows PBO 0.55, the 400 TPE trials worth about 25 independent bets, and a
+  modest deflated Sharpe, while the per-path spread confirms the model family
+  does carry real structure on this trending window.
+- `optuna` added to the `examples` optional-dependency extra so the gallery
+  runs with `pip install purgedcv[examples]`.
 - Python 3.13 and 3.14 are now part of the CI test matrix and listed
   among the supported versions.
 - New example notebook `examples/selection_regret_lcl.ipynb`: on UK

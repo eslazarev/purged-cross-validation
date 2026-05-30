@@ -44,6 +44,7 @@ TARGETS = [
     REPO / "examples" / "uk_smart_meter_lcl.ipynb",
     REPO / "examples" / "earthquake_magnitude_leakage.ipynb",
     REPO / "examples" / "air_quality_clock_leakage.ipynb",
+    REPO / "examples" / "backtest_overfitting_audit.ipynb",
     REPO / "paper" / "paper.md",  # tracked JOSS paper
     REPO / "docs" / "index.md",
     REPO / "docs" / "quickstart.md",

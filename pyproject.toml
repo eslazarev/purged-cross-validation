@@ -79,6 +79,7 @@ examples = [
     "jupyter>=1.0",
     "matplotlib>=3.7",
     "pricehub>=0.0.7",
+    "optuna>=3.0",
 ]
 optuna = [
     "optuna>=3.0",
