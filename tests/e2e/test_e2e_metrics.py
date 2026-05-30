@@ -16,9 +16,12 @@ from sklearn.exceptions import FitFailedWarning
 from purgedcv import (
     CombinatorialPurgedCV,
     deflated_sharpe_ratio,
+    deflated_sharpe_ratio_full,
+    effective_n_trials,
     min_track_record_length,
     probabilistic_sharpe_ratio,
 )
+from purgedcv.optuna_integration import TrialSharpeRecorder
 
 
 @pytest.mark.e2e
@@ -80,22 +83,95 @@ def test_user_story_min_track_record_length() -> None:
 
 
 @pytest.mark.e2e
+def test_user_story_optuna_recorder_feeds_deflated_sharpe() -> None:
+    """User Story: a researcher tunes a strategy with Optuna, records each
+    trial's Sharpe through TrialSharpeRecorder, then deflates the champion's
+    Sharpe by the variance and count of all trials searched. The recorder
+    needs no Optuna import; a SimpleNamespace stands in for the frozen trial.
+    """
+    from types import SimpleNamespace
+
+    rng = np.random.default_rng(31)
+    recorder = TrialSharpeRecorder()
+    for s in rng.normal(0.8, 0.4, 120):
+        recorder(study=None, trial=SimpleNamespace(value=float(s), user_attrs={"sharpe": float(s)}))
+
+    assert recorder.n_trials() == 120
+    var_sharpe = recorder.var_sharpe()
+    assert var_sharpe > 0
+
+    champion_returns = rng.normal(0.001, 0.01, 504)
+    diag = deflated_sharpe_ratio_full(
+        champion_returns, n_trials=recorder.n_trials(), var_sharpe=var_sharpe
+    )
+    # The diagnostics expose why the deflation landed where it did.
+    assert diag.n_trials == 120
+    assert diag.n_obs == 504
+    assert diag.var_sharpe == pytest.approx(var_sharpe)
+    assert diag.sr_star == pytest.approx(np.sqrt(var_sharpe) * diag.expected_max_z)
+    assert diag.dsr == pytest.approx(deflated_sharpe_ratio(champion_returns, 120, var_sharpe))
+
+
+@pytest.mark.e2e
+def test_user_story_effective_n_trials_rescues_dsr() -> None:
+    """User Story: a 6000-trial TPE search is heavily autocorrelated. Feeding
+    the raw count to DSR over-deflates it toward zero; the effective count
+    collapses to a few hundred and DSR becomes informative again."""
+    rng = np.random.default_rng(123)
+    # Correlated trial-Sharpe path (random walk stands in for a TPE trajectory).
+    trial_sharpes = np.cumsum(rng.standard_normal(6000)) * 0.01
+    n_eff = effective_n_trials(trial_sharpes)
+    assert 1 <= n_eff < 6000
+
+    returns = rng.normal(0.0015, 0.01, 504)
+    dsr_raw = deflated_sharpe_ratio(returns, n_trials=6000, var_sharpe=0.02**2)
+    dsr_eff = deflated_sharpe_ratio(returns, n_trials=n_eff, var_sharpe=0.02**2)
+    # Fewer effective trials -> lower deflated benchmark -> larger DSR.
+    assert dsr_eff >= dsr_raw
+
+
+@pytest.mark.e2e
+def test_user_story_min_track_record_length_unreachable() -> None:
+    """User Story: a researcher checks how long a track record must run to
+    prove a Sharpe they have not yet beaten. The honest answer is 'no finite
+    length suffices', returned as infinity rather than an exception."""
+    import math
+
+    unreachable = min_track_record_length(
+        observed_sharpe=0.3, target_sharpe=0.5, alpha=0.05, skew=0.0, kurtosis=3.0
+    )
+    assert math.isinf(unreachable)
+    reachable = min_track_record_length(
+        observed_sharpe=0.7, target_sharpe=0.5, alpha=0.05, skew=0.0, kurtosis=3.0
+    )
+    assert math.isfinite(reachable)
+    assert int(reachable) > 0
+
+
+@pytest.mark.e2e
 def test_subprocess_metrics_smoke() -> None:
     snippet = textwrap.dedent("""\
         import numpy as np
         from purgedcv import (
             probabilistic_sharpe_ratio,
             deflated_sharpe_ratio,
+            deflated_sharpe_ratio_full,
+            effective_n_trials,
             min_track_record_length,
         )
         rng = np.random.default_rng(0)
         returns = rng.normal(0.001, 0.01, 200)
         psr = probabilistic_sharpe_ratio(returns, benchmark_skill=0.0)
         dsr = deflated_sharpe_ratio(returns, n_trials=20, var_sharpe=0.005**2)
+        diag = deflated_sharpe_ratio_full(returns, n_trials=20, var_sharpe=0.005**2)
         n_min = min_track_record_length(0.5, 0.2, 0.05, 0.0, 3.0)
+        n_eff = effective_n_trials(np.cumsum(rng.standard_normal(1000)))
         assert 0 <= psr <= 1
         assert 0 <= dsr <= 1
+        assert diag.dsr == dsr
+        assert diag.n_obs == 200
         assert n_min > 0
+        assert 1 <= n_eff <= 1000
         print("OK")
         """)
     result = subprocess.run(

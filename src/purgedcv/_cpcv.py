@@ -7,6 +7,7 @@ backtest path reconstruction (domain D6) via :meth:`backtest_paths`.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from itertools import combinations
 from math import comb
 
@@ -226,4 +227,121 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
             self.n_splits,
             self.n_test_groups,
             n_samples,
+        )
+
+    def reconstruct_paths(
+        self,
+        fold_predictions: Sequence[NDArrayAny],
+    ) -> NDArrayAny:
+        """Assemble per-fold predictions into the C(N-1, K-1) backtest paths.
+
+        Ergonomic wrapper around :func:`~purgedcv.reconstruct_paths`. The
+        splitter already knows ``n_splits``, ``n_test_groups``, the fold
+        test-index layout, and ``n_samples`` (from the bound times), so the
+        caller supplies only one prediction array per fold, in
+        :meth:`split` order. Use this when you ran the fits yourself (for
+        example a per-fold backtest loop) rather than via
+        :meth:`backtest_paths`.
+
+        Args:
+            fold_predictions: One array per fold, in the same order as
+                :meth:`split` yields folds; ``fold_predictions[f]`` holds
+                the predictions for that fold's test rows, in test-index
+                order. There must be ``C(n_splits, n_test_groups)`` arrays.
+
+        Returns:
+            ``(n_paths, n_samples)`` array of out-of-sample predictions with
+            ``n_paths = C(n_splits - 1, n_test_groups - 1)``.
+
+        Raises:
+            ValueError: on a fold-count or fold-prediction length mismatch
+                (propagated from :func:`~purgedcv.reconstruct_paths`).
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from purgedcv import CombinatorialPurgedCV
+            >>> pred = pd.Series(pd.date_range("2024-01-01", periods=16, freq="D"))
+            >>> evalu = pred + pd.Timedelta(days=1)
+            >>> cv = CombinatorialPurgedCV(
+            ...     n_splits=4, n_test_groups=2,
+            ...     prediction_times=pred, evaluation_times=evalu,
+            ... )
+            >>> X = np.zeros((16, 1))
+            >>> fold_preds = [
+            ...     np.full(len(test), float(i))
+            ...     for i, (_, test) in enumerate(cv.split(X))
+            ... ]
+            >>> cv.reconstruct_paths(fold_preds).shape
+            (3, 16)
+        """
+        n_samples = len(self._prediction_times)
+        fold_test_indices = list(self._iter_test_indices(n_samples))
+        return reconstruct_paths(
+            fold_predictions,
+            fold_test_indices,
+            self.n_splits,
+            self.n_test_groups,
+            n_samples,
+        )
+
+
+class CombinatoriallySymmetricCV(CombinatorialPurgedCV):
+    """Combinatorially Symmetric Cross-Validation (CSCV).
+
+    The special case of :class:`CombinatorialPurgedCV` with
+    ``n_test_groups = n_splits // 2``: every fold cuts the timeline into two
+    equal halves, one in-sample and one out-of-sample. CSCV is the substrate
+    of :func:`~purgedcv.probability_of_backtest_overfitting`; expose it
+    directly when you want the symmetric IS/OOS folds without going through
+    the PBO estimator.
+
+    See *Advances in Financial Machine Learning* (Lopez de Prado, Wiley
+    2018), chapter 11.
+
+    Examples:
+        >>> import pandas as pd
+        >>> from purgedcv import CombinatoriallySymmetricCV
+        >>> pred = pd.Series(pd.date_range("2024-01-01", periods=24, freq="D"))
+        >>> evalu = pred + pd.Timedelta(days=1)
+        >>> cv = CombinatoriallySymmetricCV(
+        ...     n_splits=6, prediction_times=pred, evaluation_times=evalu,
+        ... )
+        >>> cv.get_n_splits()
+        20
+    """
+
+    def __init__(
+        self,
+        n_splits: int,
+        *,
+        prediction_times: pd.Series,
+        evaluation_times: pd.Series,
+        purge_horizon: HorizonLike | None = None,
+        embargo: HorizonLike | None = None,
+    ) -> None:
+        """Configure a CSCV splitter.
+
+        Args:
+            n_splits: Number of contiguous group blocks. Must be even and
+                at least 2; half are chosen as the test (out-of-sample)
+                groups in each fold.
+            prediction_times: Per-sample prediction times.
+            evaluation_times: Per-sample evaluation times.
+            purge_horizon: Optional purge horizon applied per fold.
+            embargo: Optional embargo horizon applied per fold.
+
+        Raises:
+            ValueError: if ``n_splits`` is odd or below 2.
+        """
+        n_splits = _validate_integer("n_splits", n_splits, minimum=2)
+        if n_splits % 2 != 0:
+            raise ValueError(f"CSCV requires an even n_splits, got {n_splits}.")
+        super().__init__(
+            n_splits=n_splits,
+            n_test_groups=n_splits // 2,
+            prediction_times=prediction_times,
+            evaluation_times=evaluation_times,
+            purge_horizon=purge_horizon,
+            embargo=embargo,
         )

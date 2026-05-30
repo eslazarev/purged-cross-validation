@@ -19,9 +19,15 @@ contract.
 
 ::: purgedcv.CombinatorialPurgedCV
 
+::: purgedcv.CombinatoriallySymmetricCV
+
 ## Backtest paths
 
 ::: purgedcv.reconstruct_paths
+
+::: purgedcv.path_metrics
+
+::: purgedcv.default_backtest_metrics
 
 ## Row-level primitives
 
@@ -43,7 +49,19 @@ contract.
 
 ::: purgedcv.deflated_sharpe_ratio
 
+::: purgedcv.deflated_sharpe_ratio_full
+
 ::: purgedcv.min_track_record_length
+
+::: purgedcv.effective_n_trials
+
+## Backtest overfitting
+
+::: purgedcv.probability_of_backtest_overfitting
+
+## Optuna integration
+
+::: purgedcv.optuna_integration.TrialSharpeRecorder
 
 ## Diagnostics
 

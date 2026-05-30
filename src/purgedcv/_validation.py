@@ -25,6 +25,32 @@ def _validate_integer(name: str, value: object, *, minimum: int) -> int:
     return value_int
 
 
+def _validate_bars_per_year(bars_per_year: object) -> None:
+    """Require ``bars_per_year`` to be a positive finite scalar number, or ``None``.
+
+    ``None`` passes (the caller treats it as "already per-observation").
+    Everything else must be a single real number: ``bool`` is rejected
+    (``True``/``False`` are ``int`` subclasses but never a meaningful
+    bars-per-year, matching :func:`_validate_integer`), as are strings, arrays,
+    and other non-scalar inputs, all with one consistent message rather than a
+    leaked numpy ``TypeError`` or ambiguous-truth ``ValueError``.
+
+    Raises:
+        ValueError: if ``bars_per_year`` is not a positive finite scalar number.
+    """
+    if bars_per_year is None:
+        return
+    if isinstance(bars_per_year, bool) or not isinstance(
+        bars_per_year, (int, float, np.integer, np.floating)
+    ):
+        raise ValueError(
+            "bars_per_year must be a positive finite number, got "
+            f"{type(bars_per_year).__name__}."
+        )
+    if not np.isfinite(bars_per_year) or bars_per_year <= 0:
+        raise ValueError(f"bars_per_year must be a positive finite number, got {bars_per_year}.")
+
+
 def _validate_positional_indices(
     name: str,
     indices: NDArrayAny,
