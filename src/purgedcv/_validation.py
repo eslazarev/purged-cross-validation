@@ -25,6 +25,24 @@ def _validate_integer(name: str, value: object, *, minimum: int) -> int:
     return value_int
 
 
+def _validate_bars_per_year(bars_per_year: int | float | None) -> None:
+    """Reject a bool, non-finite, or non-positive ``bars_per_year``.
+
+    ``None`` passes (the caller treats it as "already per-observation").
+    ``bool`` is rejected explicitly: ``True``/``False`` are ``int`` subclasses
+    but never a meaningful bars-per-year, matching :func:`_validate_integer`.
+
+    Raises:
+        ValueError: if ``bars_per_year`` is a bool, non-finite, or <= 0.
+    """
+    if bars_per_year is None:
+        return
+    if isinstance(bars_per_year, bool):
+        raise ValueError(f"bars_per_year must be a number, not a bool, got {bars_per_year}.")
+    if not np.isfinite(bars_per_year) or bars_per_year <= 0:
+        raise ValueError(f"bars_per_year must be a positive finite number, got {bars_per_year}.")
+
+
 def _validate_positional_indices(
     name: str,
     indices: NDArrayAny,

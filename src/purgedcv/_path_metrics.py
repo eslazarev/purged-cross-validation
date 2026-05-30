@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from ._typing import NDArrayAny
+from ._validation import _validate_bars_per_year
 
 #: A path metric: maps one path's 1-D return series to a name -> value mapping.
 PathMetricFn = Callable[[NDArrayAny], Mapping[str, float]]
@@ -63,8 +64,7 @@ def default_backtest_metrics(
         >>> round(m["max_drawdown"], 4)
         0.02
     """
-    if bars_per_year is not None and (not np.isfinite(bars_per_year) or bars_per_year <= 0):
-        raise ValueError(f"bars_per_year must be a positive finite number, got {bars_per_year}.")
+    _validate_bars_per_year(bars_per_year)
     arr = np.asarray(path, dtype=float)
     arr = arr[np.isfinite(arr)]
     if arr.size < 2:

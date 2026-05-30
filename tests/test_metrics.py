@@ -278,6 +278,13 @@ class TestDeflatedSharpeRatio:
             with pytest.raises(ValueError, match="bars_per_year"):
                 deflated_sharpe_ratio(returns, 10, 0.01, bars_per_year=bad)  # type: ignore[arg-type]
 
+    def test_rejects_bool_bars_per_year(self) -> None:
+        """``True`` is an int subclass but never a meaningful bars-per-year."""
+        rng = np.random.default_rng(44)
+        returns = rng.normal(0.001, 0.01, 100)
+        with pytest.raises(ValueError, match="bool"):
+            deflated_sharpe_ratio(returns, 10, 0.01, bars_per_year=True)
+
 
 class TestDeflatedSharpeRatioFull:
     def test_dsr_field_matches_scalar_function(self) -> None:
@@ -589,6 +596,12 @@ class TestEffectiveNTrials:
             effective_n_trials(np.array([]))
         with pytest.raises(ValueError, match="NaN or infinite"):
             effective_n_trials(np.array([1.0, np.nan, 2.0, 3.0]))
+
+    def test_rejects_non_1d_array(self) -> None:
+        """A matrix must not be silently flattened: its row-major order is not
+        a meaningful trial trajectory."""
+        with pytest.raises(ValueError, match="1-D"):
+            effective_n_trials(np.arange(6.0).reshape(2, 3))
 
     def test_deflates_more_realistically(self) -> None:
         """The headline use: a correlated search inflates raw n_trials, which

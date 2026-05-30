@@ -68,6 +68,10 @@ class TestDefaultBacktestMetrics:
                     bars_per_year=bad,  # type: ignore[arg-type]
                 )
 
+    def test_rejects_bool_bars_per_year(self) -> None:
+        with pytest.raises(ValueError, match="bool"):
+            default_backtest_metrics(np.array([0.01, -0.02, 0.03]), bars_per_year=True)
+
 
 class TestPathMetrics:
     def test_dataframe_shape_and_columns(self) -> None:

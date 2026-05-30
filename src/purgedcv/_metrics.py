@@ -25,6 +25,7 @@ import numpy as np
 from scipy import stats
 
 from ._typing import NDArrayAny
+from ._validation import _validate_bars_per_year
 
 # Euler-Mascheroni constant, used by the DSR extreme-value approximation.
 _GAMMA_EM = 0.5772156649015329
@@ -145,10 +146,9 @@ def _to_per_observation_var(var_sharpe: float, bars_per_year: int | None) -> flo
     ``var_per_obs = var_annual / bars_per_year`` (since annualised Sharpe is
     per-observation Sharpe times ``sqrt(bars_per_year)``).
     """
+    _validate_bars_per_year(bars_per_year)
     if bars_per_year is None:
         return var_sharpe
-    if not np.isfinite(bars_per_year) or bars_per_year <= 0:
-        raise ValueError(f"bars_per_year must be a positive finite number, got {bars_per_year}.")
     return var_sharpe / bars_per_year
 
 
@@ -514,7 +514,12 @@ def effective_n_trials(trial_sharpes: NDArrayAny, method: str = "autocorr") -> i
     """
     if method != "autocorr":
         raise ValueError(f"unknown method {method!r}; only 'autocorr' is supported.")
-    arr = np.asarray(trial_sharpes, dtype=float).ravel()
+    arr = np.asarray(trial_sharpes, dtype=float)
+    if arr.ndim != 1:
+        raise ValueError(
+            f"trial_sharpes must be a 1-D array in trial order, got {arr.ndim}-D; "
+            "flatten it deliberately if that order is meaningful."
+        )
     if arr.size == 0:
         raise ValueError("trial_sharpes must contain at least one value.")
     if not np.isfinite(arr).all():
