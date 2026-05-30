@@ -135,6 +135,23 @@ def _validate_dsr_inputs(n_trials: int, var_sharpe: float) -> None:
         raise ValueError(f"var_sharpe must be non-negative, got {var_sharpe}.")
 
 
+def _to_per_observation_var(var_sharpe: float, bars_per_year: int | None) -> float:
+    """Convert an annualised Sharpe variance to per-observation, or pass through.
+
+    DSR is intrinsically per-observation (PSR depends on the per-observation
+    Sharpe non-linearly), so the only correct unit for ``var_sharpe`` is the
+    variance of per-observation Sharpes. When the caller has annualised trial
+    Sharpes, ``bars_per_year`` performs the exact conversion
+    ``var_per_obs = var_annual / bars_per_year`` (since annualised Sharpe is
+    per-observation Sharpe times ``sqrt(bars_per_year)``).
+    """
+    if bars_per_year is None:
+        return var_sharpe
+    if bars_per_year <= 0:
+        raise ValueError(f"bars_per_year must be positive, got {bars_per_year}.")
+    return var_sharpe / bars_per_year
+
+
 def _deflated_benchmark(n_trials: int, var_sharpe: float) -> tuple[float, float]:
     """Return ``(expected_max_z, sr_star)`` for the DSR deflation.
 
@@ -166,6 +183,8 @@ def deflated_sharpe_ratio(
     returns: NDArrayAny,
     n_trials: int,
     var_sharpe: float,
+    *,
+    bars_per_year: int | None = None,
 ) -> float:
     """Probability that the true Sharpe ratio exceeds the deflated
     benchmark that accounts for ``n_trials`` independent hyperparameter
@@ -196,21 +215,27 @@ def deflated_sharpe_ratio(
             :class:`purgedcv.optuna_integration.TrialSharpeRecorder`
             produces it directly from an Optuna study.
 
-            UNITS: ``var_sharpe`` must be in the same Sharpe units as
-            ``returns``. The observed Sharpe of ``returns`` is computed per
-            period (not annualised), so ``var_sharpe`` must be a per-period
-            Sharpe variance. If your trial Sharpes were annualised, divide
-            their variance by ``bars_per_year`` first
-            (``var_annual = bars_per_year * var_per_bar``). Mixing units
-            silently inflates the deflated benchmark.
+            UNITS: ``var_sharpe`` must be in the same Sharpe units as the
+            per-observation Sharpe of ``returns`` (DSR is intrinsically
+            per-observation). If your trial Sharpes were annualised, pass
+            ``bars_per_year`` and the conversion is done for you; otherwise
+            ``var_sharpe`` is taken as already per-observation. Note that
+            :func:`path_metrics` annualises its Sharpe when given
+            ``bars_per_year``, so a ``var`` taken from its output is
+            annualised: pass the same ``bars_per_year`` here.
+        bars_per_year: If given, ``var_sharpe`` is interpreted as an
+            annualised Sharpe variance and converted to per-observation
+            (``var_sharpe / bars_per_year``) before deflation. ``None``
+            (default) treats ``var_sharpe`` as already per-observation and
+            leaves prior behaviour unchanged.
 
     Returns:
         Scalar probability in [0, 1].
 
     Raises:
         TypeError: if ``n_trials`` is not an integer.
-        ValueError: on invalid ``n_trials`` or non-finite/negative
-            ``var_sharpe``.
+        ValueError: on invalid ``n_trials``, non-finite/negative
+            ``var_sharpe``, or non-positive ``bars_per_year``.
 
     Examples:
         >>> import numpy as np
@@ -220,8 +245,14 @@ def deflated_sharpe_ratio(
         >>> dsr = deflated_sharpe_ratio(returns, n_trials=50, var_sharpe=0.01**2)
         >>> 0.0 <= dsr <= 1.0
         True
+        >>> # Annualised trial-Sharpe variance: pass bars_per_year to convert.
+        >>> annual = deflated_sharpe_ratio(returns, 50, 0.5**2, bars_per_year=252)
+        >>> per_bar = deflated_sharpe_ratio(returns, 50, 0.5**2 / 252)
+        >>> abs(annual - per_bar) < 1e-12
+        True
     """
     _validate_dsr_inputs(n_trials, var_sharpe)
+    var_sharpe = _to_per_observation_var(var_sharpe, bars_per_year)
     _, sr_star = _deflated_benchmark(n_trials, var_sharpe)
     return probabilistic_sharpe_ratio(returns, benchmark_skill=sr_star)
 
@@ -265,6 +296,8 @@ def deflated_sharpe_ratio_full(
     returns: NDArrayAny,
     n_trials: int,
     var_sharpe: float,
+    *,
+    bars_per_year: int | None = None,
 ) -> DSRDiagnostics:
     """Like :func:`deflated_sharpe_ratio` but return the intermediate
     quantities alongside the probability.
@@ -277,19 +310,27 @@ def deflated_sharpe_ratio_full(
     Args:
         returns: 1-D array of returns.
         n_trials: Number of independent searches (>= 1).
-        var_sharpe: Variance of Sharpe ratios across the candidates, in the
-            same per-period Sharpe units as ``returns`` (see
-            :func:`deflated_sharpe_ratio` for the unit contract).
+        var_sharpe: Variance of Sharpe ratios across the candidates. Per
+            observation by default; pass ``bars_per_year`` if it is
+            annualised (see :func:`deflated_sharpe_ratio` for the unit
+            contract).
+        bars_per_year: If given, ``var_sharpe`` is annualised and converted
+            to per-observation before deflation. ``None`` (default) treats
+            it as already per-observation.
 
     Returns:
         A :class:`DSRDiagnostics` (frozen dataclass; read fields by
         attribute, e.g. ``diag.dsr``, ``diag.sr_star``). ``dsr`` equals
-        :func:`deflated_sharpe_ratio` for the same arguments.
+        :func:`deflated_sharpe_ratio` for the same arguments. The
+        ``var_sharpe`` field holds the per-observation value actually used
+        (after any ``bars_per_year`` conversion), so
+        ``sr_star == sqrt(var_sharpe) * expected_max_z`` always holds.
 
     Raises:
         TypeError: if ``n_trials`` is not an integer.
         ValueError: on invalid ``n_trials``, non-finite/negative
-            ``var_sharpe``, or a degenerate ``returns`` series.
+            ``var_sharpe``, non-positive ``bars_per_year``, or a degenerate
+            ``returns`` series.
 
     Examples:
         >>> import numpy as np
@@ -305,6 +346,7 @@ def deflated_sharpe_ratio_full(
         True
     """
     _validate_dsr_inputs(n_trials, var_sharpe)
+    var_sharpe = _to_per_observation_var(var_sharpe, bars_per_year)
     arr = _validate_returns(returns)
     sr_hat, gamma3, gamma4 = _sharpe_moments(arr)
     expected_max_z, sr_star = _deflated_benchmark(n_trials, var_sharpe)

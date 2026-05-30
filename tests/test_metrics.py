@@ -250,6 +250,26 @@ class TestDeflatedSharpeRatio:
             with pytest.raises(ValueError, match="finite"):
                 deflated_sharpe_ratio(returns, n_trials=10, var_sharpe=var_sharpe)
 
+    def test_bars_per_year_converts_annualised_variance(self) -> None:
+        """Passing an annualised var with bars_per_year is identical to
+        passing the per-observation var directly, and differs from
+        mis-passing the annualised var as per-observation."""
+        rng = np.random.default_rng(40)
+        returns = rng.normal(0.001, 0.01, 252)
+        var_annual = 0.5**2
+        annual = deflated_sharpe_ratio(returns, 50, var_annual, bars_per_year=252)
+        per_bar = deflated_sharpe_ratio(returns, 50, var_annual / 252)
+        assert annual == pytest.approx(per_bar)
+        wrong = deflated_sharpe_ratio(returns, 50, var_annual)
+        assert annual != pytest.approx(wrong)
+
+    def test_rejects_non_positive_bars_per_year(self) -> None:
+        rng = np.random.default_rng(41)
+        returns = rng.normal(0.001, 0.01, 100)
+        for bad in (0, -252):
+            with pytest.raises(ValueError, match="bars_per_year"):
+                deflated_sharpe_ratio(returns, 10, 0.01, bars_per_year=bad)
+
 
 class TestDeflatedSharpeRatioFull:
     def test_dsr_field_matches_scalar_function(self) -> None:
@@ -293,6 +313,22 @@ class TestDeflatedSharpeRatioFull:
         assert diag.sr_star == 0.0
         assert diag.expected_max_z == 0.0
         assert diag.dsr == pytest.approx(probabilistic_sharpe_ratio(returns, 0.0))
+
+    def test_bars_per_year_stores_per_observation_var(self) -> None:
+        """With bars_per_year the result echoes the per-observation var and
+        the sr_star = sqrt(var) * expected_max_z identity still holds; the
+        probability matches the scalar form with the same conversion."""
+        from purgedcv._metrics import deflated_sharpe_ratio_full
+
+        rng = np.random.default_rng(42)
+        returns = rng.normal(0.001, 0.01, 252)
+        var_annual = 0.4**2
+        diag = deflated_sharpe_ratio_full(returns, 100, var_annual, bars_per_year=252)
+        assert diag.var_sharpe == pytest.approx(var_annual / 252)
+        assert diag.sr_star == pytest.approx(np.sqrt(diag.var_sharpe) * diag.expected_max_z)
+        assert diag.dsr == pytest.approx(
+            deflated_sharpe_ratio(returns, 100, var_annual, bars_per_year=252)
+        )
 
     def test_validates_like_scalar_form(self) -> None:
         from purgedcv._metrics import deflated_sharpe_ratio_full

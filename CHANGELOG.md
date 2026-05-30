@@ -28,9 +28,12 @@ Plan is listed under the published version it shipped in.
   it (observed Sharpe, deflated benchmark `sr_star`, the standardized
   expected-maximum multiplier `expected_max_z`, `var_sharpe`, `n_trials`,
   track-record length, skew, and kurtosis). The scalar
-  `deflated_sharpe_ratio` is unchanged. Both document that `var_sharpe` must
-  be a per-period Sharpe variance, matching the per-period Sharpe of
-  `returns`.
+  `deflated_sharpe_ratio` keeps its scalar return. Both gained an optional
+  `bars_per_year`: `var_sharpe` is per-observation by default, and passing
+  `bars_per_year` converts an annualised Sharpe variance to per-observation
+  internally. This closes the unit trap where `path_metrics(...,
+  bars_per_year=...)` returns an annualised Sharpe whose variance does not
+  match the per-observation contract DSR requires.
 - `path_metrics` and `default_backtest_metrics`: reduce an
   `(n_paths, n_samples)` CPCV path matrix to a per-path DataFrame of
   Sharpe, Calmar, max drawdown, and total return in one call.
