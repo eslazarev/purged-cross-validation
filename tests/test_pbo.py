@@ -173,3 +173,13 @@ class TestPBOValidation:
             probability_of_backtest_overfitting(
                 self._returns(), n_splits=4, metric=lambda r: float("nan")
             )
+
+    def test_rejects_non_scalar_metric_result(self) -> None:
+        """A metric that returns a vector must raise a clear error, not an
+        opaque IndexError from downstream argmax/rank indexing."""
+        with pytest.raises(ValueError, match="scalar"):
+            probability_of_backtest_overfitting(
+                self._returns(),
+                n_splits=4,
+                metric=lambda r: r[:2],  # type: ignore[arg-type,return-value]
+            )

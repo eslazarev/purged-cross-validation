@@ -114,6 +114,8 @@ class TrialSharpeRecorder:
         ``returns`` you will later deflate). Do that and the recorder feeds
         ``deflated_sharpe_ratio`` directly, with no unit conversion.
         """
+        if ddof < 0:
+            raise ValueError(f"ddof must be >= 0, got {ddof}.")
         arr = self.sharpes()
         if arr.size <= ddof:
             return float("nan")

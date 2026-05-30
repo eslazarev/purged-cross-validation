@@ -147,8 +147,8 @@ def _to_per_observation_var(var_sharpe: float, bars_per_year: int | None) -> flo
     """
     if bars_per_year is None:
         return var_sharpe
-    if bars_per_year <= 0:
-        raise ValueError(f"bars_per_year must be positive, got {bars_per_year}.")
+    if not np.isfinite(bars_per_year) or bars_per_year <= 0:
+        raise ValueError(f"bars_per_year must be a positive finite number, got {bars_per_year}.")
     return var_sharpe / bars_per_year
 
 
@@ -274,7 +274,9 @@ class DSRDiagnostics:
             maximum Sharpe of ``n_trials`` candidates under the null.
         expected_max_z: Standardized expected maximum (the bracket term);
             ``sr_star = sqrt(var_sharpe) * expected_max_z``.
-        var_sharpe: The ``var_sharpe`` passed in, echoed for the record.
+        var_sharpe: The per-observation Sharpe variance used in the
+            deflation (after any ``bars_per_year`` conversion), so that
+            ``sr_star == sqrt(var_sharpe) * expected_max_z`` holds.
         n_trials: The ``n_trials`` passed in.
         n_obs: Track record length (number of observations in ``returns``).
         skew: Sample skew of ``returns``.

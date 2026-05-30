@@ -63,8 +63,8 @@ def default_backtest_metrics(
         >>> round(m["max_drawdown"], 4)
         0.02
     """
-    if bars_per_year is not None and bars_per_year <= 0:
-        raise ValueError(f"bars_per_year must be positive, got {bars_per_year}.")
+    if bars_per_year is not None and (not np.isfinite(bars_per_year) or bars_per_year <= 0):
+        raise ValueError(f"bars_per_year must be a positive finite number, got {bars_per_year}.")
     arr = np.asarray(path, dtype=float)
     arr = arr[np.isfinite(arr)]
     if arr.size < 2:

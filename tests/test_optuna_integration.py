@@ -58,6 +58,11 @@ class TestTrialSharpeRecorder:
         assert rec.n_trials() == 1
         assert rec.sharpes().tolist() == [2.0]
 
+    def test_var_sharpe_rejects_negative_ddof(self) -> None:
+        rec = TrialSharpeRecorder()
+        with pytest.raises(ValueError, match="ddof"):
+            rec.var_sharpe(ddof=-1)
+
     def test_var_sharpe_nan_below_two_trials(self) -> None:
         rec = TrialSharpeRecorder()
         assert np.isnan(rec.var_sharpe())

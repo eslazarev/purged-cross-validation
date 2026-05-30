@@ -201,7 +201,8 @@ def probability_of_backtest_overfitting(
         embargo: Optional embargo horizon (requires the time series).
 
     Returns:
-        A :class:`PBOResult` mapping.
+        A :class:`PBOResult` (frozen dataclass; read fields by attribute,
+        e.g. ``result.pbo``, ``result.slope``).
 
     Raises:
         ValueError: on a malformed ``returns`` matrix, an odd or too-small
@@ -255,8 +256,22 @@ def probability_of_backtest_overfitting(
         if len(is_idx) == 0 or len(oos_idx) == 0:
             n_dropped += 1
             continue
-        is_perf = np.array([metric(matrix[j, is_idx]) for j in range(n_configs)])
-        oos_perf = np.array([metric(matrix[j, oos_idx]) for j in range(n_configs)])
+        try:
+            is_perf = np.asarray([metric(matrix[j, is_idx]) for j in range(n_configs)], dtype=float)
+            oos_perf = np.asarray(
+                [metric(matrix[j, oos_idx]) for j in range(n_configs)], dtype=float
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "metric must return a single finite number per configuration; "
+                "it returned a non-numeric or ragged value."
+            ) from exc
+        if is_perf.ndim != 1 or oos_perf.ndim != 1:
+            raise ValueError(
+                "metric must return a scalar per configuration, got a "
+                f"{max(is_perf.ndim, oos_perf.ndim)}-D result; do not return a "
+                "vector (e.g. a slice of the input)."
+            )
         if not np.isfinite(is_perf).all() or not np.isfinite(oos_perf).all():
             raise ValueError(
                 "metric returned a non-finite value; PBO requires a finite score "

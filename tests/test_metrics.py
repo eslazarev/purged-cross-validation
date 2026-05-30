@@ -270,6 +270,13 @@ class TestDeflatedSharpeRatio:
             with pytest.raises(ValueError, match="bars_per_year"):
                 deflated_sharpe_ratio(returns, 10, 0.01, bars_per_year=bad)
 
+    def test_rejects_non_finite_bars_per_year(self) -> None:
+        rng = np.random.default_rng(43)
+        returns = rng.normal(0.001, 0.01, 100)
+        for bad in (float("nan"), float("inf")):
+            with pytest.raises(ValueError, match="bars_per_year"):
+                deflated_sharpe_ratio(returns, 10, 0.01, bars_per_year=bad)  # type: ignore[arg-type]
+
 
 class TestDeflatedSharpeRatioFull:
     def test_dsr_field_matches_scalar_function(self) -> None:
