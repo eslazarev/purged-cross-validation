@@ -1,0 +1,92 @@
+\begin{thebibliography}{999}
+
+\bibitem[Teodorescu and Obreja~Bra{\c{s}}oveanu(2025)]{teodorescu2025regret}
+Teodorescu, V.; Obreja~Bra{\c{s}}oveanu, L.
+\newblock Assessing the Validity of k-Fold Cross-Validation for Model
+  Selection: Evidence from Bankruptcy Prediction Using Random Forest and
+  XGBoost.
+\newblock {\em Computation} {\bf 2025}, {\em 13},~127.
+\newblock {\url{https://doi.org/10.3390/computation13050127}}.
+
+\bibitem[Kaufman et~al.(2012)Kaufman, Rosset, Perlich, and
+  Stitelman]{kaufman2012}
+Kaufman, S.; Rosset, S.; Perlich, C.; Stitelman, O.
+\newblock Leakage in Data Mining: Formulation, Detection, and Avoidance.
+\newblock {\em ACM Transactions on Knowledge Discovery from Data} {\bf 2012},
+  {\em 6},~1--21.
+\newblock {\url{https://doi.org/10.1145/2382577.2382579}}.
+
+\bibitem[McDermott et~al.(2021)McDermott, Wang, Marinsek, Ranganath, Foschini,
+  and Ghassemi]{mcdermott2021}
+McDermott, M.B.A.; Wang, S.; Marinsek, N.; Ranganath, R.; Foschini, L.;
+  Ghassemi, M.
+\newblock Reproducibility in Machine Learning for Health Research: Still a Ways
+  to Go.
+\newblock {\em Science Translational Medicine} {\bf 2021}, {\em 13}.
+\newblock {\url{https://doi.org/10.1126/scitranslmed.abb1655}}.
+
+\bibitem[Kapoor and Narayanan(2023)]{kapoor2023leakage}
+Kapoor, S.; Narayanan, A.
+\newblock Leakage and the Reproducibility Crisis in Machine-Learning-Based
+  Science.
+\newblock {\em Patterns} {\bf 2023}, {\em 4},~100804.
+\newblock {\url{https://doi.org/10.1016/j.patter.2023.100804}}.
+
+\bibitem[Roberts et~al.(2021)Roberts, Driggs, Thorpe,
+  et~al.]{roberts2021pitfalls}
+Roberts, M.; Driggs, D.; Thorpe, M.;  et~al.
+\newblock Common Pitfalls and Recommendations for Using Machine Learning to
+  Detect and Prognosticate for COVID-19 Using Chest Radiographs and CT Scans.
+\newblock {\em Nature Machine Intelligence} {\bf 2021}, {\em 3},~199--217.
+\newblock {\url{https://doi.org/10.1038/s42256-021-00307-0}}.
+
+\bibitem[L{\'o}pez~de Prado(2018)]{lopezdeprado2018afml}
+L{\'o}pez~de Prado, M.
+\newblock {\em Advances in Financial Machine Learning}; Wiley: Hoboken, NJ,
+  2018.
+\newblock Purging and embargoing: chapter 7. Combinatorial Purged
+  Cross-Validation: chapter 12.
+
+\bibitem[Albelali and Ahmed(2025)]{hiddenleaks2025}
+Albelali, S.; Ahmed, M.
+\newblock Hidden Leaks in Time Series Forecasting: How Data Leakage Affects
+  LSTM Evaluation Across Configurations and Validation Strategies,  2025,
+  \href{http://arxiv.org/abs/2512.06932}{{\normalfont
+  [arXiv:cs.LG/2512.06932]}}.
+\newblock {\url{https://doi.org/10.48550/arXiv.2512.06932}}.
+
+\bibitem[Lazarev(2026)]{purgedcv2026}
+Lazarev, E.
+\newblock \pkg{purgedcv}: scikit-learn-compatible purged and combinatorial
+  cross-validation for time-series and panel machine learning.
+\newblock Python package,
+  \url{https://github.com/eslazarev/purged-cross-validation},  2026.
+\newblock Software concept DOI; MIT license.,
+  {\url{https://doi.org/10.5281/zenodo.20312695}}.
+
+\bibitem[Pedregosa et~al.(2011)Pedregosa, Varoquaux, Gramfort, Michel, Thirion,
+  Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
+  Cournapeau, Brucher, Perrot, and Duchesnay]{pedregosa2011sklearn}
+Pedregosa, F.; Varoquaux, G.; Gramfort, A.; Michel, V.; Thirion, B.; Grisel,
+  O.; Blondel, M.; Prettenhofer, P.; Weiss, R.; Dubourg, V.;  et~al.
+\newblock Scikit-learn: Machine Learning in Python.
+\newblock {\em Journal of Machine Learning Research} {\bf 2011}, {\em
+  12},~2825--2830.
+
+\bibitem[{UK Power Networks}(2014)]{ukpn_lcl}
+{UK Power Networks}.
+\newblock SmartMeter Energy Consumption Data in London Households (Low Carbon
+  London).
+\newblock London Datastore,  2014.
+\newblock Dataset \path{smartmeter-energy-use-data-in-london-households}; open
+  terms.
+
+\bibitem[Pirbazari et~al.(2020)Pirbazari, Farmanbar, Chakravorty, and
+  Rong]{pirbazari2020generalization}
+Pirbazari, A.M.; Farmanbar, M.; Chakravorty, A.; Rong, C.
+\newblock Short-Term Load Forecasting Using Smart Meter Data: A Generalization
+  Analysis.
+\newblock {\em Processes} {\bf 2020}, {\em 8},~484.
+\newblock {\url{https://doi.org/10.3390/pr8040484}}.
+
+\end{thebibliography}

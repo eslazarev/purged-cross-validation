@@ -14,7 +14,7 @@
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![CodeFactor](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation/badge)](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation)
 
-**[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** — purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
+**[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 
 *Cite this software:* see [`CITATION.cff`](CITATION.cff) and [`paper/paper.md`](paper/paper.md) (JOSS paper).
 
@@ -55,11 +55,21 @@ Same kind of question, opposite framing: on a partially predictable real task, d
 | naive shuffled KFold | RF d=None     | 2.638 kWh      | +0.759        |
 | PurgedGroupKFold     | Ridge α=0.01  | **2.464 kWh**  | **+0.783**    |
 
-The honest-selected model deploys at **6.6% lower MAE** on the 12 unseen households. Holds across 5 random seeds; honest wins all five with a median improvement of 7.7%.
+The honest-selected model deploys at **6.6% lower MAE** on the 12 unseen households. Across **30 random 48/12 household partitions**, honest wins every single one: naive picks deep RandomForest in all 30, honest picks Ridge in all 30, and the honest selection deploys better in all 30:
+
+| | value |
+|---|---|
+| Honest deploys better | **30 / 30** partitions |
+| Naive selector regret, median (IQR) | 0.28 kWh (0.18 to 0.52) |
+| Honest selector regret, median (IQR) | **0** (exactly zero) |
+| Naive − honest MAE, median | 0.28 kWh (**13.3% relative**) |
+| Range | 0.11 to 1.79 kWh |
+
+Plain `sklearn.GroupKFold` gives the same selection as `PurgedGroupKFold` here: the effect is a property of group-aware validation, not of a specific package ([`examples/selection_regret_lcl_seeds.py`](examples/selection_regret_lcl_seeds.py)).
 
 ![Honest CV deploys better on new LCL households: naive shuffled KFold picks deep RandomForest and deploys at 2.638 kWh; PurgedGroupKFold picks Ridge and deploys at 2.464 kWh.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/selection_regret_lcl.png)
 
-The naive selector picks deep RandomForest because the household-identifier feature lets it memorise per-household baselines inside the shuffled CV. On truly unseen households that feature is useless and the model collapses. An ablation that removes the identifier flattens the gap to zero, confirming the mechanism.
+The naive selector picks deep RandomForest because the household-identifier feature lets it memorise per-household baselines inside the shuffled CV. On truly unseen households that feature is useless and the model collapses. An ablation that removes the identifier flattens the gap to zero. A second variant replaces the raw identifier with a **leakage-aware target-mean encoding** of the customer's average load (the kind of feature a careful practitioner would use): the gap reproduces at median 0.36 kWh (15.6% relative, 30/30 wins), confirming the effect is not an artifact of the contrived identifier ([`examples/selection_regret_lcl_targetenc.py`](examples/selection_regret_lcl_targetenc.py)).
 
 ---
 
@@ -121,7 +131,7 @@ print(f"Kept:   {kept_idx.tolist()}")    # [0, 1, 2]    -> predict days 6, 7, 8
 print(f"Purged: {purged_idx.tolist()}")  # [3, 4, 5, 6] -> predict days 9, 10, 11, 12
 ```
 
-Each bar below is one observation's 5-day feature window. The four red bars cross into the test window (dashed line) — their features overlap the test period, so `purge` drops them. The three green bars stay fully before it; `→ day 8` only touches the boundary and is kept, because label horizons are half-open.
+Each bar below is one observation's 5-day feature window. The four red bars cross into the test window (dashed line): their features overlap the test period, so `purge` drops them. The three green bars stay fully before it; `→ day 8` only touches the boundary and is kept, because label horizons are half-open.
 
 ![Purge on a 5-day sliding window: training observations whose feature window overlaps the test window are dropped, leaving a clean gap before the test block.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/purge_example.png)
 
@@ -129,7 +139,7 @@ Each bar below is one observation's 5-day feature window. The four red bars cros
 
 ### 2. The post-test buffer: `apply_embargo`
 
-`apply_embargo` is the second leakage guard. Where `purge` removes label overlap, embargo drops a fixed buffer of training rows right *after* the test fold — their features are still serially correlated with the test period, so they leak even when their labels do not. The buffer extends only after the test, never before it.
+`apply_embargo` is the second leakage guard. Where `purge` removes label overlap, embargo drops a fixed buffer of training rows right *after* the test fold; their features are still serially correlated with the test period, so they leak even when their labels do not. The buffer extends only after the test, never before it.
 
 ```python
 import numpy as np
@@ -193,7 +203,7 @@ for i, (train_idx, test_idx) in enumerate(cv.split(X), 1):
 
 Three folds tile the end of the series. Each fold trains on the past and tests on the next block; the red purge gap right before each test is removed automatically. *Expanding* grows the training set every fold; *sliding* keeps it a fixed size and moves it forward.
 
-![WalkForwardSplit over 24 rows: three folds, each training before its test block, with the purge gap removed — shown for both the expanding and the sliding training window.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/walkforward_example.png)
+![WalkForwardSplit over 24 rows: three folds, each training before its test block, with the purge gap removed; shown for both the expanding and the sliding training window.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/walkforward_example.png)
 
 ---
 

@@ -1,0 +1,191 @@
+\begin{thebibliography}{21}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Kaufman et~al.(2012)Kaufman, Rosset, Perlich, and
+  Stitelman]{kaufman2012}
+Shachar Kaufman, Saharon Rosset, Claudia Perlich, and Ori Stitelman.
+\newblock Leakage in data mining: Formulation, detection, and avoidance.
+\newblock \emph{ACM Transactions on Knowledge Discovery from Data}, 6\penalty0
+  (4):\penalty0 1--21, 2012.
+\newblock \doi{10.1145/2382577.2382579}.
+
+\bibitem[McDermott et~al.(2021)McDermott, Wang, Marinsek, Ranganath, Foschini,
+  and Ghassemi]{mcdermott2021}
+Matthew B.~A. McDermott, Shirly Wang, Nikki Marinsek, Rajesh Ranganath, Luca
+  Foschini, and Marzyeh Ghassemi.
+\newblock Reproducibility in machine learning for health research: Still a ways
+  to go.
+\newblock \emph{Science Translational Medicine}, 13\penalty0 (586), 2021.
+\newblock \doi{10.1126/scitranslmed.abb1655}.
+
+\bibitem[L{\'o}pez~de Prado(2018)]{lopezdeprado2018afml}
+Marcos L{\'o}pez~de Prado.
+\newblock \emph{Advances in Financial Machine Learning}.
+\newblock Wiley, Hoboken, NJ, 2018.
+\newblock ISBN 9781119482086.
+\newblock Purging and embargoing: chapter 7. Combinatorial Purged
+  Cross-Validation: chapter 12.
+
+\bibitem[Bailey and L{\'o}pez~de Prado(2012)]{bailey2012psr}
+David~H. Bailey and Marcos L{\'o}pez~de Prado.
+\newblock The sharpe ratio efficient frontier.
+\newblock \emph{Journal of Risk}, 15\penalty0 (2):\penalty0 3--44, 2012.
+
+\bibitem[Bailey and L{\'o}pez~de Prado(2014)]{bailey2014dsr}
+David~H. Bailey and Marcos L{\'o}pez~de Prado.
+\newblock The deflated sharpe ratio: Correcting for selection bias, backtest
+  overfitting, and non-normality.
+\newblock \emph{Journal of Portfolio Management}, 40\penalty0 (5):\penalty0
+  94--107, 2014.
+
+\bibitem[Pedregosa et~al.(2011)Pedregosa, Varoquaux, Gramfort, Michel, Thirion,
+  Grisel, Blondel, Prettenhofer, Weiss, Dubourg, Vanderplas, Passos,
+  Cournapeau, Brucher, Perrot, and Duchesnay]{pedregosa2011sklearn}
+Fabian Pedregosa, Ga{\"e}l Varoquaux, Alexandre Gramfort, Vincent Michel,
+  Bertrand Thirion, Olivier Grisel, Mathieu Blondel, Peter Prettenhofer, Ron
+  Weiss, Vincent Dubourg, Jake Vanderplas, Alexandre Passos, David Cournapeau,
+  Matthieu Brucher, Matthieu Perrot, and {\'E}douard Duchesnay.
+\newblock Scikit-learn: Machine learning in python.
+\newblock \emph{Journal of Machine Learning Research}, 12:\penalty0 2825--2830,
+  2011.
+
+\bibitem[Lazarev(2026{\natexlab{a}})]{purgedcv2026}
+Evgenii Lazarev.
+\newblock \pkg{purgedcv}: scikit-learn-compatible purged and combinatorial
+  cross-validation for time-series and panel machine learning.
+\newblock Python package,
+  \url{https://github.com/eslazarev/purged-cross-validation},
+  2026{\natexlab{a}}.
+\newblock Software concept DOI; MIT license.
+
+\bibitem[Harris et~al.(2020)Harris, Millman, van~der Walt, Gommers, Virtanen,
+  Cournapeau, Wieser, Taylor, Berg, Smith, Kern, Picus, Hoyer, van Kerkwijk,
+  Brett, Haldane, Del~R{\'i}o, Wiebe, Peterson, G{\'e}rard-Marchant, Sheppard,
+  Reddy, Weckesser, Abbasi, Gohlke, and Oliphant]{harris2020numpy}
+Charles~R. Harris, K.~Jarrod Millman, St{\'e}fan~J. van~der Walt, Ralf Gommers,
+  Pauli Virtanen, David Cournapeau, Eric Wieser, Julian Taylor, Sebastian Berg,
+  Nathaniel~J. Smith, Robert Kern, Matti Picus, Stephan Hoyer, Marten~H. van
+  Kerkwijk, Matthew Brett, Allan Haldane, Jaime~Fern{\'a}ndez Del~R{\'i}o, Mark
+  Wiebe, Pearu Peterson, Pierre G{\'e}rard-Marchant, Kevin Sheppard, Tyler
+  Reddy, Warren Weckesser, Hameer Abbasi, Christoph Gohlke, and Travis~E.
+  Oliphant.
+\newblock Array programming with {NumPy}.
+\newblock \emph{Nature}, 585\penalty0 (7825):\penalty0 357--362, 2020.
+\newblock \doi{10.1038/s41586-020-2649-2}.
+
+\bibitem[McKinney(2010)]{mckinney2010pandas}
+Wes McKinney.
+\newblock Data structures for statistical computing in {Python}.
+\newblock In \emph{Proceedings of the 9th Python in Science Conference}, pages
+  56--61, 2010.
+\newblock \doi{10.25080/Majora-92bf1922-00a}.
+
+\bibitem[Virtanen et~al.(2020)Virtanen, Gommers, Oliphant, Haberland, Reddy,
+  Cournapeau, Burovski, Peterson, Weckesser, Bright, van~der Walt, Brett,
+  Wilson, Millman, Mayorov, Nelson, Jones, Kern, Larson, Carey, Polat, Feng,
+  Moore, VanderPlas, Laxalde, Perktold, Cimrman, Henriksen, Quintero, Harris,
+  Archibald, Ribeiro, Pedregosa, and van Mulbregt]{virtanen2020scipy}
+Pauli Virtanen, Ralf Gommers, Travis~E. Oliphant, Matt Haberland, Tyler Reddy,
+  David Cournapeau, Evgeni Burovski, Pearu Peterson, Warren Weckesser, Jonathan
+  Bright, St{\'e}fan~J. van~der Walt, Matthew Brett, Joshua Wilson, K.~Jarrod
+  Millman, Nikolay Mayorov, Andrew R.~J. Nelson, Eric Jones, Robert Kern, Eric
+  Larson, C.~J. Carey, {\.I}lhan Polat, Yu~Feng, Eric~W. Moore, Jake
+  VanderPlas, Denis Laxalde, Josef Perktold, Robert Cimrman, Ian Henriksen,
+  E.~A. Quintero, Charles~R. Harris, Anne~M. Archibald, Ant{\^o}nio~H. Ribeiro,
+  Fabian Pedregosa, and Paul van Mulbregt.
+\newblock {SciPy} 1.0: Fundamental algorithms for scientific computing in
+  {Python}.
+\newblock \emph{Nature Methods}, 17:\penalty0 261--272, 2020.
+\newblock \doi{10.1038/s41592-019-0686-2}.
+
+\bibitem[{UK Power Networks}(2014)]{ukpn_lcl}
+{UK Power Networks}.
+\newblock Smartmeter energy consumption data in london households (low carbon
+  london).
+\newblock London Datastore, 2014.
+\newblock Dataset \texttt{smartmeter-energy-use-data-in-london-households};
+  open terms.
+
+\bibitem[{timeseriescv contributors}(2018)]{timeseriescv2018}
+{timeseriescv contributors}.
+\newblock \pkg{timeseriescv}: scikit-learn style cross-validation for time
+  series.
+\newblock Python package, \url{https://pypi.org/project/timeseriescv/}, 2018.
+\newblock Version 0.2.
+
+\bibitem[{Hudson and Thames}(2026)]{mlfinlab2026}
+{Hudson and Thames}.
+\newblock \pkg{mlfinlab}: Financial machine learning package.
+\newblock Software product, \url{https://hudsonthames.org/mlfinlab/}, 2026.
+\newblock Accessed 2026-05-21.
+
+\bibitem[{U.S. Geological Survey}(2026)]{usgs_catalog}
+{U.S. Geological Survey}.
+\newblock Earthquake catalog.
+\newblock USGS FDSN event web service, 2026.
+\newblock Public domain. \url{https://earthquake.usgs.gov/fdsnws/event/1/};
+  accessed 2026-05-21.
+
+\bibitem[De~Vito et~al.(2008)De~Vito, Massera, Piga, Martinotto, and
+  Di~Francia]{devito2008airquality}
+S.~De~Vito, E.~Massera, M.~Piga, L.~Martinotto, and G.~Di~Francia.
+\newblock On field calibration of an electronic nose for benzene estimation in
+  an urban pollution monitoring scenario.
+\newblock \emph{Sensors and Actuators B: Chemical}, 129\penalty0 (2):\penalty0
+  750--757, 2008.
+\newblock \doi{10.1016/j.snb.2007.09.060}.
+
+\bibitem[Menne et~al.(2012)Menne, Durre, Vose, Gleason, and
+  Houston]{noaa_ghcnd}
+Matthew~J. Menne, Imke Durre, Russell~S. Vose, Byron~E. Gleason, and Tamara~G.
+  Houston.
+\newblock An overview of the global historical climatology network-daily
+  database.
+\newblock \emph{Journal of Atmospheric and Oceanic Technology}, 29\penalty0
+  (7):\penalty0 897--910, 2012.
+\newblock \doi{10.1175/JTECH-D-11-00103.1}.
+
+\bibitem[Saxena et~al.(2008)Saxena, Goebel, Simon, and Eklund]{nasa_cmapss}
+Abhinav Saxena, Kai Goebel, Don Simon, and Neil Eklund.
+\newblock Damage propagation modeling for aircraft engine run-to-failure
+  simulation.
+\newblock In \emph{International Conference on Prognostics and Health
+  Management}, 2008.
+\newblock \doi{10.1109/PHM.2008.4711414}.
+
+\bibitem[Goldberger et~al.(2000)Goldberger, Amaral, Glass, Hausdorff, Ivanov,
+  Mark, Mietus, Moody, Peng, and Stanley]{physionet2012goldberger}
+Ary~L. Goldberger, Luis A.~N. Amaral, Leon Glass, Jeffrey~M. Hausdorff,
+  Plamen~Ch. Ivanov, Roger~G. Mark, Joseph~E. Mietus, George~B. Moody,
+  Chung-Kang Peng, and H.~Eugene Stanley.
+\newblock Physiobank, physiotoolkit, and physionet: Components of a new
+  research resource for complex physiologic signals.
+\newblock \emph{Circulation}, 101\penalty0 (23):\penalty0 e215--e220, 2000.
+\newblock \doi{10.1161/01.CIR.101.23.e215}.
+
+\bibitem[Silva et~al.(2012)Silva, Moody, Scott, Celi, and
+  Mark]{physionet2012silva}
+Ikaro Silva, George Moody, Daniel~J. Scott, Leo~A. Celi, and Roger~G. Mark.
+\newblock Predicting in-hospital mortality of icu patients: The
+  physionet/computing in cardiology challenge 2012.
+\newblock In \emph{Computing in Cardiology}, volume~39, pages 245--248, 2012.
+
+\bibitem[{PJM Interconnection}(2026)]{pjm_load}
+{PJM Interconnection}.
+\newblock Hourly metered load data.
+\newblock Public historical load data, 2026.
+\newblock Mirror used by the example; public domain dedication (CC0); accessed
+  2026-05-21.
+
+\bibitem[Lazarev(2026{\natexlab{b}})]{binance_pricehub}
+Evgenii Lazarev.
+\newblock pricehub: Unified ohlc market-data fetcher.
+\newblock Python package, \url{https://pypi.org/project/pricehub/},
+  2026{\natexlab{b}}.
+\newblock Binance public spot market data; subject to the exchange API terms.
+
+\end{thebibliography}
