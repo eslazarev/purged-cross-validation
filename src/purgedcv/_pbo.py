@@ -164,6 +164,100 @@ def _iter_is_oos(
     yield from cv.split(placeholder)
 
 
+def _validate_pbo_inputs(
+    returns: NDArrayAny,
+    n_splits: int,
+    prediction_times: pd.Series | None,
+    evaluation_times: pd.Series | None,
+) -> tuple[NDArrayAny, int, int]:
+    """Validate the PBO inputs and return ``(matrix, n_configs, n_obs)``."""
+    if n_splits % 2 != 0:
+        raise ValueError(f"n_splits must be even for CSCV, got {n_splits}.")
+    matrix = np.asarray(returns, dtype=float)
+    if matrix.ndim != 2:
+        raise ValueError(f"returns must be a 2-D (n_configs, n_obs) array, got {matrix.ndim}-D.")
+    n_configs, n_obs = matrix.shape
+    if n_configs < 2:
+        raise ValueError(f"returns needs at least 2 configurations, got {n_configs}.")
+    if n_obs < n_splits:
+        raise ValueError(
+            f"returns has n_obs={n_obs} columns, fewer than n_splits={n_splits}; "
+            "CSCV requires non-empty blocks."
+        )
+    if not np.isfinite(matrix).all():
+        raise ValueError("returns contains NaN or infinite values.")
+    if prediction_times is not None and len(prediction_times) != n_obs:
+        raise ValueError(
+            f"prediction_times length {len(prediction_times)} does not match n_obs={n_obs}."
+        )
+    if evaluation_times is not None and len(evaluation_times) != n_obs:
+        raise ValueError(
+            f"evaluation_times length {len(evaluation_times)} does not match n_obs={n_obs}."
+        )
+    return matrix, n_configs, n_obs
+
+
+def _score_combination(
+    matrix: NDArrayAny,
+    is_idx: NDArrayAny,
+    oos_idx: NDArrayAny,
+    metric: PerformanceMetric,
+    n_configs: int,
+) -> tuple[float, float, float]:
+    """Score one CSCV combination: ``(logit, is_best, oos_best)`` for the IS-best."""
+    try:
+        is_perf = np.asarray([metric(matrix[j, is_idx]) for j in range(n_configs)], dtype=float)
+        oos_perf = np.asarray([metric(matrix[j, oos_idx]) for j in range(n_configs)], dtype=float)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "metric must return a single finite number per configuration; "
+            "it returned a non-numeric or ragged value."
+        ) from exc
+    if is_perf.ndim != 1 or oos_perf.ndim != 1:
+        raise ValueError(
+            "metric must return a scalar per configuration, got a "
+            f"{max(is_perf.ndim, oos_perf.ndim)}-D result; do not return a "
+            "vector (e.g. a slice of the input)."
+        )
+    if not np.isfinite(is_perf).all() or not np.isfinite(oos_perf).all():
+        raise ValueError(
+            "metric returned a non-finite value; PBO requires a finite score "
+            "for every configuration on every in-sample and out-of-sample "
+            "split. Make the metric return a finite fallback for degenerate "
+            "slices (the default sharpe scores a constant slice 0.0)."
+        )
+    best = int(np.argmax(is_perf))
+    # Relative OOS rank of the IS-best, in (0, 1): average ranks handle ties,
+    # and dividing by n_configs + 1 keeps the logit finite even when the
+    # IS-best is strictly worst or best out of sample.
+    ranks = stats.rankdata(oos_perf)
+    omega = float(ranks[best] / (n_configs + 1))
+    return float(np.log(omega / (1 - omega))), float(is_perf[best]), float(oos_perf[best])
+
+
+def _aggregate_pbo(
+    logits: list[float],
+    is_perf_best: list[float],
+    oos_perf_best: list[float],
+) -> PBOResult:
+    """Assemble the per-combination scores into a :class:`PBOResult`."""
+    logit_arr = np.asarray(logits, dtype=float)
+    is_arr = np.asarray(is_perf_best, dtype=float)
+    oos_arr = np.asarray(oos_perf_best, dtype=float)
+    var_is = float(np.var(is_arr))
+    if var_is > 0 and len(is_arr) > 1:
+        slope = float(np.cov(is_arr, oos_arr, ddof=0)[0, 1] / var_is)
+    else:
+        slope = float("nan")
+    return PBOResult(
+        pbo=float(np.mean(logit_arr < 0)),
+        logits=logit_arr,
+        slope=slope,
+        is_oos_performance=np.column_stack([is_arr, oos_arr]),
+        n_combos=len(logits),
+    )
+
+
 def probability_of_backtest_overfitting(
     returns: NDArrayAny,
     n_splits: int = 16,
@@ -221,30 +315,9 @@ def probability_of_backtest_overfitting(
         70
     """
     n_splits = _validate_integer("n_splits", n_splits, minimum=2)
-    if n_splits % 2 != 0:
-        raise ValueError(f"n_splits must be even for CSCV, got {n_splits}.")
-
-    matrix = np.asarray(returns, dtype=float)
-    if matrix.ndim != 2:
-        raise ValueError(f"returns must be a 2-D (n_configs, n_obs) array, got {matrix.ndim}-D.")
-    n_configs, n_obs = matrix.shape
-    if n_configs < 2:
-        raise ValueError(f"returns needs at least 2 configurations, got {n_configs}.")
-    if n_obs < n_splits:
-        raise ValueError(
-            f"returns has n_obs={n_obs} columns, fewer than n_splits={n_splits}; "
-            "CSCV requires non-empty blocks."
-        )
-    if not np.isfinite(matrix).all():
-        raise ValueError("returns contains NaN or infinite values.")
-    if prediction_times is not None and len(prediction_times) != n_obs:
-        raise ValueError(
-            f"prediction_times length {len(prediction_times)} does not match " f"n_obs={n_obs}."
-        )
-    if evaluation_times is not None and len(evaluation_times) != n_obs:
-        raise ValueError(
-            f"evaluation_times length {len(evaluation_times)} does not match " f"n_obs={n_obs}."
-        )
+    matrix, n_configs, n_obs = _validate_pbo_inputs(
+        returns, n_splits, prediction_times, evaluation_times
+    )
 
     logits: list[float] = []
     is_perf_best: list[float] = []
@@ -256,38 +329,10 @@ def probability_of_backtest_overfitting(
         if len(is_idx) == 0 or len(oos_idx) == 0:
             n_dropped += 1
             continue
-        try:
-            is_perf = np.asarray([metric(matrix[j, is_idx]) for j in range(n_configs)], dtype=float)
-            oos_perf = np.asarray(
-                [metric(matrix[j, oos_idx]) for j in range(n_configs)], dtype=float
-            )
-        except (TypeError, ValueError) as exc:
-            raise ValueError(
-                "metric must return a single finite number per configuration; "
-                "it returned a non-numeric or ragged value."
-            ) from exc
-        if is_perf.ndim != 1 or oos_perf.ndim != 1:
-            raise ValueError(
-                "metric must return a scalar per configuration, got a "
-                f"{max(is_perf.ndim, oos_perf.ndim)}-D result; do not return a "
-                "vector (e.g. a slice of the input)."
-            )
-        if not np.isfinite(is_perf).all() or not np.isfinite(oos_perf).all():
-            raise ValueError(
-                "metric returned a non-finite value; PBO requires a finite score "
-                "for every configuration on every in-sample and out-of-sample "
-                "split. Make the metric return a finite fallback for degenerate "
-                "slices (the default sharpe scores a constant slice 0.0)."
-            )
-        best = int(np.argmax(is_perf))
-        # Relative OOS rank of the IS-best, in (0, 1): average ranks handle
-        # ties, and dividing by n_configs + 1 keeps the logit finite even
-        # when the IS-best is strictly worst or best out of sample.
-        ranks = stats.rankdata(oos_perf)
-        omega = float(ranks[best] / (n_configs + 1))
-        logits.append(float(np.log(omega / (1 - omega))))
-        is_perf_best.append(float(is_perf[best]))
-        oos_perf_best.append(float(oos_perf[best]))
+        logit, is_best, oos_best = _score_combination(matrix, is_idx, oos_idx, metric, n_configs)
+        logits.append(logit)
+        is_perf_best.append(is_best)
+        oos_perf_best.append(oos_best)
 
     if n_dropped:
         warnings.warn(
@@ -300,21 +345,4 @@ def probability_of_backtest_overfitting(
             "every CSCV combination had an empty in-sample set; relax "
             "purge_horizon/embargo or reduce n_splits."
         )
-
-    logit_arr = np.asarray(logits, dtype=float)
-    is_arr = np.asarray(is_perf_best, dtype=float)
-    oos_arr = np.asarray(oos_perf_best, dtype=float)
-    pbo = float(np.mean(logit_arr < 0))
-    var_is = float(np.var(is_arr))
-    if var_is > 0 and len(is_arr) > 1:
-        slope = float(np.cov(is_arr, oos_arr, ddof=0)[0, 1] / var_is)
-    else:
-        slope = float("nan")
-
-    return PBOResult(
-        pbo=pbo,
-        logits=logit_arr,
-        slope=slope,
-        is_oos_performance=np.column_stack([is_arr, oos_arr]),
-        n_combos=len(logits),
-    )
+    return _aggregate_pbo(logits, is_perf_best, oos_perf_best)
