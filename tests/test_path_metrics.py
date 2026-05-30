@@ -72,6 +72,14 @@ class TestDefaultBacktestMetrics:
         with pytest.raises(ValueError, match="bool"):
             default_backtest_metrics(np.array([0.01, -0.02, 0.03]), bars_per_year=True)
 
+    def test_rejects_non_scalar_bars_per_year(self) -> None:
+        """A string or an array must raise the package message, not a leaked
+        numpy TypeError or ambiguous-truth ValueError."""
+        path = np.array([0.01, -0.02, 0.03])
+        for bad in ("252", np.array([252, 253]), np.array([252])):
+            with pytest.raises(ValueError, match="bars_per_year must be a positive finite number"):
+                default_backtest_metrics(path, bars_per_year=bad)  # type: ignore[arg-type]
+
 
 class TestPathMetrics:
     def test_dataframe_shape_and_columns(self) -> None:

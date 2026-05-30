@@ -327,7 +327,8 @@ report a small calibration gap rather than a headline accuracy collapse.
 2021-01-01 to 2023-09-28 (1001 bars), same cached file as notebook 5.
 
 **Source:** the [`pricehub`](https://pypi.org/project/pricehub/) package; the
-notebook also needs the `optuna` extra (`pip install purgedcv[examples,optuna]`).
+notebook also needs Optuna, which the `examples` extra already includes
+(`pip install purgedcv[examples]`).
 
 **Files cached:**
 - `btcusdt_1d_binance_spot_2021_2023.csv` (~0.1 MB) — shared with notebook 5
