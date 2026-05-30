@@ -78,11 +78,19 @@ class TrialSharpeRecorder:
         self._sharpes: list[float] = []
 
     def __call__(self, study: object, trial: _TrialLike) -> None:
-        """Record one trial's Sharpe ratio. Matches the Optuna callback signature."""
+        """Record one trial's Sharpe ratio. Matches the Optuna callback signature.
+
+        Missing, ``None``, non-numeric, and non-finite values are skipped
+        rather than raised: a callback that throws would abort the whole
+        ``study.optimize`` run over a single malformed trial.
+        """
         raw = trial.user_attrs.get(self._attr, trial.value)
         if raw is None:
             return
-        value = float(raw)
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return  # malformed attribute (e.g. a string); treat as unusable
         if np.isfinite(value):
             self._sharpes.append(value)
 

@@ -44,6 +44,22 @@ class TestDefaultBacktestMetrics:
         assert m["max_drawdown"] == 0.0
         assert np.isnan(m["calmar"])  # division by zero drawdown -> nan
 
+    def test_drawdown_counts_opening_loss(self) -> None:
+        """A path that opens with a loss has a drawdown from the pre-trade
+        zero peak; without seeding equity at 0 it would report none."""
+        m = default_backtest_metrics(np.array([-0.1, 0.05]))
+        assert m["max_drawdown"] == pytest.approx(0.1)
+
+    def test_all_loss_path_drawdown_is_total_loss(self) -> None:
+        m = default_backtest_metrics(np.array([-0.02, -0.03]))
+        assert m["max_drawdown"] == pytest.approx(0.05)
+        assert m["total_return"] == pytest.approx(-0.05)
+
+    def test_rejects_non_positive_bars_per_year(self) -> None:
+        for bad in (-252, 0):
+            with pytest.raises(ValueError, match="bars_per_year"):
+                default_backtest_metrics(np.array([0.01, -0.02, 0.03]), bars_per_year=bad)
+
 
 class TestPathMetrics:
     def test_dataframe_shape_and_columns(self) -> None:

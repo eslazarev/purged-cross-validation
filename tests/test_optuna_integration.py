@@ -48,6 +48,16 @@ class TestTrialSharpeRecorder:
         assert rec.n_trials() == 1
         assert rec.sharpes().tolist() == [1.0]
 
+    def test_non_numeric_attr_is_skipped_not_raised(self) -> None:
+        """A malformed (non-numeric) user attribute must not abort the study:
+        the recorder skips it, like None and non-finite values."""
+        rec = TrialSharpeRecorder()
+        rec(study=None, trial=_trial(1.0, sharpe="oops"))  # type: ignore[arg-type]
+        rec(study=None, trial=_trial(None, sharpe=object()))  # type: ignore[arg-type]
+        rec(study=None, trial=_trial(2.0, sharpe=2.0))
+        assert rec.n_trials() == 1
+        assert rec.sharpes().tolist() == [2.0]
+
     def test_var_sharpe_nan_below_two_trials(self) -> None:
         rec = TrialSharpeRecorder()
         assert np.isnan(rec.var_sharpe())

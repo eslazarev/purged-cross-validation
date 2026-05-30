@@ -247,6 +247,13 @@ def probability_of_backtest_overfitting(
             continue
         is_perf = np.array([metric(matrix[j, is_idx]) for j in range(n_configs)])
         oos_perf = np.array([metric(matrix[j, oos_idx]) for j in range(n_configs)])
+        if not np.isfinite(is_perf).all() or not np.isfinite(oos_perf).all():
+            raise ValueError(
+                "metric returned a non-finite value; PBO requires a finite score "
+                "for every configuration on every in-sample and out-of-sample "
+                "split. Make the metric return a finite fallback for degenerate "
+                "slices (the default sharpe scores a constant slice 0.0)."
+            )
         best = int(np.argmax(is_perf))
         # Relative OOS rank of the IS-best, in (0, 1): average ranks handle
         # ties, and dividing by n_configs + 1 keeps the logit finite even

@@ -165,3 +165,11 @@ class TestPBOValidation:
             probability_of_backtest_overfitting(
                 returns, n_splits=4, prediction_times=pred, evaluation_times=pred
             )
+
+    def test_rejects_non_finite_metric_result(self) -> None:
+        """A custom metric that returns a non-finite score must raise rather
+        than silently report pbo=0 with NaN logits."""
+        with pytest.raises(ValueError, match="non-finite value"):
+            probability_of_backtest_overfitting(
+                self._returns(), n_splits=4, metric=lambda r: float("nan")
+            )

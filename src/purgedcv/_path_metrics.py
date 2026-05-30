@@ -60,6 +60,8 @@ def default_backtest_metrics(
         >>> round(m["max_drawdown"], 4)
         0.02
     """
+    if bars_per_year is not None and bars_per_year <= 0:
+        raise ValueError(f"bars_per_year must be positive, got {bars_per_year}.")
     arr = np.asarray(path, dtype=float)
     arr = arr[np.isfinite(arr)]
     if arr.size < 2:
@@ -76,7 +78,11 @@ def default_backtest_metrics(
         sharpe *= float(np.sqrt(bars_per_year))
 
     total_return = float(arr.sum())
-    equity = np.cumsum(arr)
+    # Seed the equity curve with a 0 starting point so the running peak
+    # begins at the pre-trade level. Without it a path that opens with a
+    # loss measures drawdown from its own first (already negative) point
+    # and reports no drawdown at all.
+    equity = np.concatenate([[0.0], np.cumsum(arr)])
     peak = np.maximum.accumulate(equity)
     max_drawdown = float(-(equity - peak).min())  # >= 0
 
