@@ -164,6 +164,12 @@ def _iter_is_oos(
     yield from cv.split(placeholder)
 
 
+def _check_times_length(name: str, times: pd.Series | None, n_obs: int) -> None:
+    """Raise if an optional time series is present but the wrong length."""
+    if times is not None and len(times) != n_obs:
+        raise ValueError(f"{name} length {len(times)} does not match n_obs={n_obs}.")
+
+
 def _validate_pbo_inputs(
     returns: NDArrayAny,
     n_splits: int,
@@ -186,14 +192,8 @@ def _validate_pbo_inputs(
         )
     if not np.isfinite(matrix).all():
         raise ValueError("returns contains NaN or infinite values.")
-    if prediction_times is not None and len(prediction_times) != n_obs:
-        raise ValueError(
-            f"prediction_times length {len(prediction_times)} does not match n_obs={n_obs}."
-        )
-    if evaluation_times is not None and len(evaluation_times) != n_obs:
-        raise ValueError(
-            f"evaluation_times length {len(evaluation_times)} does not match n_obs={n_obs}."
-        )
+    _check_times_length("prediction_times", prediction_times, n_obs)
+    _check_times_length("evaluation_times", evaluation_times, n_obs)
     return matrix, n_configs, n_obs
 
 
