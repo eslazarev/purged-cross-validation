@@ -42,6 +42,7 @@ plugins:
             docstring_style: google
             show_signature_annotations: true
             separate_signature: true
+            merge_init_into_class: true
   - include-markdown
 
 nav:
@@ -57,6 +58,8 @@ nav:
 markdown_extensions:
   - admonition
   - attr_list
+  - pymdownx.arithmatex:
+      generic: true
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -72,6 +75,10 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 extra:
   social:
