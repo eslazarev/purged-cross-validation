@@ -20,6 +20,48 @@
 
 ---
 
+## API summary
+
+| Symbol | Domain | Description |
+|---|---|---|
+| `purge` | D2 | Remove overlapping-horizon training rows |
+| `apply_embargo` | D3 | Remove post-test buffer rows |
+| `WalkForwardSplit` | D5.1 | Sliding / expanding walk-forward CV |
+| `PurgedKFold` | D5.2 | Contiguous test folds with purge + embargo |
+| `PurgedGroupKFold` | D5.3 | Group-aware purged k-fold |
+| `CombinatorialPurgedCV` | D5.4 | C(N,K) combinatorial folds |
+| `CombinatoriallySymmetricCV` | D5.4 | CSCV: symmetric IS/OOS folds, the PBO substrate |
+| `reconstruct_paths` | D6 | Assemble CPCV folds into backtest paths |
+| `path_metrics` | D6 | Per-path Sharpe / Calmar / drawdown / return table |
+| `probabilistic_sharpe_ratio` | D7 | PSR: P(true SR > benchmark) |
+| `deflated_sharpe_ratio` | D7 | DSR: PSR corrected for multiple testing |
+| `deflated_sharpe_ratio_full` | D7 | DSR plus the intermediate deflation quantities |
+| `probability_of_backtest_overfitting` | D7 | PBO via CSCV: how often in-sample selection overfits |
+| `min_track_record_length` | D7 | Minimum observations to establish SR |
+| `effective_n_trials` | D7 | Independent-trial count for a correlated search, for DSR |
+| `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance + effective count for DSR |
+| `diagnostics.*` | D8 | Leakage and embargo audit functions |
+
+---
+
+## Contents
+
+- [The problem](#the-problem)
+- [Does it actually catch leakage?](#does-it-actually-catch-leakage)
+- [Does an honest CV deploy better?](#does-an-honest-cv-deploy-better)
+- [What about a market with no real edge?](#what-about-a-market-with-no-real-edge)
+- [Installation](#installation)
+- [Quickstart](#quickstart)
+  - [1. The core primitive: `purge`](#1-the-core-primitive-purge)
+  - [2. The post-test buffer: `apply_embargo`](#2-the-post-test-buffer-apply_embargo)
+  - [3. Walk-forward CV: `WalkForwardSplit`](#3-walk-forward-cv-walkforwardsplit)
+  - [4. Purged k-fold: `PurgedKFold`](#4-purged-k-fold-purgedkfold)
+  - [5. CPCV + path reconstruction + metrics: the full workflow](#5-cpcv--path-reconstruction--metrics-the-full-workflow)
+- [Methodology references](#methodology-references)
+- [License](#license)
+
+---
+
 ## The problem
 
 Standard k-fold cross-validation assumes the rows are independent. Time-series data is not. When a label resolves over the next few days, it overlaps the labels sitting right next to it, so an ordinary shuffle-split leaks tomorrow's answer back into training. The rows immediately after a test window leak too, because they are serially correlated with it. Both effects quietly inflate backtested Sharpe ratios and hand you strategies that look great on a chart and bleed money once they go live. This library removes both.
@@ -302,31 +344,6 @@ print(f"MinTRL: {int(n_min)} observations")
 ```
 
 ---
-
-## API summary
-
-| Symbol | Domain | Description |
-|---|---|---|
-| `purge` | D2 | Remove overlapping-horizon training rows |
-| `apply_embargo` | D3 | Remove post-test buffer rows |
-| `WalkForwardSplit` | D5.1 | Sliding / expanding walk-forward CV |
-| `PurgedKFold` | D5.2 | Contiguous test folds with purge + embargo |
-| `PurgedGroupKFold` | D5.3 | Group-aware purged k-fold |
-| `CombinatorialPurgedCV` | D5.4 | C(N,K) combinatorial folds |
-| `CombinatoriallySymmetricCV` | D5.4 | CSCV: symmetric IS/OOS folds, the PBO substrate |
-| `reconstruct_paths` | D6 | Assemble CPCV folds into backtest paths |
-| `path_metrics` | D6 | Per-path Sharpe / Calmar / drawdown / return table |
-| `probabilistic_sharpe_ratio` | D7 | PSR: P(true SR > benchmark) |
-| `deflated_sharpe_ratio` | D7 | DSR: PSR corrected for multiple testing |
-| `deflated_sharpe_ratio_full` | D7 | DSR plus the intermediate deflation quantities |
-| `probability_of_backtest_overfitting` | D7 | PBO via CSCV: how often in-sample selection overfits |
-| `min_track_record_length` | D7 | Minimum observations to establish SR |
-| `effective_n_trials` | D7 | Independent-trial count for a correlated search, for DSR |
-| `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance + effective count for DSR |
-| `diagnostics.*` | D8 | Leakage and embargo audit functions |
-
----
-
 
 ## Methodology references
 
