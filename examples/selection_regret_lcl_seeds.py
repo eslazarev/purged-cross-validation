@@ -74,14 +74,14 @@ def load_daily() -> pd.DataFrame:
 
 def build_grid(seed: int):
     return [
-        ("kNN(k=1)",    make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=1))),
-        ("kNN(k=5)",    make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=5))),
-        ("kNN(k=50)",   make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=50))),
+        ("kNN(k=1)", make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=1))),
+        ("kNN(k=5)", make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=5))),
+        ("kNN(k=50)", make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=50))),
         ("Ridge a=.01", make_pipeline(StandardScaler(), Ridge(alpha=0.01))),
-        ("Ridge a=1",   make_pipeline(StandardScaler(), Ridge(alpha=1.0))),
+        ("Ridge a=1", make_pipeline(StandardScaler(), Ridge(alpha=1.0))),
         ("Ridge a=100", make_pipeline(StandardScaler(), Ridge(alpha=100.0))),
-        ("RF d=None",   RandomForestRegressor(n_estimators=100, max_depth=None, random_state=seed, n_jobs=-1)),
-        ("RF d=4",      RandomForestRegressor(n_estimators=100, max_depth=4, random_state=seed, n_jobs=-1)),
+        ("RF d=None", RandomForestRegressor(n_estimators=100, max_depth=None, random_state=seed, n_jobs=-1)),
+        ("RF d=4", RandomForestRegressor(n_estimators=100, max_depth=4, random_state=seed, n_jobs=-1)),
     ]
 
 
@@ -97,7 +97,6 @@ def run_one(clean: pd.DataFrame, all_hh: list, seed: int) -> dict:
     p_s = sel["date"].reset_index(drop=True)
 
     grid = build_grid(seed)
-    picks_models = dict(grid)
     naive_cv = KFold(n_splits=5, shuffle=True, random_state=seed)
     group_cv = GroupKFold(n_splits=5)
     honest_cv = PurgedGroupKFold(n_splits=5, prediction_times=p_s, evaluation_times=p_s, groups=g_s)

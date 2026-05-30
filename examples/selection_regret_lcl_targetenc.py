@@ -63,7 +63,7 @@ class HouseholdMeanEncoder(BaseEstimator, TransformerMixin):
     target, learned on the training fold only. Unseen households (cold start)
     get the global training mean. This is leakage-aware target encoding."""
 
-    def fit(self, X, y):
+    def fit(self, X, y):  # noqa: N803
         ids = X[:, -1]
         y = np.asarray(y, dtype=float)
         self.global_mean_ = float(y.mean())
@@ -72,8 +72,8 @@ class HouseholdMeanEncoder(BaseEstimator, TransformerMixin):
             self.mean_by_id_[float(g)] = float(y[ids == g].mean())
         return self
 
-    def transform(self, X):
-        X = np.asarray(X, dtype=float).copy()
+    def transform(self, X):  # noqa: N803
+        X = np.asarray(X, dtype=float).copy()  # noqa: N806
         ids = X[:, -1]
         enc = np.fromiter((self.mean_by_id_.get(float(g), self.global_mean_) for g in ids),
                           dtype=float, count=len(ids))
@@ -106,14 +106,14 @@ def build_grid(seed: int):
     (for distance/linear models) a scaler, then the estimator."""
     enc = HouseholdMeanEncoder
     return [
-        ("kNN(k=1)",    make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=1))),
-        ("kNN(k=5)",    make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=5))),
-        ("kNN(k=50)",   make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=50))),
+        ("kNN(k=1)", make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=1))),
+        ("kNN(k=5)", make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=5))),
+        ("kNN(k=50)", make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=50))),
         ("Ridge a=.01", make_pipeline(enc(), StandardScaler(), Ridge(alpha=0.01))),
-        ("Ridge a=1",   make_pipeline(enc(), StandardScaler(), Ridge(alpha=1.0))),
+        ("Ridge a=1", make_pipeline(enc(), StandardScaler(), Ridge(alpha=1.0))),
         ("Ridge a=100", make_pipeline(enc(), StandardScaler(), Ridge(alpha=100.0))),
-        ("RF d=None",   make_pipeline(enc(), RandomForestRegressor(n_estimators=100, max_depth=None, random_state=seed, n_jobs=-1))),
-        ("RF d=4",      make_pipeline(enc(), RandomForestRegressor(n_estimators=100, max_depth=4, random_state=seed, n_jobs=-1))),
+        ("RF d=None", make_pipeline(enc(), RandomForestRegressor(n_estimators=100, max_depth=None, random_state=seed, n_jobs=-1))),
+        ("RF d=4", make_pipeline(enc(), RandomForestRegressor(n_estimators=100, max_depth=4, random_state=seed, n_jobs=-1))),
     ]
 
 
