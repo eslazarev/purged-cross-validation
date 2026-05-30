@@ -10,6 +10,7 @@ from scipy import stats
 
 from purgedcv._metrics import (
     deflated_sharpe_ratio,
+    effective_n_trials,
     min_track_record_length,
     probabilistic_sharpe_ratio,
 )
@@ -534,3 +535,69 @@ class TestMinTrackRecordLength:
         kwargs[field] = value
         with pytest.raises(ValueError, match=field):
             min_track_record_length(**kwargs)
+
+
+class TestEffectiveNTrials:
+    def test_independent_series_is_near_full_count(self) -> None:
+        """Uncorrelated trials: the effective count is close to the raw count."""
+        rng = np.random.default_rng(0)
+        x = rng.standard_normal(500)
+        n_eff = effective_n_trials(x)
+        assert 0.6 * 500 <= n_eff <= 500
+
+    def test_autocorrelated_series_collapses(self) -> None:
+        """A random walk is strongly autocorrelated: far fewer effective trials."""
+        rng = np.random.default_rng(1)
+        walk = np.cumsum(rng.standard_normal(500))
+        assert effective_n_trials(walk) < 50
+
+    def test_more_correlation_means_fewer_effective(self) -> None:
+        """Higher AR(1) coefficient -> stronger correlation -> smaller n_eff."""
+        rng = np.random.default_rng(2)
+
+        def ar1(phi: float, n: int) -> NDArrayAny:
+            innov = rng.standard_normal(n)
+            out = np.zeros(n)
+            for t in range(1, n):
+                out[t] = phi * out[t - 1] + innov[t]
+            return out
+
+        n_low = effective_n_trials(ar1(0.3, 1000))
+        n_high = effective_n_trials(ar1(0.95, 1000))
+        assert n_high < n_low
+
+    def test_constant_series_is_one(self) -> None:
+        assert effective_n_trials(np.full(100, 2.5)) == 1
+
+    def test_result_is_bounded(self) -> None:
+        rng = np.random.default_rng(3)
+        n = 300
+        n_eff = effective_n_trials(rng.standard_normal(n))
+        assert 1 <= n_eff <= n
+        assert isinstance(n_eff, int)
+
+    def test_fewer_than_three_returns_raw_count(self) -> None:
+        assert effective_n_trials(np.array([1.0, 2.0])) == 2
+        assert effective_n_trials(np.array([1.0])) == 1
+
+    def test_rejects_unknown_method(self) -> None:
+        with pytest.raises(ValueError, match="method"):
+            effective_n_trials(np.arange(10.0), method="bootstrap")
+
+    def test_rejects_empty_and_non_finite(self) -> None:
+        with pytest.raises(ValueError, match="at least one"):
+            effective_n_trials(np.array([]))
+        with pytest.raises(ValueError, match="NaN or infinite"):
+            effective_n_trials(np.array([1.0, np.nan, 2.0, 3.0]))
+
+    def test_deflates_more_realistically(self) -> None:
+        """The headline use: a correlated search inflates raw n_trials, which
+        crushes DSR; the effective count restores an informative DSR."""
+        rng = np.random.default_rng(4)
+        returns = rng.normal(0.001, 0.01, 504)
+        walk = np.cumsum(rng.standard_normal(6000)) * 0.01  # 6000 correlated trials
+        n_eff = effective_n_trials(walk)
+        assert n_eff < 6000
+        dsr_raw = deflated_sharpe_ratio(returns, 6000, 0.02**2)
+        dsr_eff = deflated_sharpe_ratio(returns, n_eff, 0.02**2)
+        assert dsr_eff >= dsr_raw

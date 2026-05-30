@@ -58,6 +58,20 @@ class TestTrialSharpeRecorder:
         assert rec.n_trials() == 1
         assert rec.sharpes().tolist() == [2.0]
 
+    def test_n_effective_ties_to_effective_n_trials(self) -> None:
+        from purgedcv import effective_n_trials
+
+        rng = np.random.default_rng(7)
+        rec = TrialSharpeRecorder()
+        walk = np.cumsum(rng.standard_normal(400))  # correlated trial path
+        for s in walk:
+            rec(study=None, trial=_trial(float(s), sharpe=float(s)))
+        assert rec.n_effective() == effective_n_trials(rec.sharpes())
+        assert rec.n_effective() < rec.n_trials()
+
+    def test_n_effective_zero_when_empty(self) -> None:
+        assert TrialSharpeRecorder().n_effective() == 0
+
     def test_var_sharpe_rejects_negative_ddof(self) -> None:
         rec = TrialSharpeRecorder()
         with pytest.raises(ValueError, match="ddof"):

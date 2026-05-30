@@ -102,6 +102,24 @@ class TrialSharpeRecorder:
         """Number of trials with a usable (finite) Sharpe ratio recorded."""
         return len(self._sharpes)
 
+    def n_effective(self, method: str = "autocorr") -> int:
+        """Effective number of *independent* trials, for correlated samplers.
+
+        TPE and CMA-ES draw each trial conditioned on the previous ones, so
+        the raw trial count overstates the independent search effort and makes
+        :func:`~purgedcv.deflated_sharpe_ratio` overly conservative. This
+        applies :func:`~purgedcv.effective_n_trials` to the recorded Sharpe
+        series; pass the result as ``n_trials`` to deflate more realistically.
+        Returns 0 when nothing has been recorded yet. See
+        :func:`~purgedcv.effective_n_trials` for the heuristic's caveats.
+        """
+        from purgedcv._metrics import effective_n_trials
+
+        arr = self.sharpes()
+        if arr.size == 0:
+            return 0
+        return effective_n_trials(arr, method=method)
+
     def var_sharpe(self, ddof: int = 1) -> float:
         """Variance of the recorded Sharpe ratios, for ``deflated_sharpe_ratio``.
 

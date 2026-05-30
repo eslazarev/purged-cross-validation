@@ -26,6 +26,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "deflated_sharpe_ratio",
         "deflated_sharpe_ratio_full",
         "diagnostics",
+        "effective_n_trials",
         "EmbargoViolationError",
         "GroupLeakageError",
         "horizons_overlap",

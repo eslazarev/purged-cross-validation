@@ -464,3 +464,75 @@ def min_track_record_length(
     if not np.isfinite(n_minus_1):
         raise ValueError("inputs imply a non-finite minimum track record length.")
     return float(np.ceil(n_minus_1) + 1)
+
+
+def effective_n_trials(trial_sharpes: NDArrayAny, method: str = "autocorr") -> int:
+    """Estimate the number of *independent* trials behind a correlated search.
+
+    :func:`deflated_sharpe_ratio` assumes the ``n_trials`` candidates were
+    drawn independently. Sequential samplers (Optuna's TPE, CMA-ES) draw each
+    trial conditioned on the previous ones, so the trials are autocorrelated
+    and the raw count overstates how many independent bets were really placed.
+    Feeding the raw count inflates the deflated benchmark and makes DSR
+    needlessly conservative (often numerically zero). This returns a smaller
+    effective count to pass to :func:`deflated_sharpe_ratio` instead.
+
+    The estimate is the run length divided by the integrated autocorrelation
+    time of the trial-performance series:
+    ``n_eff = n / (1 + 2 * sum_k rho_k)``, summing the autocorrelations
+    ``rho_k`` until the first non-positive lag (the initial-positive-sequence
+    truncation, Geyer 1992). It is a **heuristic**: it depends on the
+    truncation rule and assumes the trial order reflects the sampler's
+    dependence, so treat the result as an order-of-magnitude correction, not
+    an exact figure.
+
+    Args:
+        trial_sharpes: 1-D array of per-trial performance values (Sharpe or
+            objective), in the order the trials were run. All finite.
+        method: Estimator to use. Only ``"autocorr"`` is implemented.
+
+    Returns:
+        Effective trial count, an integer in ``[1, n]``. A near-independent
+        series returns close to ``n``; a strongly autocorrelated one returns
+        far fewer. A constant series returns 1 (every trial was the same).
+        Fewer than 3 trials returns the raw count (too few to estimate).
+
+    Raises:
+        ValueError: on an unknown ``method``, an empty or non-1-D array, or
+            non-finite values.
+
+    Examples:
+        >>> import numpy as np
+        >>> from purgedcv import effective_n_trials
+        >>> rng = np.random.default_rng(0)
+        >>> indep = rng.standard_normal(400)            # independent trials
+        >>> drift = np.cumsum(rng.standard_normal(400))  # strongly autocorrelated
+        >>> n_indep = effective_n_trials(indep)
+        >>> n_drift = effective_n_trials(drift)
+        >>> 1 <= n_drift < n_indep <= 400
+        True
+    """
+    if method != "autocorr":
+        raise ValueError(f"unknown method {method!r}; only 'autocorr' is supported.")
+    arr = np.asarray(trial_sharpes, dtype=float).ravel()
+    if arr.size == 0:
+        raise ValueError("trial_sharpes must contain at least one value.")
+    if not np.isfinite(arr).all():
+        raise ValueError("trial_sharpes contains NaN or infinite values.")
+    n = arr.size
+    if n < 3:
+        return int(n)  # too few points to estimate autocorrelation
+    centered = arr - arr.mean()
+    var = float(np.dot(centered, centered))
+    if var == 0.0:
+        return 1  # every trial identical: maximally correlated
+    # Autocorrelation at lags 0..n-1 (acf[0] == 1).
+    acf = np.correlate(centered, centered, mode="full")[n - 1 :] / var
+    tau = 1.0
+    for k in range(1, n):
+        rho = float(acf[k])
+        if rho <= 0.0:
+            break
+        tau += 2.0 * rho
+    n_eff = round(n / tau)
+    return int(max(1, min(n, n_eff)))

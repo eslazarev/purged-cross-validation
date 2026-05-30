@@ -321,7 +321,8 @@ print(f"MinTRL: {int(n_min)} observations")
 | `deflated_sharpe_ratio_full` | D7 | DSR plus the intermediate deflation quantities |
 | `probability_of_backtest_overfitting` | D7 | PBO via CSCV: how often in-sample selection overfits |
 | `min_track_record_length` | D7 | Minimum observations to establish SR |
-| `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance for DSR |
+| `effective_n_trials` | D7 | Independent-trial count for a correlated search, for DSR |
+| `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance + effective count for DSR |
 | `diagnostics.*` | D8 | Leakage and embargo audit functions |
 
 ---

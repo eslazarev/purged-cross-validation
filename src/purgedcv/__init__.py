@@ -7,6 +7,7 @@ from purgedcv._embargo import apply_embargo
 from purgedcv._metrics import (
     deflated_sharpe_ratio,
     deflated_sharpe_ratio_full,
+    effective_n_trials,
     min_track_record_length,
     probabilistic_sharpe_ratio,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "deflated_sharpe_ratio",
     "deflated_sharpe_ratio_full",
     "diagnostics",
+    "effective_n_trials",
     "horizons_overlap",
     "min_track_record_length",
     "parse_horizon",

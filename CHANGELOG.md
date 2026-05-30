@@ -43,10 +43,20 @@ Plan is listed under the published version it shipped in.
   `n_samples`. Complements the existing free `reconstruct_paths` function.
 - `purgedcv.optuna_integration.TrialSharpeRecorder`: an Optuna study
   callback that collects per-trial Sharpe ratios and reports the
-  `var_sharpe` and trial count that `deflated_sharpe_ratio` needs.
-  Importing the module does not require Optuna; the `optuna` optional
-  extra (`pip install purgedcv[optuna]`) installs it for the surrounding
+  `var_sharpe` and trial count that `deflated_sharpe_ratio` needs, plus
+  `n_effective()` for the autocorrelation-adjusted count. Importing the
+  module does not require Optuna; the `optuna` optional extra
+  (`pip install purgedcv[optuna]`) installs it for the surrounding
   optimisation loop.
+- `effective_n_trials`: estimates the number of *independent* trials behind
+  a correlated search (TPE, CMA-ES) from the integrated autocorrelation time
+  of the trial-performance series. Pass it to `deflated_sharpe_ratio` so a
+  6000-trial TPE run is not deflated as if all 6000 were independent, which
+  otherwise crushes DSR to zero. Documented as a heuristic.
+- New example `examples/optuna_dsr_cookbook.py`: the canonical end-to-end
+  Optuna + Deflated Sharpe pattern (record per-trial Sharpe, deflate by the
+  effective trial count, convert annualised `var_sharpe` via `bars_per_year`)
+  that most users will write.
 - Python 3.13 and 3.14 are now part of the CI test matrix and listed
   among the supported versions.
 - New example notebook `examples/selection_regret_lcl.ipynb`: on UK
