@@ -1,7 +1,7 @@
 # LCL full-population benchmark
 
 - generated: 2026-05-19T04:13:11.836198+00:00
-- raw dir: `/Users/elazarev/Downloads/Small LCL Data`
+- raw dir: a local Low Carbon London CSV directory (passed via `--raw-dir`, not distributed)
 - eligible Std households (>= 17520 half-hours, >= 365 days): **4284**
 - subsamples K = 20, households per subsample N = 60, seed = 0
 - raw rows scanned: 167,932,474
@@ -22,4 +22,4 @@
 WAPE = sum|err| / sum|actual|, in percent. Temporal gap > 0 means naive
 shuffled CV looks better than honest walk-forward. Household gap > 0 means
 scoring on unseen households is worse than the pooled temporal estimate.
-Reproduce: `python tools/lcl_full_benchmark.py --k 20 --n 60 --seed 0`.
+Reproduce: `python tools/lcl_full_benchmark.py --raw-dir <local LCL dir> --k 20 --n 60 --seed 0`.

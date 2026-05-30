@@ -1,8 +1,8 @@
 """Full-population LCL benchmark with confidence intervals (offline, gitignored).
 
 The committed notebook runs one 60-household subsample: a single point, no
-error bars. This scans the entire raw Low Carbon London corpus
-(`/Users/elazarev/Downloads/Small LCL Data`, 168 CSVs, ~168M rows, ~8 GB),
+error bars. This scans the entire raw Low Carbon London corpus (a local CSV
+directory passed via ``--raw-dir``, 168 CSVs, ~168M rows, ~8 GB),
 keeps the Standard-tariff households with at least a year of data, then draws
 K seeded subsamples and runs the *exact* notebook harness
 (`examples/_lcl_harness.py`) on each. The four CV WAPEs and the two leakage
@@ -49,7 +49,12 @@ N_SPLITS = 5
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--raw-dir", type=Path, default=Path.home() / "Downloads" / "Small LCL Data")
+    p.add_argument(
+        "--raw-dir",
+        type=Path,
+        required=True,
+        help="local directory of raw Low Carbon London CSVs (not distributed)",
+    )
     p.add_argument(
         "--out-dir", type=Path, default=Path(__file__).resolve().parent.parent / "examples" / "data"
     )
