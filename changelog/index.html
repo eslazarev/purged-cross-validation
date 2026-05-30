@@ -1085,6 +1085,62 @@ Plan is listed under the published version it shipped in.</p>
 <h2 id="unreleased"><a href="https://github.com/eslazarev/purged-cross-validation/compare/v0.0.9...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li><code>probability_of_backtest_overfitting</code> (PBO): estimates how often the
+  configuration chosen as best in-sample lands below the median
+  out-of-sample, using Combinatorially Symmetric Cross-Validation (CSCV).
+  Returns a frozen <code>PBOResult</code> dataclass (read fields by attribute):
+  the PBO value, the per-combination logits, the IS-versus-OOS
+  performance-degradation slope, and the IS/OOS performance pairs. When
+  prediction and evaluation times are supplied it cleans every IS/OOS
+  boundary with the existing purge and embargo machinery. Implements
+  Bailey, Borwein, Lopez de Prado &amp; Salehipour (2017) and AFML Chapter 11.</li>
+<li><code>CombinatoriallySymmetricCV</code>: the CSCV splitter that PBO is built on,
+  exposed directly. It is <code>CombinatorialPurgedCV</code> with
+  <code>n_test_groups = n_splits // 2</code> (even <code>n_splits</code> required).</li>
+<li><code>deflated_sharpe_ratio_full</code>: returns a frozen <code>DSRDiagnostics</code> dataclass
+  with the Deflated Sharpe probability alongside the quantities that explain
+  it (observed Sharpe, deflated benchmark <code>sr_star</code>, the standardized
+  expected-maximum multiplier <code>expected_max_z</code>, <code>var_sharpe</code>, <code>n_trials</code>,
+  track-record length, skew, and kurtosis). The scalar
+  <code>deflated_sharpe_ratio</code> keeps its scalar return. Both gained an optional
+  <code>bars_per_year</code>: <code>var_sharpe</code> is per-observation by default, and passing
+  <code>bars_per_year</code> converts an annualised Sharpe variance to per-observation
+  internally. This closes the unit trap where <code>path_metrics(...,
+  bars_per_year=...)</code> returns an annualised Sharpe whose variance does not
+  match the per-observation contract DSR requires.</li>
+<li><code>path_metrics</code> and <code>default_backtest_metrics</code>: reduce an
+  <code>(n_paths, n_samples)</code> CPCV path matrix to a per-path DataFrame of
+  Sharpe, Calmar, max drawdown, and total return in one call.</li>
+<li><code>CombinatorialPurgedCV.reconstruct_paths(fold_predictions)</code>: an
+  instance method that assembles per-fold predictions into backtest paths
+  without the caller restating <code>n_splits</code>, <code>n_test_groups</code>, or
+  <code>n_samples</code>. Complements the existing free <code>reconstruct_paths</code> function.</li>
+<li><code>purgedcv.optuna_integration.TrialSharpeRecorder</code>: an Optuna study
+  callback that collects per-trial Sharpe ratios and reports the
+  <code>var_sharpe</code> and trial count that <code>deflated_sharpe_ratio</code> needs, plus
+  <code>n_effective()</code> for the autocorrelation-adjusted count. Importing the
+  module does not require Optuna; the <code>optuna</code> optional extra
+  (<code>pip install purgedcv[optuna]</code>) installs it for the surrounding
+  optimisation loop.</li>
+<li><code>effective_n_trials</code>: estimates the number of <em>independent</em> trials behind
+  a correlated search (TPE, CMA-ES) from the integrated autocorrelation time
+  of the trial-performance series. Pass it to <code>deflated_sharpe_ratio</code> so a
+  6000-trial TPE run is not deflated as if all 6000 were independent, which
+  otherwise crushes DSR to zero. Documented as a heuristic.</li>
+<li>New example <code>examples/optuna_dsr_cookbook.py</code>: the canonical end-to-end
+  Optuna + Deflated Sharpe pattern (record per-trial Sharpe, deflate by the
+  effective trial count, convert annualised <code>var_sharpe</code> via <code>bars_per_year</code>)
+  that most users will write.</li>
+<li>New example notebook <code>examples/backtest_overfitting_audit.ipynb</code>: a seeded
+  Optuna TPE search over a Ridge strategy on real BTC/USDT daily data, audited
+  end to end with PBO, <code>effective_n_trials</code>, <code>deflated_sharpe_ratio_full</code>
+  (with <code>bars_per_year</code>), and <code>CombinatorialPurgedCV.backtest_paths</code> plus
+  <code>path_metrics</code>. The search reaches an in-sample Sharpe of +2.5; the audit
+  shows PBO 0.55, the 400 TPE trials worth about 25 independent bets, and a
+  modest deflated Sharpe, while the per-path spread confirms the model family
+  does carry real structure on this trending window.</li>
+<li><code>optuna</code> added to the <code>examples</code> optional-dependency extra so the gallery
+  runs with <code>pip install purgedcv[examples]</code>.</li>
 <li>Python 3.13 and 3.14 are now part of the CI test matrix and listed
   among the supported versions.</li>
 <li>New example notebook <code>examples/selection_regret_lcl.ipynb</code>: on UK
@@ -1106,6 +1162,11 @@ Plan is listed under the published version it shipped in.</p>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><code>min_track_record_length</code> now returns <code>math.inf</code> instead of raising when
+  <code>observed_sharpe &lt;= target_sharpe</code>: no finite track record can establish
+  a gap that is not there, and infinity is the well-defined answer. The
+  return type is now <code>float</code> (wrap in <code>int(...)</code> for a count when finite).
+  Other input validation (<code>alpha</code> range, non-finite inputs) still raises.</li>
 <li><code>validate_times</code> now requires a datetime-like or timedelta-like dtype
   for <code>prediction_times</code> and <code>evaluation_times</code>. Numeric, string, and
   object-dtype series are rejected; convert with <code>pd.to_datetime</code> first.</li>
