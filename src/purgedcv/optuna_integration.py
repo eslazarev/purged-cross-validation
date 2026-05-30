@@ -106,6 +106,13 @@ class TrialSharpeRecorder:
         """Variance of the recorded Sharpe ratios, for ``deflated_sharpe_ratio``.
 
         Returns ``nan`` until more than ``ddof`` trials have been recorded.
+
+        UNITS: the variance is in the units of whatever Sharpe you stored
+        per trial. :func:`~purgedcv.deflated_sharpe_ratio` compares against
+        the per-period Sharpe of its ``returns`` argument, so record a
+        per-period Sharpe in each trial (the same convention as the
+        ``returns`` you will later deflate). Do that and the recorder feeds
+        ``deflated_sharpe_ratio`` directly, with no unit conversion.
         """
         arr = self.sharpes()
         if arr.size <= ddof:

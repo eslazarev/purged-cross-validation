@@ -48,8 +48,11 @@ def default_backtest_metrics(
             total return.
 
     Returns:
-        Dict with ``sharpe``, ``calmar``, ``max_drawdown`` (a non-negative
-        magnitude), and ``total_return``.
+        Dict with ``sharpe``, ``calmar``, ``max_drawdown``, and
+        ``total_return``. ``max_drawdown`` is a **positive magnitude**, not a
+        signed value: ``0.30`` means a 30% peak-to-trough drawdown (not
+        ``-0.30``). So the *worst* path is the one with the **largest**
+        ``max_drawdown``; sort descending, not ascending.
 
     Examples:
         >>> import numpy as np

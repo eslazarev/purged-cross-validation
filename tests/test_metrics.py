@@ -261,7 +261,7 @@ class TestDeflatedSharpeRatioFull:
 
             diag = deflated_sharpe_ratio_full(returns, n_trials=n_trials, var_sharpe=var_sharpe)
             scalar = deflated_sharpe_ratio(returns, n_trials=n_trials, var_sharpe=var_sharpe)
-            assert diag["dsr"] == pytest.approx(scalar)
+            assert diag.dsr == pytest.approx(scalar)
 
     def test_reports_consistent_intermediate_quantities(self) -> None:
         """sr_star = sqrt(var_sharpe) * expected_max_z, and the moments match
@@ -272,17 +272,15 @@ class TestDeflatedSharpeRatioFull:
         returns = rng.normal(0.002, 0.01, 300)
         var_sharpe = 0.03**2
         diag = deflated_sharpe_ratio_full(returns, n_trials=200, var_sharpe=var_sharpe)
-        assert diag["n_obs"] == 300
-        assert diag["n_trials"] == 200
-        assert diag["var_sharpe"] == pytest.approx(var_sharpe)
-        assert diag["sr_star"] == pytest.approx(np.sqrt(var_sharpe) * diag["expected_max_z"])
+        assert diag.n_obs == 300
+        assert diag.n_trials == 200
+        assert diag.var_sharpe == pytest.approx(var_sharpe)
+        assert diag.sr_star == pytest.approx(np.sqrt(var_sharpe) * diag.expected_max_z)
         # observed_sr, skew, kurt match the population-std Sharpe moments.
         observed_sr = float(returns.mean() / returns.std(ddof=0))
-        assert diag["observed_sr"] == pytest.approx(observed_sr)
-        assert diag["skew"] == pytest.approx(float(stats.skew(returns, bias=False)))
-        assert diag["kurt"] == pytest.approx(
-            float(stats.kurtosis(returns, bias=False, fisher=False))
-        )
+        assert diag.observed_sr == pytest.approx(observed_sr)
+        assert diag.skew == pytest.approx(float(stats.skew(returns, bias=False)))
+        assert diag.kurt == pytest.approx(float(stats.kurtosis(returns, bias=False, fisher=False)))
 
     def test_single_trial_has_zero_benchmark(self) -> None:
         """With one trial there is no deflation: sr_star and expected_max_z
@@ -292,9 +290,9 @@ class TestDeflatedSharpeRatioFull:
         rng = np.random.default_rng(22)
         returns = rng.normal(0.001, 0.01, 252)
         diag = deflated_sharpe_ratio_full(returns, n_trials=1, var_sharpe=0.5)
-        assert diag["sr_star"] == 0.0
-        assert diag["expected_max_z"] == 0.0
-        assert diag["dsr"] == pytest.approx(probabilistic_sharpe_ratio(returns, 0.0))
+        assert diag.sr_star == 0.0
+        assert diag.expected_max_z == 0.0
+        assert diag.dsr == pytest.approx(probabilistic_sharpe_ratio(returns, 0.0))
 
     def test_validates_like_scalar_form(self) -> None:
         from purgedcv._metrics import deflated_sharpe_ratio_full

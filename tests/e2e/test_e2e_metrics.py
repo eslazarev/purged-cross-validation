@@ -104,11 +104,11 @@ def test_user_story_optuna_recorder_feeds_deflated_sharpe() -> None:
         champion_returns, n_trials=recorder.n_trials(), var_sharpe=var_sharpe
     )
     # The diagnostics expose why the deflation landed where it did.
-    assert diag["n_trials"] == 120
-    assert diag["n_obs"] == 504
-    assert diag["var_sharpe"] == pytest.approx(var_sharpe)
-    assert diag["sr_star"] == pytest.approx(np.sqrt(var_sharpe) * diag["expected_max_z"])
-    assert diag["dsr"] == pytest.approx(deflated_sharpe_ratio(champion_returns, 120, var_sharpe))
+    assert diag.n_trials == 120
+    assert diag.n_obs == 504
+    assert diag.var_sharpe == pytest.approx(var_sharpe)
+    assert diag.sr_star == pytest.approx(np.sqrt(var_sharpe) * diag.expected_max_z)
+    assert diag.dsr == pytest.approx(deflated_sharpe_ratio(champion_returns, 120, var_sharpe))
 
 
 @pytest.mark.e2e
@@ -147,8 +147,8 @@ def test_subprocess_metrics_smoke() -> None:
         n_min = min_track_record_length(0.5, 0.2, 0.05, 0.0, 3.0)
         assert 0 <= psr <= 1
         assert 0 <= dsr <= 1
-        assert diag["dsr"] == dsr
-        assert diag["n_obs"] == 200
+        assert diag.dsr == dsr
+        assert diag.n_obs == 200
         assert n_min > 0
         print("OK")
         """)

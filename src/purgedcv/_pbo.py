@@ -21,8 +21,8 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from itertools import combinations
-from typing import TypedDict
 
 import numpy as np
 import pandas as pd
@@ -65,20 +65,30 @@ def sharpe(returns: NDArrayAny) -> float:
     return float(arr.mean() / std)
 
 
-class PBOResult(TypedDict):
+@dataclass(frozen=True, eq=False)
+class PBOResult:
     """Return type of :func:`probability_of_backtest_overfitting`.
 
-    Keys:
+    A frozen dataclass: read fields by attribute (``result.pbo``), and call
+    :func:`dataclasses.asdict` if you need a plain dict to serialise.
+
+    Attributes:
         pbo: Probability of backtest overfitting in [0, 1]. The fraction of
             CSCV combinations whose in-sample-best configuration ranked
-            below the OOS median (equivalently, logit < 0).
+            below the OOS median (equivalently, logit < 0). Read it as
+            ``0.0`` = selection never overfits, ``0.5`` = selection is no
+            better than chance, ``1.0`` = the in-sample best is always an
+            out-of-sample loser. Anything materially above 0.5 means the
+            search is mostly fitting noise.
         logits: Per-combination logit of the OOS relative rank of the
             in-sample-best configuration. Negative values are the overfit
             cases; the distribution's mass below 0 is ``pbo``.
         slope: OLS slope of OOS performance on IS performance across the
-            combinations (for the IS-best configuration). A slope well
-            below 1, or negative, is the signature of performance decay
-            out of sample.
+            combinations (for the IS-best configuration). Direction is the
+            signal: ``> 0`` means in-sample strength carries over (no
+            overfit), ``~ 0`` means the link is random, and ``< 0`` means
+            in-sample strength predicts out-of-sample weakness (severe
+            overfit). A positive slope below 1 still indicates some decay.
         is_oos_performance: ``(n_combos, 2)`` array; column 0 is the IS
             performance of the IS-best configuration, column 1 its OOS
             performance, one row per combination.
@@ -204,9 +214,9 @@ def probability_of_backtest_overfitting(
         >>> rng = np.random.default_rng(0)
         >>> returns = rng.standard_normal((10, 240))  # 10 configs, pure noise
         >>> result = probability_of_backtest_overfitting(returns, n_splits=8)
-        >>> 0.0 <= result["pbo"] <= 1.0
+        >>> 0.0 <= result.pbo <= 1.0
         True
-        >>> result["n_combos"]
+        >>> result.n_combos
         70
     """
     n_splits = _validate_integer("n_splits", n_splits, minimum=2)

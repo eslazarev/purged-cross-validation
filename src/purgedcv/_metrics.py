@@ -19,7 +19,7 @@ References:
 from __future__ import annotations
 
 import math
-from typing import TypedDict
+from dataclasses import dataclass
 
 import numpy as np
 from scipy import stats
@@ -196,6 +196,14 @@ def deflated_sharpe_ratio(
             :class:`purgedcv.optuna_integration.TrialSharpeRecorder`
             produces it directly from an Optuna study.
 
+            UNITS: ``var_sharpe`` must be in the same Sharpe units as
+            ``returns``. The observed Sharpe of ``returns`` is computed per
+            period (not annualised), so ``var_sharpe`` must be a per-period
+            Sharpe variance. If your trial Sharpes were annualised, divide
+            their variance by ``bars_per_year`` first
+            (``var_annual = bars_per_year * var_per_bar``). Mixing units
+            silently inflates the deflated benchmark.
+
     Returns:
         Scalar probability in [0, 1].
 
@@ -218,14 +226,19 @@ def deflated_sharpe_ratio(
     return probabilistic_sharpe_ratio(returns, benchmark_skill=sr_star)
 
 
-class DSRDiagnostics(TypedDict):
+@dataclass(frozen=True)
+class DSRDiagnostics:
     """Return type of :func:`deflated_sharpe_ratio_full`.
 
-    Keys:
+    A frozen dataclass: read fields by attribute (``diag.dsr``), and call
+    :func:`dataclasses.asdict` if you need a plain dict to serialise.
+
+    Attributes:
         dsr: The deflated Sharpe probability (identical to
             :func:`deflated_sharpe_ratio` for the same inputs).
         observed_sr: Sample Sharpe ratio of ``returns`` (population
-            standard deviation, ``ddof=0``).
+            standard deviation, ``ddof=0``). In the same per-period units
+            as ``var_sharpe`` must be; see :func:`deflated_sharpe_ratio_full`.
         sr_star: Deflated benchmark in Sharpe units, i.e. the expected
             maximum Sharpe of ``n_trials`` candidates under the null.
         expected_max_z: Standardized expected maximum (the bracket term);
@@ -264,10 +277,13 @@ def deflated_sharpe_ratio_full(
     Args:
         returns: 1-D array of returns.
         n_trials: Number of independent searches (>= 1).
-        var_sharpe: Variance of Sharpe ratios across the candidates.
+        var_sharpe: Variance of Sharpe ratios across the candidates, in the
+            same per-period Sharpe units as ``returns`` (see
+            :func:`deflated_sharpe_ratio` for the unit contract).
 
     Returns:
-        A :class:`DSRDiagnostics` mapping. ``dsr`` equals
+        A :class:`DSRDiagnostics` (frozen dataclass; read fields by
+        attribute, e.g. ``diag.dsr``, ``diag.sr_star``). ``dsr`` equals
         :func:`deflated_sharpe_ratio` for the same arguments.
 
     Raises:
@@ -281,11 +297,11 @@ def deflated_sharpe_ratio_full(
         >>> rng = np.random.default_rng(0)
         >>> returns = rng.normal(0.001, 0.01, 252)
         >>> diag = deflated_sharpe_ratio_full(returns, n_trials=50, var_sharpe=0.01**2)
-        >>> abs(diag["dsr"] - deflated_sharpe_ratio(returns, 50, 0.01**2)) < 1e-12
+        >>> abs(diag.dsr - deflated_sharpe_ratio(returns, 50, 0.01**2)) < 1e-12
         True
-        >>> diag["n_obs"]
+        >>> diag.n_obs
         252
-        >>> diag["sr_star"] > 0
+        >>> diag.sr_star > 0
         True
     """
     _validate_dsr_inputs(n_trials, var_sharpe)

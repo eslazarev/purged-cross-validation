@@ -26,31 +26,31 @@ class TestPBOStructure:
         rng = np.random.default_rng(0)
         returns = rng.standard_normal((6, 200))
         result = probability_of_backtest_overfitting(returns, n_splits=8)
-        assert result["n_combos"] == comb(8, 4) == 70
+        assert result.n_combos == comb(8, 4) == 70
 
     def test_result_shapes(self) -> None:
         rng = np.random.default_rng(1)
         returns = rng.standard_normal((5, 160))
         result = probability_of_backtest_overfitting(returns, n_splits=6)
         n_combos = comb(6, 3)
-        assert result["logits"].shape == (n_combos,)
-        assert result["is_oos_performance"].shape == (n_combos, 2)
-        assert 0.0 <= result["pbo"] <= 1.0
+        assert result.logits.shape == (n_combos,)
+        assert result.is_oos_performance.shape == (n_combos, 2)
+        assert 0.0 <= result.pbo <= 1.0
 
     def test_pbo_is_fraction_of_negative_logits(self) -> None:
         rng = np.random.default_rng(2)
         returns = rng.standard_normal((7, 180))
         result = probability_of_backtest_overfitting(returns, n_splits=6)
-        expected = float(np.mean(result["logits"] < 0))
-        assert result["pbo"] == pytest.approx(expected)
+        expected = float(np.mean(result.logits < 0))
+        assert result.pbo == pytest.approx(expected)
 
     def test_deterministic(self) -> None:
         rng = np.random.default_rng(3)
         returns = rng.standard_normal((6, 160))
         a = probability_of_backtest_overfitting(returns, n_splits=8)
         b = probability_of_backtest_overfitting(returns, n_splits=8)
-        assert a["pbo"] == b["pbo"]
-        assert np.array_equal(a["logits"], b["logits"])
+        assert a.pbo == b.pbo
+        assert np.array_equal(a.logits, b.logits)
 
 
 class TestPBODiscriminates:
@@ -63,7 +63,7 @@ class TestPBODiscriminates:
         signal = 0.05 + rng.standard_normal((1, 240)) * 0.01
         returns = np.vstack([signal, noise])
         result = probability_of_backtest_overfitting(returns, n_splits=8)
-        assert result["pbo"] == 0.0
+        assert result.pbo == 0.0
 
     def test_pure_noise_pbo_exceeds_signal_pbo(self) -> None:
         """Pure-noise configurations overfit: the in-sample winner is chosen
@@ -71,13 +71,13 @@ class TestPBODiscriminates:
         set containing a genuinely dominant configuration."""
         rng = np.random.default_rng(11)
         noise_only = rng.standard_normal((8, 240)) * 0.01
-        pbo_noise = probability_of_backtest_overfitting(noise_only, n_splits=8)["pbo"]
+        pbo_noise = probability_of_backtest_overfitting(noise_only, n_splits=8).pbo
 
         rng2 = np.random.default_rng(11)
         noise = rng2.standard_normal((7, 240)) * 0.01
         signal = 0.05 + rng2.standard_normal((1, 240)) * 0.01
         with_signal = np.vstack([signal, noise])
-        pbo_signal = probability_of_backtest_overfitting(with_signal, n_splits=8)["pbo"]
+        pbo_signal = probability_of_backtest_overfitting(with_signal, n_splits=8).pbo
 
         assert pbo_noise > pbo_signal
         assert 0.2 <= pbo_noise <= 0.8  # near the 0.5 no-skill expectation
@@ -95,8 +95,8 @@ class TestPBOPurgePath:
         with_times = probability_of_backtest_overfitting(
             returns, n_splits=8, prediction_times=pred, evaluation_times=pred
         )
-        assert with_times["pbo"] == no_times["pbo"]
-        assert np.allclose(with_times["logits"], no_times["logits"])
+        assert with_times.pbo == no_times.pbo
+        assert np.allclose(with_times.logits, no_times.logits)
 
     def test_purge_runs_and_returns_valid_pbo(self) -> None:
         rng = np.random.default_rng(21)
@@ -111,8 +111,8 @@ class TestPBOPurgePath:
             purge_horizon="2D",
             embargo="1D",
         )
-        assert 0.0 <= result["pbo"] <= 1.0
-        assert result["n_combos"] == comb(8, 4)
+        assert 0.0 <= result.pbo <= 1.0
+        assert result.n_combos == comb(8, 4)
 
     def test_custom_metric_is_used(self) -> None:
         rng = np.random.default_rng(22)
@@ -120,7 +120,7 @@ class TestPBOPurgePath:
         result = probability_of_backtest_overfitting(
             returns, n_splits=6, metric=lambda r: float(np.mean(r))
         )
-        assert 0.0 <= result["pbo"] <= 1.0
+        assert 0.0 <= result.pbo <= 1.0
 
 
 class TestPBOValidation:

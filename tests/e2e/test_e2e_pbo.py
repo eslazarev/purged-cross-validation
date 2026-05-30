@@ -27,12 +27,12 @@ def test_user_story_grid_search_over_noise_is_flagged() -> None:
     n_obs = 16 * 15  # 16 CSCV blocks, 15 rows each
 
     noise_grid = rng.standard_normal((40, n_obs)) * 0.01
-    pbo_noise = probability_of_backtest_overfitting(noise_grid, n_splits=16)["pbo"]
+    pbo_noise = probability_of_backtest_overfitting(noise_grid, n_splits=16).pbo
     assert 0.3 <= pbo_noise <= 0.7
 
     winner = 0.04 + rng.standard_normal((1, n_obs)) * 0.01
     with_winner = np.vstack([winner, noise_grid])
-    pbo_with_winner = probability_of_backtest_overfitting(with_winner, n_splits=16)["pbo"]
+    pbo_with_winner = probability_of_backtest_overfitting(with_winner, n_splits=16).pbo
     assert pbo_with_winner < pbo_noise
 
 
@@ -58,9 +58,9 @@ def test_user_story_pbo_with_purge_on_overlapping_labels() -> None:
     )
     from math import comb
 
-    assert result["n_combos"] == comb(8, 4)
-    assert 0.0 <= result["pbo"] <= 1.0
-    assert result["logits"].shape == (result["n_combos"],)
+    assert result.n_combos == comb(8, 4)
+    assert 0.0 <= result.pbo <= 1.0
+    assert result.logits.shape == (result.n_combos,)
 
 
 @pytest.mark.e2e
@@ -71,9 +71,9 @@ def test_subprocess_pbo_smoke() -> None:
         rng = np.random.default_rng(0)
         returns = rng.standard_normal((8, 200)) * 0.01
         result = probability_of_backtest_overfitting(returns, n_splits=8)
-        assert 0.0 <= result["pbo"] <= 1.0
-        assert result["n_combos"] == 70
-        assert result["is_oos_performance"].shape == (70, 2)
+        assert 0.0 <= result.pbo <= 1.0
+        assert result.n_combos == 70
+        assert result.is_oos_performance.shape == (70, 2)
         print("OK")
         """)
     result = subprocess.run(

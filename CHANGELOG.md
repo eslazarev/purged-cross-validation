@@ -14,7 +14,8 @@ Plan is listed under the published version it shipped in.
 - `probability_of_backtest_overfitting` (PBO): estimates how often the
   configuration chosen as best in-sample lands below the median
   out-of-sample, using Combinatorially Symmetric Cross-Validation (CSCV).
-  Returns the PBO value, the per-combination logits, the IS-versus-OOS
+  Returns a frozen `PBOResult` dataclass (read fields by attribute):
+  the PBO value, the per-combination logits, the IS-versus-OOS
   performance-degradation slope, and the IS/OOS performance pairs. When
   prediction and evaluation times are supplied it cleans every IS/OOS
   boundary with the existing purge and embargo machinery. Implements
@@ -22,11 +23,14 @@ Plan is listed under the published version it shipped in.
 - `CombinatoriallySymmetricCV`: the CSCV splitter that PBO is built on,
   exposed directly. It is `CombinatorialPurgedCV` with
   `n_test_groups = n_splits // 2` (even `n_splits` required).
-- `deflated_sharpe_ratio_full`: returns the Deflated Sharpe probability
-  alongside the quantities that explain it (observed Sharpe, deflated
-  benchmark `sr_star`, the standardized expected-maximum multiplier
-  `expected_max_z`, `var_sharpe`, `n_trials`, track-record length, skew,
-  and kurtosis). The scalar `deflated_sharpe_ratio` is unchanged.
+- `deflated_sharpe_ratio_full`: returns a frozen `DSRDiagnostics` dataclass
+  with the Deflated Sharpe probability alongside the quantities that explain
+  it (observed Sharpe, deflated benchmark `sr_star`, the standardized
+  expected-maximum multiplier `expected_max_z`, `var_sharpe`, `n_trials`,
+  track-record length, skew, and kurtosis). The scalar
+  `deflated_sharpe_ratio` is unchanged. Both document that `var_sharpe` must
+  be a per-period Sharpe variance, matching the per-period Sharpe of
+  `returns`.
 - `path_metrics` and `default_backtest_metrics`: reduce an
   `(n_paths, n_samples)` CPCV path matrix to a per-path DataFrame of
   Sharpe, Calmar, max drawdown, and total return in one call.
