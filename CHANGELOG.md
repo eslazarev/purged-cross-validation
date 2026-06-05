@@ -9,6 +9,15 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-06-05
+
+First minor release. The version bump from the `0.0.x` line signals that
+the public API in `purgedcv/__init__.py` is now considered usable and is
+maintained deliberately: the splitters, backtest-path reconstruction, and
+the Sharpe-ratio metric family are stable enough to build on. Breaking
+changes will still happen before `1.0.0`, but they will be noted here
+rather than slipped into a patch release.
+
 ### Added
 
 - `probability_of_backtest_overfitting` (PBO): estimates how often the
