@@ -353,6 +353,25 @@ print(f"MinTRL: {int(n_min)} observations")
 
 ---
 
+## Contributing and development
+
+Bug reports, feature requests, and pull requests are welcome. The full
+development setup, the local gates (`ruff`, `black`, `mypy --strict`,
+`pytest`, `mkdocs build --strict`), the end-to-end test convention, and the
+prose-quality gate are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+Conduct is governed by the [Contributor Covenant](CODE_OF_CONDUCT.md);
+security reports go through [SECURITY.md](SECURITY.md).
+
+## Use of generative AI
+
+This project was developed with the help of AI coding assistants.
+They were used to draft and refactor implementation code, expand the test
+suite, and edit documentation. The methodology, the public API design, the
+choice and execution of every experiment, and all reported numbers are the
+author's own: each empirical result in this repository comes from a script
+in `examples/` or `tools/` that is committed and reproducible, and the
+numbers were verified against those runs rather than generated as text.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
