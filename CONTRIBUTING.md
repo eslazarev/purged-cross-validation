@@ -43,8 +43,8 @@ references will fail the build.
 
 ## What needs an end-to-end test
 
-Any user-visible behaviour — a new splitter, a metric, a diagnostic, or a
-new CLI tool under `tools/` — needs an entry in `tests/e2e/`. Unit and
+Any user-visible behaviour (a new splitter, a metric, a diagnostic, or a
+new CLI tool under `tools/`) needs an entry in `tests/e2e/`. Unit and
 property tests stay in `tests/` (flat). When a feature spans multiple
 modules, prefer a subprocess-style e2e test that exercises the public API
 the way a user would.
@@ -62,23 +62,28 @@ python tools/prose_gate.py
 ```
 
 Any **FAIL** result blocks a PR; **WARN** is advisory. The gate is a
-heuristic and not a detector — but it catches regressions reliably. If you
+heuristic and not a detector, but it catches regressions reliably. If you
 disagree with a flag in your prose, raise it in the PR.
 
 ## Commit messages and pull requests
 
 - Conventional commits style is appreciated (`feat:`, `fix:`, `chore:`,
   `docs:`, `test:`). Not enforced.
-- Keep PRs focused. One feature, one fix, one refactor — not a mix.
+- Keep PRs focused. One feature, one fix, one refactor, not a mix.
 - Update `CHANGELOG.md` under `Unreleased` if your change is user-visible.
-- The release workflow bumps the patch version on every push to `main`
-  (alpha-aware), so do not bump it yourself.
+- The release workflow publishes to PyPI and bumps the patch version only
+  when a push to `main` changes the shipped package (`src/**` or
+  `pyproject.toml`). Merges that touch only docs, tests, CI, tooling, or
+  examples do not release. For an ordinary change do not bump the version
+  yourself; the workflow bumps the patch (alpha-aware) after publishing.
+  To jump a minor or major version on purpose, set it deliberately in both
+  `pyproject.toml` and `src/purgedcv/__init__.py` in your PR.
 
 ## Reporting bugs and requesting features
 
 Open an issue from one of the templates in `.github/ISSUE_TEMPLATE/`. For
 bug reports, the most helpful thing you can include is a minimal
-reproducer — a few lines of code, the actual output, and the expected
+reproducer: a few lines of code, the actual output, and the expected
 output. For feature requests, describing the cross-validation use case
 matters more than describing the API you would like.
 
