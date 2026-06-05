@@ -7,6 +7,8 @@ Four closed-form tools that correct reported Sharpe ratios:
 - :func:`deflated_sharpe_ratio_full` — DSR plus the intermediate quantities
   that explain *why* the deflation landed where it did.
 - :func:`min_track_record_length` (MinTRL) — derived from PSR by inversion.
+- :func:`minimum_backtest_length` (MinBTL) — the backtest length below which a
+  reported Sharpe is within what selection over N trials produces by chance.
 
 References:
 - Bailey, D. H., & Lopez de Prado, M. (2012). The Sharpe Ratio Efficient
@@ -14,6 +16,8 @@ References:
 - Bailey, D. H., & Lopez de Prado, M. (2014). The Deflated Sharpe Ratio:
   Correcting for Selection Bias, Backtest Overfitting and Non-Normality.
   Journal of Portfolio Management 40(5).
+- Bailey, D. H., Borwein, J. M., Lopez de Prado, M., & Zhu, Q. J. (2014).
+  Pseudo-mathematics and financial charlatanism. Notices of the AMS 61(5).
 """
 
 from __future__ import annotations
@@ -153,29 +157,38 @@ def _to_per_observation_var(var_sharpe: float, bars_per_year: int | None) -> flo
     return var_sharpe / bars_per_year
 
 
+def _expected_max_z(n_trials: int) -> float:
+    """Standardized expected maximum of ``n_trials`` independent N(0, 1) draws.
+
+    The bracket term of the Bailey-Lopez de Prado extreme-value approximation:
+    ``(1 - gamma) * Phi_inv(1 - 1/n) + gamma * Phi_inv(1 - 1/(n*e))``, where
+    ``gamma`` is the Euler-Mascheroni constant. A single trial has no maximum
+    to correct for, so the expected maximum under the null is 0 (the formula
+    diverges at n = 1, where ``Phi_inv(0) = -inf``). Shared by the DSR
+    deflation and :func:`minimum_backtest_length`.
+    """
+    if n_trials == 1:
+        return 0.0
+    return float(
+        (1 - _GAMMA_EM) * stats.norm.ppf(1 - 1 / n_trials)
+        + _GAMMA_EM * stats.norm.ppf(1 - 1 / (n_trials * math.e))
+    )
+
+
 def _deflated_benchmark(n_trials: int, var_sharpe: float) -> tuple[float, float]:
     """Return ``(expected_max_z, sr_star)`` for the DSR deflation.
 
     ``expected_max_z`` is the standardized expected maximum of ``n_trials``
-    independent Sharpe estimators under the null (the bracket term of the
-    extreme-value approximation). ``sr_star`` is that multiplier scaled by
-    the spread of trial Sharpes, i.e. the deflated benchmark in Sharpe units:
+    independent Sharpe estimators under the null (see :func:`_expected_max_z`).
+    ``sr_star`` is that multiplier scaled by the spread of trial Sharpes, i.e.
+    the deflated benchmark in Sharpe units:
     ``sr_star = sqrt(var_sharpe) * expected_max_z``.
 
     With a single trial there is no multiple-comparison correction: the
     expected maximum Sharpe under the null across one trial is 0, so both
-    quantities are 0 and DSR reduces to PSR against a zero benchmark. The
-    extreme-value formula is valid only for ``n_trials >= 2``, where
-    ``Phi_inv(1 - 1/n_trials)`` is finite (it diverges to -inf at n = 1).
+    quantities are 0 and DSR reduces to PSR against a zero benchmark.
     """
-    from math import e
-
-    if n_trials == 1:
-        return 0.0, 0.0
-    expected_max_z = float(
-        (1 - _GAMMA_EM) * stats.norm.ppf(1 - 1 / n_trials)
-        + _GAMMA_EM * stats.norm.ppf(1 - 1 / (n_trials * e))
-    )
+    expected_max_z = _expected_max_z(n_trials)
     sr_star = float(np.sqrt(var_sharpe) * expected_max_z)
     return expected_max_z, sr_star
 
@@ -467,6 +480,77 @@ def min_track_record_length(
     if not np.isfinite(n_minus_1):
         raise ValueError("inputs imply a non-finite minimum track record length.")
     return float(np.ceil(n_minus_1) + 1)
+
+
+def minimum_backtest_length(n_trials: int, target_sharpe: float = 1.0) -> float:
+    r"""Minimum backtest length, in years, below which a high in-sample Sharpe
+    is not evidence of skill once ``n_trials`` configurations were tried.
+
+    Run ``n_trials`` independent backtests on a strategy with no real edge
+    (true Sharpe 0) and the best of them shows a positive Sharpe purely by
+    chance. The shorter the backtest, the larger that chance maximum. This
+    returns the length at which the expected maximum *annualised* Sharpe across
+    ``n_trials`` trials under the null equals ``target_sharpe``: a reported
+    annualised Sharpe of ``target_sharpe`` over a shorter history is within what
+    selection alone would produce, so it is not yet evidence of skill.
+
+    Inverts the Bailey-Lopez de Prado expected-maximum approximation for the
+    length ``y`` in years:
+
+    $$
+    \text{MinBTL} = \left(
+    \frac{(1 - \gamma)\,\Phi^{-1}\!\left(1 - \frac{1}{n_{\text{trials}}}\right)
+    + \gamma\,\Phi^{-1}\!\left(1 - \frac{1}{n_{\text{trials}} \cdot e}\right)}
+    {\text{SR}^\ast}
+    \right)^2
+    $$
+
+    where $\gamma$ is the Euler-Mascheroni constant and $\text{SR}^\ast$ is
+    ``target_sharpe``. The numerator is the same bracket term that deflates the
+    Sharpe in :func:`deflated_sharpe_ratio`; MinBTL is its inverse, solving for
+    length instead of for a probability.
+
+    Bailey, Borwein, Lopez de Prado & Zhu (2014), "Pseudo-mathematics and
+    financial charlatanism", Notices of the AMS 61(5). AFML Chapter 11.
+
+    Args:
+        n_trials: Number of independent configurations tried. Integer >= 1.
+        target_sharpe: The annualised Sharpe threshold to clear. Must be a
+            positive finite number. Defaults to 1.0.
+
+    Returns:
+        The minimum backtest length in **years**, as a ``float``. Multiply by
+        the number of observations per year for a length in observations. A
+        single trial (``n_trials == 1``) involves no selection, so the bound
+        is ``0.0``.
+
+    Raises:
+        TypeError: if ``n_trials`` is not an integer.
+        ValueError: if ``n_trials < 1`` or ``target_sharpe`` is not a positive
+            finite number.
+
+    Examples:
+        >>> from purgedcv import minimum_backtest_length
+        >>> # Trying 10 configs, an annualised Sharpe of 1 is not evidence of
+        >>> # skill until about 2.5 years of backtest:
+        >>> round(minimum_backtest_length(10, target_sharpe=1.0), 1)
+        2.5
+        >>> # More trials demand a longer backtest for the same Sharpe:
+        >>> minimum_backtest_length(100) > minimum_backtest_length(10)
+        True
+        >>> minimum_backtest_length(1)  # a single trial: no selection
+        0.0
+    """
+    if isinstance(n_trials, bool) or not isinstance(n_trials, (int, np.integer)):
+        raise TypeError(f"n_trials must be an integer, got {type(n_trials).__name__}.")
+    if n_trials < 1:
+        raise ValueError(f"n_trials must be >= 1, got {n_trials}.")
+    if not np.isfinite(target_sharpe):
+        raise ValueError(f"target_sharpe must be finite, got {target_sharpe}.")
+    if target_sharpe <= 0:
+        raise ValueError(f"target_sharpe must be positive, got {target_sharpe}.")
+    expected_max_z = _expected_max_z(int(n_trials))
+    return float((expected_max_z / target_sharpe) ** 2)
 
 
 def effective_n_trials(trial_sharpes: NDArrayAny, method: str = "autocorr") -> int:

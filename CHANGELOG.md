@@ -9,6 +9,17 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Added
+
+- `minimum_backtest_length` (MinBTL): the backtest length, in years, below
+  which a reported annualised Sharpe is within what selecting the best of
+  `n_trials` independent backtests produces by chance under the null. It is
+  the inverse of the Deflated Sharpe Ratio deflation, reusing the same
+  Bailey-Lopez de Prado expected-maximum bracket term, and finishes the
+  AFML Chapter 11 selection-bias toolset (PSR, DSR, PBO, MinTRL) in-package.
+  Implements Bailey, Borwein, Lopez de Prado & Zhu (2014), "Pseudo-mathematics
+  and financial charlatanism".
+
 ## [0.1.0] - 2026-06-05
 
 First minor release. The version bump from the `0.0.x` line signals that

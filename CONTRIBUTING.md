@@ -71,13 +71,15 @@ disagree with a flag in your prose, raise it in the PR.
   `docs:`, `test:`). Not enforced.
 - Keep PRs focused. One feature, one fix, one refactor, not a mix.
 - Update `CHANGELOG.md` under `Unreleased` if your change is user-visible.
-- The release workflow publishes to PyPI and bumps the patch version only
-  when a push to `main` changes the shipped package (`src/**` or
-  `pyproject.toml`). Merges that touch only docs, tests, CI, tooling, or
-  examples do not release. For an ordinary change do not bump the version
-  yourself; the workflow bumps the patch (alpha-aware) after publishing.
-  To jump a minor or major version on purpose, set it deliberately in both
-  `pyproject.toml` and `src/purgedcv/__init__.py` in your PR.
+- Releases are automated. The version in `pyproject.toml` is the **last
+  published** version. Merging a package change (`src/**` or `pyproject.toml`)
+  to `main` bumps the patch, tags it, publishes that exact version to PyPI,
+  and leaves `main` holding what is on PyPI (the bump happens before the
+  upload, so git and PyPI never disagree). Merges that touch only docs, tests,
+  CI, tooling, or examples do not release. Do not bump the version yourself
+  for a normal patch release; the workflow does it (alpha-aware). A minor or
+  major release is a manual step, since the auto-bump only increments the
+  patch.
 
 ## Reporting bugs and requesting features
 

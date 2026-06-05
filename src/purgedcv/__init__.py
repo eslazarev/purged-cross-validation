@@ -9,6 +9,7 @@ from purgedcv._metrics import (
     deflated_sharpe_ratio_full,
     effective_n_trials,
     min_track_record_length,
+    minimum_backtest_length,
     probabilistic_sharpe_ratio,
 )
 from purgedcv._path_metrics import default_backtest_metrics, path_metrics
@@ -25,7 +26,7 @@ from purgedcv.exceptions import (
     TemporalLeakageError,
 )
 
-__version__ = "0.1.1"
+__version__ = "0.1.0"
 
 __all__ = [
     "BaseTemporalSplitter",
@@ -47,6 +48,7 @@ __all__ = [
     "effective_n_trials",
     "horizons_overlap",
     "min_track_record_length",
+    "minimum_backtest_length",
     "parse_horizon",
     "path_metrics",
     "probabilistic_sharpe_ratio",

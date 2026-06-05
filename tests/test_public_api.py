@@ -31,6 +31,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "GroupLeakageError",
         "horizons_overlap",
         "min_track_record_length",
+        "minimum_backtest_length",
         "parse_horizon",
         "path_metrics",
         "probabilistic_sharpe_ratio",

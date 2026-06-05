@@ -12,6 +12,7 @@ from purgedcv._metrics import (
     deflated_sharpe_ratio,
     effective_n_trials,
     min_track_record_length,
+    minimum_backtest_length,
     probabilistic_sharpe_ratio,
 )
 from purgedcv._typing import NDArrayAny
@@ -614,3 +615,78 @@ class TestEffectiveNTrials:
         dsr_raw = deflated_sharpe_ratio(returns, 6000, 0.02**2)
         dsr_eff = deflated_sharpe_ratio(returns, n_eff, 0.02**2)
         assert dsr_eff >= dsr_raw
+
+
+class TestMinimumBacktestLength:
+    def test_reference_value_matches_paper(self) -> None:
+        """Bailey, Borwein, Lopez de Prado & Zhu (2014) Table 1: 10 trials at an
+        annualised Sharpe of 1 need roughly 2.5 years of backtest."""
+        assert minimum_backtest_length(10, target_sharpe=1.0) == pytest.approx(2.48, abs=0.05)
+
+    def test_increases_with_more_trials(self) -> None:
+        """More configurations tried -> a larger chance maximum -> a longer
+        backtest is required to clear the same Sharpe."""
+        lengths = [minimum_backtest_length(n) for n in (2, 10, 100, 1000)]
+        assert lengths == sorted(lengths)
+        assert all(b > a for a, b in itertools.pairwise(lengths))
+
+    def test_decreases_with_higher_target(self) -> None:
+        """A higher Sharpe bar is cleared by chance less easily, so it needs a
+        shorter backtest to rule out selection luck."""
+        assert minimum_backtest_length(50, 0.5) > minimum_backtest_length(50, 2.0)
+
+    def test_inverse_square_in_target_sharpe(self) -> None:
+        """MinBTL scales as 1 / target_sharpe**2: doubling the target quarters
+        the required length."""
+        base = minimum_backtest_length(50, 1.0)
+        assert minimum_backtest_length(50, 2.0) == pytest.approx(base / 4.0)
+        assert minimum_backtest_length(50, 0.5) == pytest.approx(base * 4.0)
+
+    def test_single_trial_is_zero(self) -> None:
+        """One trial involves no selection: nothing to correct for."""
+        assert minimum_backtest_length(1) == 0.0
+        assert minimum_backtest_length(1, target_sharpe=3.0) == 0.0
+
+    def test_consistent_with_dsr_expected_max(self) -> None:
+        """MinBTL is the inverse of the DSR deflation: its square root times the
+        target Sharpe recovers the standardized expected maximum the DSR uses."""
+        from purgedcv._metrics import _deflated_benchmark
+
+        for n in (2, 16, 250):
+            expected_max_z, _ = _deflated_benchmark(n, var_sharpe=1.0)
+            length = minimum_backtest_length(n, target_sharpe=1.3)
+            assert np.sqrt(length) * 1.3 == pytest.approx(expected_max_z)
+
+    def test_result_is_non_negative_float(self) -> None:
+        for n in (1, 3, 25, 5000):
+            out = minimum_backtest_length(n)
+            assert isinstance(out, float)
+            assert out >= 0.0
+            assert np.isfinite(out)
+
+    def test_rejects_non_integer_trials(self) -> None:
+        with pytest.raises(TypeError, match="n_trials must be an integer"):
+            minimum_backtest_length(10.0)  # type: ignore[arg-type]
+        with pytest.raises(TypeError, match="n_trials must be an integer"):
+            minimum_backtest_length(True)  # bool is not a trial count
+
+    def test_rejects_trials_below_one(self) -> None:
+        with pytest.raises(ValueError, match="n_trials must be >= 1"):
+            minimum_backtest_length(0)
+
+    def test_rejects_non_positive_or_non_finite_target(self) -> None:
+        with pytest.raises(ValueError, match="target_sharpe must be positive"):
+            minimum_backtest_length(10, target_sharpe=0.0)
+        with pytest.raises(ValueError, match="target_sharpe must be positive"):
+            minimum_backtest_length(10, target_sharpe=-1.0)
+        with pytest.raises(ValueError, match="target_sharpe must be finite"):
+            minimum_backtest_length(10, target_sharpe=float("inf"))
+        with pytest.raises(ValueError, match="target_sharpe must be finite"):
+            minimum_backtest_length(10, target_sharpe=float("nan"))
+
+    def test_accepts_numpy_integer(self) -> None:
+        """A numpy integer (the natural type from len(study.trials) wrappers)
+        is accepted like a Python int."""
+        assert minimum_backtest_length(np.int64(10)) == pytest.approx(  # type: ignore[arg-type]
+            minimum_backtest_length(10)
+        )

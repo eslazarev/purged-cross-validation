@@ -19,6 +19,7 @@ from purgedcv import (
     deflated_sharpe_ratio_full,
     effective_n_trials,
     min_track_record_length,
+    minimum_backtest_length,
     probabilistic_sharpe_ratio,
 )
 from purgedcv.optuna_integration import TrialSharpeRecorder
@@ -149,6 +150,28 @@ def test_user_story_min_track_record_length_unreachable() -> None:
 
 
 @pytest.mark.e2e
+def test_user_story_minimum_backtest_length_flags_short_history() -> None:
+    """User Story: a researcher ran a 200-config search and the champion shows
+    an annualised Sharpe of 1.5 over about 1.5 years of data. MinBTL says how
+    long the backtest must be before that Sharpe is more than selection luck;
+    here it exceeds the 1.5 years on hand, so the result is not yet evidence
+    of skill. A search over fewer configs would clear the same Sharpe sooner."""
+    n_trials = 200
+    champion_annualised_sharpe = 1.5
+    years_on_hand = 1.5
+
+    required_years = minimum_backtest_length(n_trials, target_sharpe=champion_annualised_sharpe)
+    # The 1.5-year backtest is too short for 200 trials at this Sharpe.
+    assert required_years > years_on_hand
+    assert 2.0 < required_years < 6.0
+
+    # Fewer configurations -> a shorter required backtest for the same Sharpe.
+    assert minimum_backtest_length(10, target_sharpe=champion_annualised_sharpe) < required_years
+    # A single trial involves no selection, so no minimum length applies.
+    assert minimum_backtest_length(1, target_sharpe=champion_annualised_sharpe) == 0.0
+
+
+@pytest.mark.e2e
 def test_subprocess_metrics_smoke() -> None:
     snippet = textwrap.dedent("""\
         import numpy as np
@@ -158,6 +181,7 @@ def test_subprocess_metrics_smoke() -> None:
             deflated_sharpe_ratio_full,
             effective_n_trials,
             min_track_record_length,
+            minimum_backtest_length,
         )
         rng = np.random.default_rng(0)
         returns = rng.normal(0.001, 0.01, 200)
@@ -166,12 +190,14 @@ def test_subprocess_metrics_smoke() -> None:
         diag = deflated_sharpe_ratio_full(returns, n_trials=20, var_sharpe=0.005**2)
         n_min = min_track_record_length(0.5, 0.2, 0.05, 0.0, 3.0)
         n_eff = effective_n_trials(np.cumsum(rng.standard_normal(1000)))
+        min_btl = minimum_backtest_length(50, target_sharpe=1.0)
         assert 0 <= psr <= 1
         assert 0 <= dsr <= 1
         assert diag.dsr == dsr
         assert diag.n_obs == 200
         assert n_min > 0
         assert 1 <= n_eff <= 1000
+        assert min_btl > minimum_backtest_length(10, target_sharpe=1.0) > 0
         print("OK")
         """)
     result = subprocess.run(

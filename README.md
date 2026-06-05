@@ -38,6 +38,7 @@
 | `deflated_sharpe_ratio_full` | D7 | DSR plus the intermediate deflation quantities |
 | `probability_of_backtest_overfitting` | D7 | PBO via CSCV: how often in-sample selection overfits |
 | `min_track_record_length` | D7 | Minimum observations to establish SR |
+| `minimum_backtest_length` | D7 | MinBTL: backtest years below which a Sharpe is selection luck |
 | `effective_n_trials` | D7 | Independent-trial count for a correlated search, for DSR |
 | `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance + effective count for DSR |
 | `diagnostics.*` | D8 | Leakage and embargo audit functions |

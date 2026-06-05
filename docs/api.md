@@ -53,6 +53,8 @@ contract.
 
 ::: purgedcv.min_track_record_length
 
+::: purgedcv.minimum_backtest_length
+
 ::: purgedcv.effective_n_trials
 
 ## Backtest overfitting
