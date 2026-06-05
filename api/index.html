@@ -740,6 +740,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#purgedcv.minimum_backtest_length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimum_backtest_length
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#purgedcv.effective_n_trials" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1438,6 +1449,17 @@
     <span class="md-ellipsis">
       
         min_track_record_length
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#purgedcv.minimum_backtest_length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        minimum_backtest_length
       
     </span>
   </a>
@@ -5166,6 +5188,198 @@ extreme for the Gaussian approximation.</p>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="c1"># No track record proves a Sharpe you have not actually beaten:</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">math</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">min_track_record_length</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">))</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="go">True</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="purgedcv.minimum_backtest_length" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">purgedcv.minimum_backtest_length</span>
+
+
+<a href="#purgedcv.minimum_backtest_length" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">minimum_backtest_length</span><span class="p">(</span><span class="n">n_trials</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_sharpe</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Minimum backtest length, in years, below which a high in-sample Sharpe
+is not evidence of skill once <code>n_trials</code> configurations were tried.</p>
+<p>Run <code>n_trials</code> independent backtests on a strategy with no real edge
+(true Sharpe 0) and the best of them shows a positive Sharpe purely by
+chance. The shorter the backtest, the larger that chance maximum. This
+returns the length at which the expected maximum <em>annualised</em> Sharpe across
+<code>n_trials</code> trials under the null equals <code>target_sharpe</code>: a reported
+annualised Sharpe of <code>target_sharpe</code> over a shorter history is within what
+selection alone would produce, so it is not yet evidence of skill.</p>
+<p>Inverts the Bailey-Lopez de Prado expected-maximum approximation for the
+length <code>y</code> in years:</p>
+<div class="arithmatex">\[
+\text{MinBTL} = \left(
+\frac{(1 - \gamma)\,\Phi^{-1}\!\left(1 - \frac{1}{n_{\text{trials}}}\right)
++ \gamma\,\Phi^{-1}\!\left(1 - \frac{1}{n_{\text{trials}} \cdot e}\right)}
+{\text{SR}^\ast}
+\right)^2
+\]</div>
+<p>where <span class="arithmatex">\(\gamma\)</span> is the Euler-Mascheroni constant and <span class="arithmatex">\(\text{SR}^\ast\)</span> is
+<code>target_sharpe</code>. The numerator is the same bracket term that deflates the
+Sharpe in :func:<code>deflated_sharpe_ratio</code>; MinBTL is its inverse, solving for
+length instead of for a probability.</p>
+<p>Bailey, Borwein, Lopez de Prado &amp; Zhu (2014), "Pseudo-mathematics and
+financial charlatanism", Notices of the AMS 61(5). AFML Chapter 11.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_trials</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of independent configurations tried. Integer &gt;= 1.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>target_sharpe</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The annualised Sharpe threshold to clear. Must be a
+positive finite number. Defaults to 1.0.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1.0</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The minimum backtest length in <strong>years</strong>, as a <code>float</code>. Multiply by</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the number of observations per year for a length in observations. A</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>single trial (<code>n_trials == 1</code>) involves no selection, so the bound</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>is <code>0.0</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>n_trials</code> is not an integer.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>n_trials &lt; 1</code> or <code>target_sharpe</code> is not a positive
+finite number.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">purgedcv</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimum_backtest_length</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trying 10 configs, an annualised Sharpe of 1 is not evidence of</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="c1"># skill until about 2.5 years of backtest:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">minimum_backtest_length</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">target_sharpe</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="go">2.5</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="c1"># More trials demand a longer backtest for the same Sharpe:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">minimum_backtest_length</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">minimum_backtest_length</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="go">True</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">minimum_backtest_length</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># a single trial: no selection</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="go">0.0</span>
 </code></pre></div>
 
 
