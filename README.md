@@ -292,7 +292,11 @@ All four splitters (`WalkForwardSplit`, `PurgedKFold`, `PurgedGroupKFold`, `Comb
 
 ### 5. CPCV + path reconstruction + metrics: the full workflow
 
-Combinatorial Purged CV produces C(N, K) folds that tile into multiple out-of-sample backtest paths. Use PSR and DSR to evaluate them with corrections for non-normality and selection bias.
+Combinatorial Purged CV produces C(N, K) folds that tile into multiple out-of-sample backtest paths. The metric functions then evaluate a strategy's realised returns for statistical significance and selection bias.
+
+![C(6, 2) = 15 splits over 6 blocks tile into 5 backtest paths. Top panel: each split tests 2 blocks, and the number in a test cell is the path that block's out-of-sample prediction feeds. Bottom panel: the 5 reconstructed paths, each cell labelled with the split that produced that block's prediction.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/cpcv_example.png)
+
+The split-to-path assignment in the figure comes straight from `cv.split` and `reconstruct_paths`, so it matches what the code below produces.
 
 ```python
 import numpy as np
@@ -301,7 +305,6 @@ from sklearn.dummy import DummyRegressor
 from purgedcv import (
     CombinatorialPurgedCV,
     probabilistic_sharpe_ratio,
-    deflated_sharpe_ratio,
     min_track_record_length,
 )
 
@@ -320,29 +323,26 @@ cv = CombinatorialPurgedCV(
     evaluation_times=evalu,
 )
 
-# paths.shape == (n_paths, n_samples); NaN only if a fold could not be fit
+# paths.shape == (n_paths, n_samples); NaN where a sample was not OOS in that path
 paths = cv.backtest_paths(DummyRegressor(strategy="mean"), X, y)
 print(f"Backtest paths: {paths.shape}")  # (5, 120)
 
-# Derive a toy "return" series and compute per-path PSR
-per_path_returns = paths - y[np.newaxis, :]
-per_path_psr = [
-    probabilistic_sharpe_ratio(row[np.isfinite(row)], benchmark_skill=0.0)
-    for row in per_path_returns
-]
-print(f"PSR per path: {[round(p, 3) for p in per_path_psr]}")
+# PSR evaluates one strategy's realised RETURN series (not the prediction paths
+# above, which are model outputs, not returns). Shown on a synthetic daily series:
+strategy_returns = rng.normal(0.0008, 0.01, 504)
+psr = probabilistic_sharpe_ratio(strategy_returns, benchmark_skill=0.0)
+print(f"PSR: {psr:.3f}")  # P(true Sharpe > 0)
 
-# DSR corrects for testing 5 paths simultaneously
-first = per_path_returns[0]
-dsr = deflated_sharpe_ratio(first[np.isfinite(first)], n_trials=5, var_sharpe=0.01**2)
-print(f"Deflated SR (first path): {dsr:.3f}")
-
-# Minimum observations needed to prove SR=0.7 beats benchmark SR=0.5 at 95% confidence
+# MinTRL: observations needed to show an observed Sharpe beats a benchmark at
+# 95% confidence. The Sharpes and the count share one frequency, so a high
+# per-bar Sharpe (0.7) needs few bars.
 n_min = min_track_record_length(
     observed_sharpe=0.7, target_sharpe=0.5, alpha=0.05, skew=0.0, kurtosis=3.0
 )
 print(f"MinTRL: {int(n_min)} observations")
 ```
+
+For the full selection-bias workflow on a real search, the Deflated Sharpe Ratio with the correct `var_sharpe`, `effective_n_trials` for correlated Optuna trials, `minimum_backtest_length`, and PBO are worked end to end on real BTC/USDT data in [`examples/backtest_overfitting_audit.ipynb`](examples/backtest_overfitting_audit.ipynb). The Deflated Sharpe Ratio deflates by the number of strategy *configurations* searched (not the number of CPCV paths), with `var_sharpe` estimated from the spread of trial Sharpes rather than assumed.
 
 ---
 
