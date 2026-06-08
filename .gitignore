@@ -220,6 +220,14 @@ __marimo__/
 # Example notebook downloaded datasets (lazily fetched on first run)
 examples/data/
 
+# Private journal-submission materials, kept locally outside the public tree.
+paper/.private/
+
+# Prevent accidental regeneration of private MDPI submission artifacts in paper/.
+paper/Definitions/
+paper/forecasting_selection_regret_mdpi.*
+paper/editage_review_response.md
+
 # docs/ is now the tracked mkdocs source. Only ignore build/scratch under it.
 docs/_build/
 docs/plans/

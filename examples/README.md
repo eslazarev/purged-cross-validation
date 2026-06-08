@@ -197,7 +197,9 @@ answer, and it is the point of the package.
 
 **Source:** London Datastore, dataset
 `smartmeter-energy-use-data-in-london-households` (the 168-file CSV split).
-Download the zip; the notebook builds a small cached subset.
+Download the zip, then build the cached subset with
+`python build_lcl_cache.py --source <path-to-data>` (it filters the data to the 60
+households listed in `lcl_household_manifest.csv`).
 
 **Files cached:**
 - `lcl_halfhourly.csv` — 60 standard-tariff households, fixed-seed sample,
