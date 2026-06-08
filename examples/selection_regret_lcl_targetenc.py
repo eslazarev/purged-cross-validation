@@ -7,20 +7,24 @@ an artifact of a contrived feature.
 
 This script replaces the raw identifier with the most common realistic
 entity-correlated feature in load forecasting: the customer's average daily
-consumption ("baseline load"). Crucially, it is built the way a careful
-practitioner would, with no naive target leakage:
+consumption ("baseline load"). It is built the way a careful practitioner would,
+as a *causal* encoder fit per fold on the training side only:
 
-  * the per-household mean of the target is computed *inside the pipeline*, fit
-    only on the training fold (a leakage-aware target encoder);
-  * a household absent from the training fold (a genuinely unseen customer, the
-    deployment condition) is imputed with the global training mean, the standard
-    cold-start handling.
+  * for each row, the household's mean target is computed over that household's
+    *earlier* training targets only, so the encoder reads no validation-fold
+    targets, no future targets, and never the row's own target;
+  * a household absent from the training fold, or a row with no earlier history
+    (a genuinely unseen customer, the deployment condition), takes a cold-start
+    prior pooled, inside each fit, from the pre-2013 daily consumption of the
+    training-fold households only. A held-out household never contributes.
 
-Even done this carefully, shuffled k-fold still leaks: because the same household
-sits in both the train and test side of a shuffled fold, the encoder gives test
-rows their own household's mean, which is unavailable for a truly new customer.
-Group-aware cross-validation puts whole households on the test side, so the
-encoder imputes the global mean there, exactly as at deployment. The question
+The encoder is thus free of target leakage, temporal look-ahead, and
+fold-contaminated preprocessing. Shuffled k-fold nevertheless retains the intended
+entity-overlap leakage: because the same household sits in both the train and test
+side of a shuffled fold, the encoder gives test rows their own household's mean,
+which is unavailable for a truly new customer. Group-aware cross-validation puts
+whole households on the test side, so they take the training-only prior, exactly as
+at deployment. The question
 this script answers empirically: does the innocent feature reproduce the
 selection-regret gap?
 
@@ -51,34 +55,68 @@ N_SEEDS = 30
 YEAR_START, YEAR_END = "2013-01-01", "2014-01-01"
 
 DATA_DIR = Path("data") if Path("data").exists() else Path("examples/data")
-# Numeric features, then the household id as the LAST column. The encoder below
-# replaces that last column with a leakage-aware per-household target mean.
+# Numeric features, then a date ordinal and the household id as the LAST two
+# columns. The encoder below consumes the date, replaces the id with a causal
+# per-household target mean (earlier dates only), and drops the date column.
 NUM_FEATURES = ["lag_1", "lag_7"] + [f"dow_{d}" for d in range(7)]
 MODEL_NAMES = ["kNN(k=1)", "kNN(k=5)", "kNN(k=50)", "Ridge a=.01",
                "Ridge a=1", "Ridge a=100", "RF d=None", "RF d=4"]
 
 
-class HouseholdMeanEncoder(BaseEstimator, TransformerMixin):
-    """Replace the last column (household id) with the per-household mean of the
-    target, learned on the training fold only. Unseen households (cold start)
-    get the global training mean. This is leakage-aware target encoding."""
+class CausalHouseholdMeanEncoder(BaseEstimator, TransformerMixin):
+    """Replace the household-id column with a *causal* expanding mean of the
+    household's target: for each row, the mean of that household's training
+    targets on strictly earlier dates. A row with no earlier same-household
+    history (an unseen customer, or a household's earliest day) takes a cold-start
+    prior pooled, inside ``fit``, from the pre-window data of the households present
+    in the *training fold only*; a held-out household never contributes. The
+    encoder is fit on the training fold only and reads no validation-fold targets,
+    no future targets, no row's own target, and no held-out household's data, so its
+    construction is free of target leakage, temporal look-ahead, and
+    fold-contaminated preprocessing. Shuffled folds still expose the intended
+    entity-overlap leakage, the mechanism under study. Input columns are the numeric
+    features, then a date ordinal, then the household id (last two columns); the date
+    column is consumed and dropped, so the output width equals the numeric features
+    plus the encoding.
+
+    ``pre2013_stats`` maps integer household id to ``(sum, count)`` of that
+    household's pre-window daily consumption; only the training fold's households
+    are read."""
+
+    def __init__(self, pre2013_stats=None):
+        self.pre2013_stats = pre2013_stats
 
     def fit(self, X, y):  # noqa: N803
-        ids = X[:, -1]
+        X = np.asarray(X, dtype=float)  # noqa: N806
         y = np.asarray(y, dtype=float)
-        self.global_mean_ = float(y.mean())
-        self.mean_by_id_ = {}
-        for g in np.unique(ids):
-            self.mean_by_id_[float(g)] = float(y[ids == g].mean())
+        date, ids = X[:, -2], X[:, -1]
+        train_ids = np.unique(ids)
+        stats = self.pre2013_stats or {}
+        s = c = 0.0
+        for g in train_ids:
+            st = stats.get(float(g))
+            if st:
+                s += st[0]
+                c += st[1]
+        self.cold_start_prior_ = s / c if c else 0.0  # training-fold households only
+        self.by_id_ = {}
+        for g in train_ids:
+            m = ids == g
+            o = np.argsort(date[m], kind="mergesort")
+            self.by_id_[float(g)] = (date[m][o], np.concatenate(([0.0], np.cumsum(y[m][o]))))
         return self
 
     def transform(self, X):  # noqa: N803
-        X = np.asarray(X, dtype=float).copy()  # noqa: N806
-        ids = X[:, -1]
-        enc = np.fromiter((self.mean_by_id_.get(float(g), self.global_mean_) for g in ids),
-                          dtype=float, count=len(ids))
-        X[:, -1] = enc
-        return X
+        X = np.asarray(X, dtype=float)  # noqa: N806
+        date, ids = X[:, -2], X[:, -1]
+        enc = np.full(len(X), float(self.cold_start_prior_))  # training-only pre-window prior
+        for g, (sd, pref) in self.by_id_.items():
+            m = ids == g
+            if not m.any():
+                continue
+            k = np.searchsorted(sd, date[m], side="left")  # strictly earlier same-household dates
+            enc[m] = np.where(k > 0, pref[k] / np.maximum(k, 1), enc[m])
+        return np.column_stack([X[:, :-2], enc])
 
 
 def load_daily() -> pd.DataFrame:
@@ -96,32 +134,49 @@ def load_daily() -> pd.DataFrame:
     daily["hh_int"] = daily["LCLid"].map(hh_to_int).astype(float)
     for d in range(7):
         daily[f"dow_{d}"] = (daily["date"].dt.dayofweek == d).astype(float)
+    daily["date_ord"] = (daily["date"] - pd.Timestamp(YEAR_START)).dt.days.astype(float)
     daily["target"] = daily["kwh"]
     cols = [*NUM_FEATURES, "hh_int", "target"]
     return daily.dropna(subset=cols).reset_index(drop=True)
 
 
-def build_grid(seed: int):
-    """Each candidate is a pipeline: leakage-aware household-mean encoder, then
-    (for distance/linear models) a scaler, then the estimator."""
-    enc = HouseholdMeanEncoder
+def pre2013_stats() -> dict:
+    """Per-household ``(sum, count)`` of daily consumption strictly before the
+    modelling window (pre-2013), keyed by the integer household id used in the
+    features. The encoder pools these over the *training-fold* households only to
+    form the cold-start prior, so a held-out household never contributes to the
+    prior used on it (the prior uses no held-out, future, or in-window-target data)."""
+    raw = pd.read_csv(DATA_DIR / "lcl_halfhourly.csv", parse_dates=["tstp"])
+    hh_to_int = {h: i for i, h in enumerate(sorted(raw["LCLid"].unique()))}
+    raw["date"] = raw["tstp"].dt.normalize()
+    pre = raw[raw["tstp"] < YEAR_START]
+    daily = pre.groupby(["LCLid", "date"])["energy_kwh"].sum().reset_index()
+    agg = daily.groupby("LCLid")["energy_kwh"].agg(["sum", "count"])
+    return {float(hh_to_int[h]): (float(r["sum"]), int(r["count"])) for h, r in agg.iterrows()}
+
+
+def build_grid(seed: int, stats: dict):
+    """Each candidate is a pipeline: causal household-mean encoder (with a
+    training-only pre-window cold-start prior), then a scaler, then the estimator."""
+    enc = CausalHouseholdMeanEncoder
     return [
-        ("kNN(k=1)", make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=1))),
-        ("kNN(k=5)", make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=5))),
-        ("kNN(k=50)", make_pipeline(enc(), StandardScaler(), KNeighborsRegressor(n_neighbors=50))),
-        ("Ridge a=.01", make_pipeline(enc(), StandardScaler(), Ridge(alpha=0.01))),
-        ("Ridge a=1", make_pipeline(enc(), StandardScaler(), Ridge(alpha=1.0))),
-        ("Ridge a=100", make_pipeline(enc(), StandardScaler(), Ridge(alpha=100.0))),
-        ("RF d=None", make_pipeline(enc(), RandomForestRegressor(n_estimators=100, max_depth=None, random_state=seed, n_jobs=-1))),
-        ("RF d=4", make_pipeline(enc(), RandomForestRegressor(n_estimators=100, max_depth=4, random_state=seed, n_jobs=-1))),
+        ("kNN(k=1)", make_pipeline(enc(pre2013_stats=stats),StandardScaler(), KNeighborsRegressor(n_neighbors=1))),
+        ("kNN(k=5)", make_pipeline(enc(pre2013_stats=stats),StandardScaler(), KNeighborsRegressor(n_neighbors=5))),
+        ("kNN(k=50)", make_pipeline(enc(pre2013_stats=stats),StandardScaler(), KNeighborsRegressor(n_neighbors=50))),
+        ("Ridge a=.01", make_pipeline(enc(pre2013_stats=stats),StandardScaler(), Ridge(alpha=0.01))),
+        ("Ridge a=1", make_pipeline(enc(pre2013_stats=stats),StandardScaler(), Ridge(alpha=1.0))),
+        ("Ridge a=100", make_pipeline(enc(pre2013_stats=stats),StandardScaler(), Ridge(alpha=100.0))),
+        ("RF d=None", make_pipeline(enc(pre2013_stats=stats),RandomForestRegressor(n_estimators=100, max_depth=None, random_state=seed, n_jobs=-1))),
+        ("RF d=4", make_pipeline(enc(pre2013_stats=stats),RandomForestRegressor(n_estimators=100, max_depth=4, random_state=seed, n_jobs=-1))),
     ]
 
 
-# Feature columns fed to the pipeline: numeric features then the id (last).
-COLS = [*NUM_FEATURES, "hh_int"]
+# Feature columns fed to the pipeline: numeric features, date ordinal, then id.
+# The causal encoder consumes the date ordinal and id, emitting numeric + mean.
+COLS = [*NUM_FEATURES, "date_ord", "hh_int"]
 
 
-def run_one(clean: pd.DataFrame, all_hh: list, seed: int) -> dict:
+def run_one(clean: pd.DataFrame, all_hh: list, seed: int, stats: dict) -> dict:
     rng = np.random.default_rng(seed)
     perm = rng.permutation(len(all_hh))
     sel_hh = {all_hh[i] for i in perm[:N_SELECT_HH]}
@@ -132,7 +187,7 @@ def run_one(clean: pd.DataFrame, all_hh: list, seed: int) -> dict:
     g_s = pd.Series(sel["LCLid"].to_numpy())
     p_s = sel["date"].reset_index(drop=True)
 
-    grid = build_grid(seed)
+    grid = build_grid(seed, stats)
     naive_cv = KFold(n_splits=5, shuffle=True, random_state=seed)
     honest_cv = PurgedGroupKFold(n_splits=5, prediction_times=p_s, evaluation_times=p_s, groups=g_s)
 
@@ -179,10 +234,14 @@ def quart(a: np.ndarray) -> tuple:
 
 def main() -> None:
     clean = load_daily()
+    stats = pre2013_stats()
+    print(f"pre-2013 cold-start prior pooled over all 60 households: "
+          f"{sum(v[0] for v in stats.values()) / sum(v[1] for v in stats.values()):.4f} kWh/day "
+          f"(the experiment pools only training-fold households inside each fit)")
     all_hh = sorted(clean["LCLid"].unique())
     rows = []
     for s in range(N_SEEDS):
-        r = run_one(clean, all_hh, s)
+        r = run_one(clean, all_hh, s, stats)
         rows.append(r)
         print(f"seed {s:>2}: naive {r['naive_pick']:<11} {r['naive_dep_mae']:.4f}  "
               f"honest {r['honest_pick']:<11} {r['honest_dep_mae']:.4f}  "
@@ -213,9 +272,9 @@ def main() -> None:
     summary = (
         f"# Selection regret with an innocent entity feature (LCL, fixed N=60, 48/12 split, {n} partitions)\n\n"
         f"Generated by `examples/selection_regret_lcl_targetenc.py`.\n\n"
-        f"The raw household identifier is replaced by a leakage-aware target-mean encoding "
-        f"of the household (the customer's average daily consumption), fit per fold on the "
-        f"training side only, with global-mean imputation for unseen households (cold start). "
+        f"The raw household identifier is replaced by a causal target-mean encoding "
+        f"of the household (the customer's average daily consumption), computed per fold from "
+        f"earlier dates only, with a training-only pre-2013 cold-start prior for unseen households. "
         f"Each seed is a different 48/12 partition of the same 60-household sample (correlated "
         f"resamples, not independent draws), so spreads are descriptive.\n\n"
         f"## Model selection\n"
