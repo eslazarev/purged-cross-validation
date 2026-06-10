@@ -78,8 +78,8 @@ A controlled check on synthetic data whose target is built so that **no feature 
 | model | naive shuffled KFold R² | PurgedKFold R² |
 |---|--:|--:|
 | predict-the-mean (reference) | -0.01 | -0.13 |
-| k-NN | **0.83** | -1.31 |
-| RandomForest | **0.91** | -1.94 |
+| k-NN | **0.83** | -1.48 |
+| RandomForest | **0.91** | -1.87 |
 
 Train/test label overlap: **100% under naive → 0% under PurgedKFold**.
 
