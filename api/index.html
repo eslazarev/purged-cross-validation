@@ -3644,7 +3644,37 @@ annualisation. Ignored when a custom <code>metric_fn</code> is given
             </td>
             <td>
               <div class="doc-md-description">
-                <p>one column per metric.</p>
+                <p>one column per metric. With the default <code>metric_fn</code> the</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>max_drawdown</code> column is a <strong>positive magnitude</strong> (<code>0.30</code> = a 30%</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>drawdown), so the worst path is <code>df["max_drawdown"].idxmax()</code>, not</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>idxmin()</code>; see :func:<code>default_backtest_metrics</code>.</p>
               </div>
             </td>
           </tr>

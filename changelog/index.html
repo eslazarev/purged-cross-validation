@@ -531,6 +531,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -848,6 +859,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1149,6 +1171,19 @@ Plan is listed under the published version it shipped in.</p>
   AFML Chapter 11 selection-bias toolset (PSR, DSR, PBO, MinTRL) in-package.
   Implements Bailey, Borwein, Lopez de Prado &amp; Zhu (2014), "Pseudo-mathematics
   and financial charlatanism".</li>
+</ul>
+<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Quickstart now shows how to pass <code>sample_weight</code> through the splitters.
+  Because the splitters stay drop-in to scikit-learn and ship no scorer of
+  their own, weights travel via sklearn metadata routing
+  (<code>enable_metadata_routing</code>, <code>set_fit_request</code>/<code>set_score_request</code>); the
+  section covers both train-time-only weighting and weighting the score
+  through a custom scorer, and the <code>UnsetMetadataPassedError</code> it raises if
+  the scorer neither requests nor declines the weight.</li>
+<li><code>path_metrics</code> docstring states the <code>max_drawdown</code> sign convention at the
+  point of use (positive magnitude; worst path is <code>idxmax</code>, not <code>idxmin</code>),
+  matching the note already in <code>default_backtest_metrics</code>.</li>
 </ul>
 <h2 id="010-2026-06-05">[0.1.0] - 2026-06-05<a class="headerlink" href="#010-2026-06-05" title="Permanent link">&para;</a></h2>
 <p>First minor release. The version bump from the <code>0.0.x</code> line signals that
