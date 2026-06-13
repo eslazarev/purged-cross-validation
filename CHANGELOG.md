@@ -20,6 +20,19 @@ Plan is listed under the published version it shipped in.
   Implements Bailey, Borwein, Lopez de Prado & Zhu (2014), "Pseudo-mathematics
   and financial charlatanism".
 
+### Documentation
+
+- Quickstart now shows how to pass `sample_weight` through the splitters.
+  Because the splitters stay drop-in to scikit-learn and ship no scorer of
+  their own, weights travel via sklearn metadata routing
+  (`enable_metadata_routing`, `set_fit_request`/`set_score_request`); the
+  section covers both train-time-only weighting and weighting the score
+  through a custom scorer, and the `UnsetMetadataPassedError` it raises if
+  the scorer neither requests nor declines the weight.
+- `path_metrics` docstring states the `max_drawdown` sign convention at the
+  point of use (positive magnitude; worst path is `idxmax`, not `idxmin`),
+  matching the note already in `default_backtest_metrics`.
+
 ## [0.1.0] - 2026-06-05
 
 First minor release. The version bump from the `0.0.x` line signals that

@@ -128,7 +128,10 @@ def path_metrics(
 
     Returns:
         DataFrame indexed ``0 .. n_paths - 1`` (index name ``"path"``) with
-        one column per metric.
+        one column per metric. With the default ``metric_fn`` the
+        ``max_drawdown`` column is a **positive magnitude** (``0.30`` = a 30%
+        drawdown), so the worst path is ``df["max_drawdown"].idxmax()``, not
+        ``idxmin()``; see :func:`default_backtest_metrics`.
 
     Raises:
         ValueError: if ``paths`` is not 2-D.
