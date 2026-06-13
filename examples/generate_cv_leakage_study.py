@@ -103,6 +103,55 @@ print(f"corr(x, y) = {np.corrcoef(features[:, 0], y)[0, 1]:+.3f} "
 """))
 
 cells.append(md("""\
+A picture makes the construction obvious. The noise has no visible structure, the
+label is smooth because adjacent windows share most of their terms, and the feature
+just grows.\
+"""))
+
+cells.append(code("""\
+rng0 = np.random.default_rng(0)
+e0 = rng0.standard_normal(N + H - 1)
+y0 = np.array([e0[t : t + H].mean() for t in range(N)])
+x0 = np.cumsum(rng0.gamma(shape=2.0, scale=1.0, size=N))
+
+T0 = 400  # the window we highlight
+
+fig, axes = plt.subplots(3, 1, figsize=(8, 5.8), sharex=True)
+fig.patch.set_facecolor("white")
+
+axes[0].plot(np.arange(N), e0[:N], lw=0.5, color="#888888", zorder=2)
+axes[0].axvspan(T0, T0 + H, color="#e8a13a", alpha=0.45, zorder=1)
+axes[0].set_ylabel("noise e[t]", fontsize=9.5, color="#444444")
+
+axes[1].plot(np.arange(N), y0, lw=1.0, color="#9c4a06", zorder=2)
+axes[1].plot([T0], [y0[T0]], "o", ms=6, markerfacecolor="#e8a13a",
+             markeredgecolor="#3a1c02", zorder=3)
+axes[1].axhline(0.0, color="#bbbbbb", lw=0.8, zorder=1)
+axes[1].set_ylabel("label y[t]", fontsize=9.5, color="#444444")
+
+axes[2].plot(np.arange(N), x0, lw=1.2, color="#4f86c6", zorder=2)
+axes[2].set_ylabel("feature x[t]", fontsize=9.5, color="#444444")
+axes[2].set_xlabel("observation index (time)", fontsize=10, color="#444444")
+
+for ax in axes:
+    ax.tick_params(colors="#666666", labelsize=9)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color("#cccccc")
+    ax.grid(ls=":", color="#dddddd", alpha=0.8, zorder=0)
+
+fig.text(0.5, 0.965, "One realization of the data (seed = 0)",
+         ha="center", fontsize=12.5, fontweight="bold", color="#222222")
+fig.text(0.5, 0.925,
+         "the shaded noise window of length H = 20 averages into the marked label;\\n"
+         "the label is strongly autocorrelated, the feature is monotone and unrelated to it",
+         ha="center", fontsize=8.5, color="#777777")
+fig.subplots_adjust(top=0.87, bottom=0.09, left=0.10, right=0.97, hspace=0.30)
+plt.show()\
+"""))
+
+cells.append(md("""\
 ## Four ways to split the same data
 
 1. **KFold, shuffled.** A common choice for tabular work (scikit-learn's own default is `shuffle=False`). Test indices are
