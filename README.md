@@ -14,7 +14,7 @@
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![CodeFactor](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation/badge)](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation)
 
-**[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
+**[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** · [![Open in Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/evgeniilazarev/when-cross-validation-lies-a-controlled-study-on) · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 
 *Cite this software:* see [`CITATION.cff`](CITATION.cff) and [`paper/paper.md`](paper/paper.md) (JOSS paper).
 
@@ -73,7 +73,7 @@ Why write another one? People have asked scikit-learn, auto-sklearn, and mlpack 
 
 ## Does it actually catch leakage?
 
-A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](examples/synthetic_leakage_proof.ipynb), deterministic, no download):
+A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](examples/synthetic_leakage_proof.ipynb), deterministic, no download; run it in your browser on [![Open in Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/evgeniilazarev/when-cross-validation-lies-a-controlled-study-on)):
 
 | model | naive shuffled KFold R² | PurgedKFold R² |
 |---|--:|--:|
