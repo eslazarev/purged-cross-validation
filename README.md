@@ -73,7 +73,7 @@ Why write another one? People have asked scikit-learn, auto-sklearn, and mlpack 
 
 ## Does it actually catch leakage?
 
-A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](examples/synthetic_leakage_proof.ipynb), deterministic, no download; run it in your browser on [![Open in Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/evgeniilazarev/when-cross-validation-lies-a-controlled-study-on)):
+A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](examples/synthetic_leakage_proof.ipynb), deterministic, no downloads):
 
 | model | naive shuffled KFold R² | PurgedKFold R² |
 |---|--:|--:|

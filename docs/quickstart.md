@@ -75,6 +75,57 @@ print("honest R^2 per fold:", scores)
 (chronological train-on-the-past, expanding or rolling) follow the same
 constructor pattern.
 
+### Sample weights
+
+The splitters carry no scorer of their own; they stay drop-in to
+scikit-learn, so sample weights travel through sklearn's own metadata
+routing rather than through any `purgedcv` argument. Enable routing once,
+then have the estimator request the weight for `fit`. The split itself is
+unaffected: weights ride along with the rows each fold keeps.
+
+```python
+import numpy as np
+import pandas as pd
+import sklearn
+from sklearn.linear_model import Ridge
+from sklearn.metrics import make_scorer, mean_squared_error
+from sklearn.model_selection import cross_val_score
+from purgedcv import PurgedKFold
+
+n, h = 300, 5
+rng = np.random.default_rng(0)
+features = rng.standard_normal((n, 3))
+labels = rng.standard_normal(n)
+weights = rng.uniform(0.5, 1.5, n)
+pred = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+evalu = pred + pd.Timedelta(days=h)
+cv = PurgedKFold(n_splits=5, prediction_times=pred, evaluation_times=evalu,
+                 purge_horizon=f"{h}D")
+
+sklearn.set_config(enable_metadata_routing=True)
+
+# Train-time weighting only. The estimator requests the weight for fit and
+# explicitly declines it for score, so cross_val_score knows where it goes.
+est = Ridge().set_fit_request(sample_weight=True).set_score_request(sample_weight=False)
+scores = cross_val_score(est, features, labels, cv=cv, params={"sample_weight": weights})
+
+# Weight the score as well: route the weight into fit and into a scorer that
+# also requests it. Without this, the default scorer leaves the test fold
+# unweighted.
+est = Ridge().set_fit_request(sample_weight=True)
+scorer = make_scorer(mean_squared_error, greater_is_better=False).set_score_request(
+    sample_weight=True
+)
+scores_w = cross_val_score(est, features, labels, cv=cv, scoring=scorer,
+                           params={"sample_weight": weights})
+```
+
+The gotcha is the second case: if you route `sample_weight` but leave the
+default scorer, sklearn raises `UnsetMetadataPassedError` because the scorer
+neither requested nor declined the weight. Decline it with
+`set_score_request(sample_weight=False)` for train-only weighting, or pass a
+scorer that requests it for weighted evaluation.
+
 ## 3. CPCV + backtest paths + deflated Sharpe
 
 The full workflow from chapter 12 of *Advances in Financial Machine
