@@ -1,6 +1,6 @@
-# Purged cross validation
+# purgedcv: scikit-learn-compatible purged and combinatorial cross-validation (CPCV) for time-series and financial machine learning in Python
 
-**scikit-learn-compatible cross-validation for time-series machine learning: purging, embargoes, and combinatorial backtest paths.**
+> Honest, leakage-aware cross-validation for time series and quantitative finance: purged k-fold, embargo, walk-forward, and combinatorial purged CV (CPCV) with backtest-path reconstruction, plus deflated and probabilistic Sharpe ratios.
 
 [![CI](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/eslazarev/purged-cross-validation/branch/main/graph/badge.svg)](https://codecov.io/gh/eslazarev/purged-cross-validation)
@@ -9,14 +9,14 @@
 [![PyPI wheel](https://img.shields.io/pypi/wheel/purgedcv)](https://pypi.org/project/purgedcv/#files)
 
 [![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/eslazarev/purged-cross-validation/blob/main/LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![CodeFactor](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation/badge)](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation)
 
-**[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](examples/)** · [![Open in Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/evgeniilazarev/when-cross-validation-lies-a-controlled-study-on) · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
+**[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](https://github.com/eslazarev/purged-cross-validation/tree/main/examples)** · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 
-*Cite this software:* see [`CITATION.cff`](CITATION.cff) and [`paper/paper.md`](paper/paper.md) (JOSS paper).
+*Cite this software:* see [`CITATION.cff`](https://github.com/eslazarev/purged-cross-validation/blob/main/CITATION.cff) and [`paper/paper.md`](https://github.com/eslazarev/purged-cross-validation/blob/main/paper/paper.md) (JOSS paper).
 
 ---
 
@@ -73,7 +73,7 @@ Why write another one? People have asked scikit-learn, auto-sklearn, and mlpack 
 
 ## Does it actually catch leakage?
 
-A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](examples/synthetic_leakage_proof.ipynb), deterministic, no downloads):
+A controlled check on synthetic data whose target is built so that **no feature can predict it**. The honest out-of-sample score must never be positive. Naive shuffled k-fold runs against `PurgedKFold` side by side ([examples/synthetic_leakage_proof.ipynb](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/synthetic_leakage_proof.ipynb), deterministic, no downloads; run it in your browser: [![Open in Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/evgeniilazarev/when-cross-validation-lies-a-controlled-study-on)):
 
 | model | naive shuffled KFold R² | PurgedKFold R² |
 |---|--:|--:|
@@ -91,7 +91,7 @@ Naive CV reports R² ≈ 0.83–0.91 on a target nothing can predict. That is pu
 
 ## Does an honest CV deploy better?
 
-Same kind of question, opposite framing: on a partially predictable real task, does `PurgedGroupKFold` pick a model that deploys better than naive shuffled `KFold`? UK Low Carbon London smart meters, 48 households for model selection, 12 truly held-out households for deployment ([examples/selection_regret_lcl.ipynb](examples/selection_regret_lcl.ipynb)):
+Same kind of question, opposite framing: on a partially predictable real task, does `PurgedGroupKFold` pick a model that deploys better than naive shuffled `KFold`? UK Low Carbon London smart meters, 48 households for model selection, 12 truly held-out households for deployment ([examples/selection_regret_lcl.ipynb](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_lcl.ipynb)):
 
 | selection method     | picked model  | deployment MAE | deployment R² |
 |----------------------|---------------|---------------:|--------------:|
@@ -108,17 +108,17 @@ The honest-selected model deploys at **6.6% lower MAE** on the 12 unseen househo
 | Naive − honest MAE, median | 0.28 kWh (**13.3% relative**) |
 | Range | 0.11 to 1.79 kWh |
 
-Plain `sklearn.GroupKFold` gives the same selection as `PurgedGroupKFold` here: the effect is a property of group-aware validation, not of a specific package ([`examples/selection_regret_lcl_seeds.py`](examples/selection_regret_lcl_seeds.py)).
+Plain `sklearn.GroupKFold` gives the same selection as `PurgedGroupKFold` here: the effect is a property of group-aware validation, not of a specific package ([`examples/selection_regret_lcl_seeds.py`](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_lcl_seeds.py)).
 
 ![Honest CV deploys better on new LCL households: naive shuffled KFold picks deep RandomForest and deploys at 2.638 kWh; PurgedGroupKFold picks Ridge and deploys at 2.464 kWh.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/selection_regret_lcl.png)
 
-The naive selector picks deep RandomForest because the household-identifier feature lets it memorise per-household baselines inside the shuffled CV. On truly unseen households that feature is useless and the model collapses. An ablation that removes the identifier flattens the gap to zero. A second variant replaces the raw identifier with a **causal target-mean encoding** of the customer's average load (the kind of feature a careful practitioner would use): the gap reproduces at median 0.2154 kWh (10.1% relative, 29/30 wins), confirming the effect is not an artifact of the contrived identifier ([`examples/selection_regret_lcl_targetenc.py`](examples/selection_regret_lcl_targetenc.py)).
+The naive selector picks deep RandomForest because the household-identifier feature lets it memorise per-household baselines inside the shuffled CV. On truly unseen households that feature is useless and the model collapses. An ablation that removes the identifier flattens the gap to zero. A second variant replaces the raw identifier with a **causal target-mean encoding** of the customer's average load (the kind of feature a careful practitioner would use): the gap reproduces at median 0.2154 kWh (10.1% relative, 29/30 wins), confirming the effect is not an artifact of the contrived identifier ([`examples/selection_regret_lcl_targetenc.py`](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_lcl_targetenc.py)).
 
 ---
 
 ## What about a market with no real edge?
 
-On a task where no honest model has predictive power (daily BTC/USDT 2021-2023 with ordinary technical features), the question changes from "does honest CV pick a better model" to "does honest CV stop me from picking a worse one" ([examples/selection_regret_crypto.ipynb](examples/selection_regret_crypto.ipynb)):
+On a task where no honest model has predictive power (daily BTC/USDT 2021-2023 with ordinary technical features), the question changes from "does honest CV pick a better model" to "does honest CV stop me from picking a worse one" ([examples/selection_regret_crypto.ipynb](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_crypto.ipynb)):
 
 |                                    | naive shuffled KFold | PurgedKFold      |
 |------------------------------------|----------------------|------------------|
@@ -342,7 +342,7 @@ n_min = min_track_record_length(
 print(f"MinTRL: {int(n_min)} observations")
 ```
 
-For the full selection-bias workflow on a real search, the Deflated Sharpe Ratio with the correct `var_sharpe`, `effective_n_trials` for correlated Optuna trials, `minimum_backtest_length`, and PBO are worked end to end on real BTC/USDT data in [`examples/backtest_overfitting_audit.ipynb`](examples/backtest_overfitting_audit.ipynb). The Deflated Sharpe Ratio deflates by the number of strategy *configurations* searched (not the number of CPCV paths), with `var_sharpe` estimated from the spread of trial Sharpes rather than assumed.
+For the full selection-bias workflow on a real search, the Deflated Sharpe Ratio with the correct `var_sharpe`, `effective_n_trials` for correlated Optuna trials, `minimum_backtest_length`, and PBO are worked end to end on real BTC/USDT data in [`examples/backtest_overfitting_audit.ipynb`](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb). The Deflated Sharpe Ratio deflates by the number of strategy *configurations* searched (not the number of CPCV paths), with `var_sharpe` estimated from the spread of trial Sharpes rather than assumed.
 
 ---
 
@@ -359,9 +359,9 @@ For the full selection-bias workflow on a real search, the Deflated Sharpe Ratio
 Bug reports, feature requests, and pull requests are welcome. The full
 development setup, the local gates (`ruff`, `black`, `mypy --strict`,
 `pytest`, `mkdocs build --strict`), the end-to-end test convention, and the
-prose-quality gate are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
-Conduct is governed by the [Contributor Covenant](CODE_OF_CONDUCT.md);
-security reports go through [SECURITY.md](SECURITY.md).
+prose-quality gate are documented in [CONTRIBUTING.md](https://github.com/eslazarev/purged-cross-validation/blob/main/CONTRIBUTING.md).
+Conduct is governed by the [Contributor Covenant](https://github.com/eslazarev/purged-cross-validation/blob/main/CODE_OF_CONDUCT.md);
+security reports go through [SECURITY.md](https://github.com/eslazarev/purged-cross-validation/blob/main/SECURITY.md).
 
 ## Use of generative AI
 
@@ -375,4 +375,4 @@ numbers were verified against those runs rather than generated as text.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/eslazarev/purged-cross-validation/blob/main/LICENSE).
