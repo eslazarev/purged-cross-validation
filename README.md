@@ -1,6 +1,6 @@
 # purgedcv: scikit-learn-compatible purged and combinatorial cross-validation (CPCV) for time-series and financial machine learning in Python
 
-> Honest, leakage-aware cross-validation for time series and quantitative finance: purged k-fold, embargo, walk-forward, and combinatorial purged CV (CPCV) with backtest-path reconstruction, plus deflated and probabilistic Sharpe ratios.
+**Honest, leakage-aware cross-validation for time series and quantitative finance:** purged k-fold, embargo, walk-forward, and combinatorial purged CV (CPCV) with backtest-path reconstruction, plus deflated and probabilistic Sharpe ratios.
 
 [![CI](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/eslazarev/purged-cross-validation/branch/main/graph/badge.svg)](https://codecov.io/gh/eslazarev/purged-cross-validation)
