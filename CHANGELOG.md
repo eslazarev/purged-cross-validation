@@ -9,16 +9,7 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
-### Added
-
-- `minimum_backtest_length` (MinBTL): the backtest length, in years, below
-  which a reported annualised Sharpe is within what selecting the best of
-  `n_trials` independent backtests produces by chance under the null. It is
-  the inverse of the Deflated Sharpe Ratio deflation, reusing the same
-  Bailey-Lopez de Prado expected-maximum bracket term, and finishes the
-  AFML Chapter 11 selection-bias toolset (PSR, DSR, PBO, MinTRL) in-package.
-  Implements Bailey, Borwein, Lopez de Prado & Zhu (2014), "Pseudo-mathematics
-  and financial charlatanism".
+## [0.1.2] - 2026-06-13
 
 ### Documentation
 
@@ -32,6 +23,19 @@ Plan is listed under the published version it shipped in.
 - `path_metrics` docstring states the `max_drawdown` sign convention at the
   point of use (positive magnitude; worst path is `idxmax`, not `idxmin`),
   matching the note already in `default_backtest_metrics`.
+
+## [0.1.1] - 2026-06-05
+
+### Added
+
+- `minimum_backtest_length` (MinBTL): the backtest length, in years, below
+  which a reported annualised Sharpe is within what selecting the best of
+  `n_trials` independent backtests produces by chance under the null. It is
+  the inverse of the Deflated Sharpe Ratio deflation, reusing the same
+  Bailey-Lopez de Prado expected-maximum bracket term, and finishes the
+  AFML Chapter 11 selection-bias toolset (PSR, DSR, PBO, MinTRL) in-package.
+  Implements Bailey, Borwein, Lopez de Prado & Zhu (2014), "Pseudo-mathematics
+  and financial charlatanism".
 
 ## [0.1.0] - 2026-06-05
 
@@ -302,7 +306,10 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.0.9...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.2
+[0.1.1]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.1
+[0.1.0]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.0
 [0.0.9]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.9
 [0.0.8]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.8
 [0.0.7]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.7

@@ -214,10 +214,10 @@ def main() -> None:
     for _, row in df.iterrows():
         ax1.plot([0, 1], [row["naive_dep_mae"], row["honest_dep_mae"]],
                  color="#bbbbbb", lw=0.8, zorder=1)
-    ax1.scatter(np.zeros(n), df["naive_dep_mae"], color="#e0564c", s=28, zorder=3, label="naive")
-    ax1.scatter(np.ones(n), df["honest_dep_mae"], color="#3a9d6e", s=28, zorder=3, label="honest")
+    ax1.scatter(np.zeros(n), df["naive_dep_mae"], color="#e0564c", s=28, zorder=3, label="shuffled")
+    ax1.scatter(np.ones(n), df["honest_dep_mae"], color="#3a9d6e", s=28, zorder=3, label="group-aware")
     ax1.set_xticks([0, 1])
-    ax1.set_xticklabels(["naive shuffled\nKFold", "PurgedGroupKFold\n(honest)"])
+    ax1.set_xticklabels(["shuffled\nKFold", "PurgedGroupKFold\n(group-aware)"])
     ax1.set_xlim(-0.3, 1.3)
     ax1.set_ylabel("deployment MAE on held-out households (kWh)", fontsize=10, color="#444444")
     ax1.tick_params(colors="#666666", labelsize=9)
@@ -225,16 +225,16 @@ def main() -> None:
 
     ax2.hist(d, bins=12, color="#3a9d6e", edgecolor="white", zorder=3)
     ax2.axvline(0, color="#e0564c", ls="--", lw=1.4, zorder=4)
-    ax2.set_xlabel("naive minus honest deployment MAE (kWh)", fontsize=10, color="#444444")
+    ax2.set_xlabel("shuffled minus group-aware deployment MAE (kWh)", fontsize=10, color="#444444")
     ax2.set_ylabel("partitions", fontsize=10, color="#444444")
     ax2.tick_params(colors="#666666", labelsize=9)
     ax2.grid(axis="y", ls=":", color="#dddddd", alpha=0.8, zorder=0)
 
-    fig.text(0.5, 0.97, f"Honest CV deploys better in {win_rate} of {n} partitions",
+    fig.text(0.5, 0.97, f"Group-aware CV deploys better in {win_rate} of {n} partitions",
              ha="center", fontsize=13, fontweight="bold", color="#222222")
     fig.text(0.5, 0.92,
              f"median gap {med:.3f} kWh (IQR {q1:.3f} to {q3:.3f}); "
-             f"positive means honest deploys better",
+             f"positive means group-aware deploys better",
              ha="center", fontsize=9.5, color="#777777")
     fig.subplots_adjust(top=0.86, bottom=0.14, left=0.08, right=0.97, wspace=0.25)
 
