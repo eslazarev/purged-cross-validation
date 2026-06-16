@@ -1,6 +1,6 @@
 # Installation
 
-`purgedcv` is on PyPI and requires Python 3.10 or newer.
+`purgedcv` is on PyPI and conda-forge, and requires Python 3.10 or newer.
 
 ## From PyPI
 
@@ -8,6 +8,16 @@ The base install gets the splitters, metrics, and diagnostics:
 
 ```bash
 pip install purgedcv
+```
+
+## From conda-forge
+
+For conda or mamba users, the package is published on conda-forge:
+
+```bash
+conda install -c conda-forge purgedcv
+# or
+mamba install -c conda-forge purgedcv
 ```
 
 ## Optional extras
