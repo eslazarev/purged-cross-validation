@@ -20,7 +20,7 @@ the original papers and pinned by 354 tests (98% line coverage).
 
 ## Where to start
 
-- [Installation](installation.md) — `pip install purgedcv`, optional extras.
+- [Installation](installation.md) — `pip install purgedcv` or `conda install -c conda-forge purgedcv`, optional extras.
 - [Quickstart](quickstart.md) — three short runnable snippets.
 - [API reference](api.md) — autodoc for every public symbol.
 - [Examples](examples.md) — eleven worked notebooks on real public data.

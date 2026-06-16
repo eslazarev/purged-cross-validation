@@ -5,6 +5,7 @@
 [![CI](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/eslazarev/purged-cross-validation/branch/main/graph/badge.svg)](https://codecov.io/gh/eslazarev/purged-cross-validation)
 [![PyPI version](https://img.shields.io/pypi/v/purgedcv)](https://pypi.org/project/purgedcv/)
+[![Conda version](https://img.shields.io/conda/vn/conda-forge/purgedcv)](https://anaconda.org/conda-forge/purgedcv)
 [![PyPI downloads](https://static.pepy.tech/badge/purgedcv)](https://pepy.tech/project/purgedcv)
 [![PyPI wheel](https://img.shields.io/pypi/wheel/purgedcv)](https://pypi.org/project/purgedcv/#files)
 
@@ -137,6 +138,10 @@ Both strategies lose money over the sideways-down deployment window; the naive p
 ```bash
 
 pip install purgedcv
+
+# Or from conda-forge (conda or mamba)
+conda install -c conda-forge purgedcv
+mamba install -c conda-forge purgedcv
 
 # Directly from the repository
 pip install git+https://github.com/eslazarev/purged-cross-validation.git
