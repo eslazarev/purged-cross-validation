@@ -28,7 +28,7 @@ import numpy as np
 from scipy import stats
 
 from purgedcv._cpcv import CombinatorialPurgedCV
-from purgedcv._time import HorizonLike
+from purgedcv._time import HorizonLike, _coerce_1d
 from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny, TimesLike
@@ -314,17 +314,27 @@ def probability_of_backtest_overfitting(
         70
     """
     n_splits = _validate_integer("n_splits", n_splits, minimum=2)
-    matrix, n_configs, n_obs = _validate_pbo_inputs(
-        returns, n_splits, prediction_times, evaluation_times
+    # Normalize the optional time inputs once, up front, so both the length
+    # check and the split loop operate on validated 1-D numpy arrays. A scalar
+    # or 2-D input is rejected here with a clear message rather than failing
+    # later inside len().
+    pred = (
+        _coerce_1d(prediction_times, name="prediction_times")
+        if prediction_times is not None
+        else None
     )
+    evalu = (
+        _coerce_1d(evaluation_times, name="evaluation_times")
+        if evaluation_times is not None
+        else None
+    )
+    matrix, n_configs, n_obs = _validate_pbo_inputs(returns, n_splits, pred, evalu)
 
     logits: list[float] = []
     is_perf_best: list[float] = []
     oos_perf_best: list[float] = []
     n_dropped = 0
-    for is_idx, oos_idx in _iter_is_oos(
-        n_obs, n_splits, prediction_times, evaluation_times, purge_horizon, embargo
-    ):
+    for is_idx, oos_idx in _iter_is_oos(n_obs, n_splits, pred, evalu, purge_horizon, embargo):
         if len(is_idx) == 0 or len(oos_idx) == 0:
             n_dropped += 1
             continue

@@ -40,8 +40,8 @@ def _coerce_1d(x: TimesLike, *, name: str) -> NDArrayAny:
     datetime/Timedelta objects resolve to ``datetime64`` / ``timedelta64``.
     Inputs that stay ``object`` after that (for example a list of strings)
     are returned as-is; ``validate_times`` then rejects them with a clear
-    dtype message. ``name`` is unused today but kept so future messages can
-    name the offending input.
+    dtype message. A 0-D (scalar) or 2-D input raises ``ValueError``. ``name``
+    labels the offending input in that error message.
     """
     dtype = getattr(x, "dtype", None)
     if isinstance(dtype, pd.DatetimeTZDtype):

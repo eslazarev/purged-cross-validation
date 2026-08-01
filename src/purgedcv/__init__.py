@@ -18,6 +18,7 @@ from purgedcv._pbo import probability_of_backtest_overfitting
 from purgedcv._purge import purge
 from purgedcv._purged_kfold import PurgedGroupKFold, PurgedKFold
 from purgedcv._time import horizons_overlap, parse_horizon, validate_times
+from purgedcv._typing import ArrayLike1D, TimesLike
 from purgedcv._walk_forward import WalkForwardSplit
 from purgedcv.exceptions import (
     EmbargoViolationError,
@@ -29,6 +30,7 @@ from purgedcv.exceptions import (
 __version__ = "0.1.2"
 
 __all__ = [
+    "ArrayLike1D",
     "BaseTemporalSplitter",
     "CombinatorialPurgedCV",
     "CombinatoriallySymmetricCV",
@@ -38,6 +40,7 @@ __all__ = [
     "PurgedKFold",
     "TemporalCVError",
     "TemporalLeakageError",
+    "TimesLike",
     "WalkForwardSplit",
     "__version__",
     "apply_embargo",

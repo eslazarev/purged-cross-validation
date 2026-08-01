@@ -7,6 +7,12 @@ keyword arguments (`prediction_times`, `evaluation_times`,
 [`BaseTemporalSplitter`](#purgedcv.BaseTemporalSplitter) for the shared
 contract.
 
+## Input type aliases
+
+::: purgedcv.TimesLike
+
+::: purgedcv.ArrayLike1D
+
 ## Splitters
 
 ::: purgedcv.BaseTemporalSplitter

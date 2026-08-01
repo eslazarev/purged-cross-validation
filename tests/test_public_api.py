@@ -21,6 +21,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
     {
         "__version__",
         "apply_embargo",
+        "ArrayLike1D",
         "BaseTemporalSplitter",
         "CombinatorialPurgedCV",
         "CombinatoriallySymmetricCV",
@@ -44,6 +45,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "PurgedKFold",
         "TemporalCVError",
         "TemporalLeakageError",
+        "TimesLike",
         "validate_times",
         "WalkForwardSplit",
     }
