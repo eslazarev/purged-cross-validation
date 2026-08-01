@@ -12,7 +12,7 @@ from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
 from purgedcv._validation import _validate_integer
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 WindowMode = Literal["sliding", "expanding"]
 
@@ -46,8 +46,8 @@ class WalkForwardSplit(BaseTemporalSplitter):
         *,
         train_size: int | None = None,
         window: WindowMode = "expanding",
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
     ) -> None:

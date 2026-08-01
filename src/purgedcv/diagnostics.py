@@ -17,7 +17,7 @@ from __future__ import annotations
 import pandas as pd
 
 from purgedcv._intervals import overlaps_any_half_open_interval, points_in_any_closed_interval
-from purgedcv._time import HorizonLike, parse_horizon, validate_times
+from purgedcv._time import HorizonLike, _coerce_1d, parse_horizon, validate_times
 from purgedcv._validation import _validate_positional_indices
 from purgedcv.exceptions import (
     EmbargoViolationError,
@@ -25,7 +25,7 @@ from purgedcv.exceptions import (
     TemporalLeakageError,
 )
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 __all__ = [
     "assert_embargo_respected",
@@ -38,8 +38,8 @@ __all__ = [
 def assert_no_temporal_leakage(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    prediction_times: pd.Series,
-    evaluation_times: pd.Series,
+    prediction_times: TimesLike,
+    evaluation_times: TimesLike,
     *,
     purge_horizon: HorizonLike | None = None,
 ) -> None:
@@ -71,6 +71,8 @@ def assert_no_temporal_leakage(
         >>> assert_no_temporal_leakage(np.arange(5), np.arange(10, 15), pred, evalu)
     """
     horizon = parse_horizon(purge_horizon) if purge_horizon is not None else pd.Timedelta(0)
+    prediction_times = _coerce_1d(prediction_times, name="prediction_times")
+    evaluation_times = _coerce_1d(evaluation_times, name="evaluation_times")
     validate_times(prediction_times, evaluation_times, require_monotonic=False)
     n_samples = len(prediction_times)
     train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
@@ -78,10 +80,10 @@ def assert_no_temporal_leakage(
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
 
-    train_pred = prediction_times.iloc[train_idx].to_numpy()
-    train_eval = evaluation_times.iloc[train_idx].to_numpy()
-    test_starts = (prediction_times.iloc[test_idx] - horizon).to_numpy()
-    test_ends = (evaluation_times.iloc[test_idx] + horizon).to_numpy()
+    train_pred = prediction_times[train_idx]
+    train_eval = evaluation_times[train_idx]
+    test_starts = prediction_times[test_idx] - horizon
+    test_ends = evaluation_times[test_idx] + horizon
 
     overlaps = overlaps_any_half_open_interval(train_pred, train_eval, test_starts, test_ends)
     if overlaps.any():
@@ -97,8 +99,8 @@ def assert_no_temporal_leakage(
 def assert_embargo_respected(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    prediction_times: pd.Series,
-    evaluation_times: pd.Series,
+    prediction_times: TimesLike,
+    evaluation_times: TimesLike,
     embargo: HorizonLike,
 ) -> None:
     """Raise :class:`EmbargoViolationError` if any training row's
@@ -121,6 +123,8 @@ def assert_embargo_respected(
         ... )
     """
     emb = parse_horizon(embargo)
+    prediction_times = _coerce_1d(prediction_times, name="prediction_times")
+    evaluation_times = _coerce_1d(evaluation_times, name="evaluation_times")
     validate_times(prediction_times, evaluation_times, require_monotonic=False)
     n_samples = len(prediction_times)
     train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
@@ -130,9 +134,9 @@ def assert_embargo_respected(
     if emb == pd.Timedelta(0):
         return
 
-    train_pred = prediction_times.iloc[train_idx].to_numpy()
-    embargo_starts = evaluation_times.iloc[test_idx].to_numpy()
-    embargo_ends = (evaluation_times.iloc[test_idx] + emb).to_numpy()
+    train_pred = prediction_times[train_idx]
+    embargo_starts = evaluation_times[test_idx]
+    embargo_ends = evaluation_times[test_idx] + emb
     in_embargo = points_in_any_closed_interval(train_pred, embargo_starts, embargo_ends)
     if in_embargo.any():
         first_local = int(in_embargo.argmax())
@@ -147,7 +151,7 @@ def assert_embargo_respected(
 def assert_groups_disjoint(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    groups: pd.Series,
+    groups: TimesLike,
 ) -> None:
     """Raise :class:`GroupLeakageError` if any group identifier appears in
     both ``train_idx`` and ``test_idx``.
@@ -164,16 +168,17 @@ def assert_groups_disjoint(
         >>> groups = pd.Series([0, 0, 1, 1, 2, 2])
         >>> assert_groups_disjoint(np.array([0, 1]), np.array([2, 3]), groups)
     """
+    groups = _coerce_1d(groups, name="groups")
     train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=len(groups))
     test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=len(groups))
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
-    train_group_values = groups.iloc[train_idx]
-    test_group_values = groups.iloc[test_idx]
-    if train_group_values.isna().any() or test_group_values.isna().any():
+    train_group_values = groups[train_idx]
+    test_group_values = groups[test_idx]
+    if pd.isna(train_group_values).any() or pd.isna(test_group_values).any():
         raise ValueError("groups contains missing values in train or test indices.")
-    train_groups = set(train_group_values.unique())
-    test_groups = set(test_group_values.unique())
+    train_groups = set(train_group_values.tolist())
+    test_groups = set(test_group_values.tolist())
     overlap = train_groups & test_groups
     if overlap:
         offender = next(iter(sorted(overlap, key=str)))
@@ -186,8 +191,8 @@ def assert_groups_disjoint(
 def compute_overlap_fraction(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    prediction_times: pd.Series,
-    evaluation_times: pd.Series,
+    prediction_times: TimesLike,
+    evaluation_times: TimesLike,
 ) -> float:
     """Return the fraction of training rows whose half-open label horizon
     overlaps any test horizon.
@@ -210,15 +215,17 @@ def compute_overlap_fraction(
         ... )
         1.0
     """
+    prediction_times = _coerce_1d(prediction_times, name="prediction_times")
+    evaluation_times = _coerce_1d(evaluation_times, name="evaluation_times")
     validate_times(prediction_times, evaluation_times, require_monotonic=False)
     n_samples = len(prediction_times)
     train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
     test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
     if len(train_idx) == 0 or len(test_idx) == 0:
         return 0.0
-    train_pred = prediction_times.iloc[train_idx].to_numpy()
-    train_eval = evaluation_times.iloc[train_idx].to_numpy()
-    test_starts = prediction_times.iloc[test_idx].to_numpy()
-    test_ends = evaluation_times.iloc[test_idx].to_numpy()
+    train_pred = prediction_times[train_idx]
+    train_eval = evaluation_times[train_idx]
+    test_starts = prediction_times[test_idx]
+    test_ends = evaluation_times[test_idx]
     overlaps = overlaps_any_half_open_interval(train_pred, train_eval, test_starts, test_ends)
     return float(overlaps.mean())

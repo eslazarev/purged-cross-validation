@@ -244,3 +244,20 @@ class TestPurgedGroupKFold:
                     evaluation_times=evalu,
                     groups=groups,
                 )
+
+
+def test_purged_group_kfold_accepts_numpy_groups() -> None:
+    from purgedcv import PurgedGroupKFold
+
+    n = 12
+    pred = pd.date_range("2024-01-01", periods=n, freq="D").to_numpy()
+    evalu = pred + np.timedelta64(1, "D")
+    groups = np.repeat(np.arange(4), 3)  # 0,0,0,1,1,1,2,2,2,3,3,3
+    splitter = PurgedGroupKFold(
+        n_splits=2, prediction_times=pred, evaluation_times=evalu, groups=groups
+    )
+    folds = list(splitter.split(np.zeros((n, 1))))
+    assert len(folds) == 2
+    # every index assigned to some test fold, none shared
+    all_test = np.concatenate([test for _, test in folds])
+    assert sorted(all_test.tolist()) == list(range(n))

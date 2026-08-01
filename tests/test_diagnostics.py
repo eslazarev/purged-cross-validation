@@ -309,3 +309,32 @@ class TestComputeOverlapFraction:
         train_idx = np.array([3, 4, 5, 6, 7, 8])
         test_idx = np.array([0, 1, 2, 9, 10, 11])
         assert compute_overlap_fraction(train_idx, test_idx, pred, evalu) == 0.0
+
+
+def test_compute_overlap_fraction_numpy_matches_pandas() -> None:
+    from purgedcv.diagnostics import compute_overlap_fraction
+
+    pred = pd.Series(pd.date_range("2024-01-01", periods=20, freq="D"))
+    evalu = pred + pd.Timedelta(days=1)
+    train = np.arange(0, 10)
+    test = np.arange(10, 15)
+    f_pd = compute_overlap_fraction(train, test, pred, evalu)
+    f_np = compute_overlap_fraction(train, test, pred.to_numpy(), evalu.to_numpy())
+    assert f_pd == f_np
+
+
+def test_assert_groups_disjoint_accepts_numpy_and_detects_overlap() -> None:
+    from purgedcv.diagnostics import assert_groups_disjoint
+    from purgedcv.exceptions import GroupLeakageError
+
+    groups = np.array([0, 0, 1, 1, 2, 2])
+    assert_groups_disjoint(np.array([0, 1]), np.array([4, 5]), groups)  # clean
+    with pytest.raises(GroupLeakageError):
+        assert_groups_disjoint(np.array([0, 1]), np.array([1, 2]), groups)
+
+
+def test_assert_groups_disjoint_string_numpy_groups() -> None:
+    from purgedcv.diagnostics import assert_groups_disjoint
+
+    groups = np.array(["a", "a", "b", "b"])
+    assert_groups_disjoint(np.array([0, 1]), np.array([2, 3]), groups)

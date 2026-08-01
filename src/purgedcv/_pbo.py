@@ -25,14 +25,13 @@ from dataclasses import dataclass
 from itertools import combinations
 
 import numpy as np
-import pandas as pd
 from scipy import stats
 
 from purgedcv._cpcv import CombinatorialPurgedCV
 from purgedcv._time import HorizonLike
 from purgedcv._validation import _validate_integer
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 #: A configuration-performance metric: maps a 1-D return slice to a scalar
 #: where larger is better. The default is :func:`sharpe`.
@@ -122,8 +121,8 @@ def _contiguous_blocks(n_obs: int, n_splits: int) -> list[NDArrayAny]:
 def _iter_is_oos(
     n_obs: int,
     n_splits: int,
-    prediction_times: pd.Series | None,
-    evaluation_times: pd.Series | None,
+    prediction_times: TimesLike | None,
+    evaluation_times: TimesLike | None,
     purge_horizon: HorizonLike | None,
     embargo: HorizonLike | None,
 ) -> Iterator[tuple[NDArrayAny, NDArrayAny]]:
@@ -164,7 +163,7 @@ def _iter_is_oos(
     yield from cv.split(placeholder)
 
 
-def _check_times_length(name: str, times: pd.Series | None, n_obs: int) -> None:
+def _check_times_length(name: str, times: TimesLike | None, n_obs: int) -> None:
     """Raise if an optional time series is present but the wrong length."""
     if times is not None and len(times) != n_obs:
         raise ValueError(f"{name} length {len(times)} does not match n_obs={n_obs}.")
@@ -173,8 +172,8 @@ def _check_times_length(name: str, times: pd.Series | None, n_obs: int) -> None:
 def _validate_pbo_inputs(
     returns: NDArrayAny,
     n_splits: int,
-    prediction_times: pd.Series | None,
-    evaluation_times: pd.Series | None,
+    prediction_times: TimesLike | None,
+    evaluation_times: TimesLike | None,
 ) -> tuple[NDArrayAny, int, int]:
     """Validate the PBO inputs and return ``(matrix, n_configs, n_obs)``."""
     if n_splits % 2 != 0:
@@ -263,8 +262,8 @@ def probability_of_backtest_overfitting(
     n_splits: int = 16,
     *,
     metric: PerformanceMetric = sharpe,
-    prediction_times: pd.Series | None = None,
-    evaluation_times: pd.Series | None = None,
+    prediction_times: TimesLike | None = None,
+    evaluation_times: TimesLike | None = None,
     purge_horizon: HorizonLike | None = None,
     embargo: HorizonLike | None = None,
 ) -> PBOResult:

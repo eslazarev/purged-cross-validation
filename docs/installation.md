@@ -80,3 +80,12 @@ python -c "import purgedcv; print(purgedcv.__version__)"
 
 should print the installed version. The full public surface is in
 [`purgedcv.__all__`](api.md).
+
+## Time inputs
+
+`prediction_times`, `evaluation_times`, and `groups` accept pandas `Series` or
+`DatetimeIndex`, numpy `datetime64` or `timedelta64` arrays, Python lists of
+datetime/Timestamp/timedelta values, and polars `Series`. Inputs are converted
+to numpy once at the boundary, and polars is never imported, so it is not a
+runtime dependency, only an optional convenience for callers who already have
+a polars `Series` on hand. tz-aware pandas input is normalized to UTC.

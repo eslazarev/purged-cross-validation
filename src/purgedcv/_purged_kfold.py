@@ -14,7 +14,7 @@ from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
 from purgedcv._validation import _validate_integer
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 
 class PurgedKFold(BaseTemporalSplitter):
@@ -58,8 +58,8 @@ class PurgedKFold(BaseTemporalSplitter):
         self,
         n_splits: int,
         *,
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
     ) -> None:
@@ -154,9 +154,9 @@ class PurgedGroupKFold(BaseTemporalSplitter):
         self,
         n_splits: int,
         *,
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
-        groups: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
+        groups: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
     ) -> None:
@@ -190,7 +190,12 @@ class PurgedGroupKFold(BaseTemporalSplitter):
             embargo=embargo,
             groups=groups,
         )
-        unique = list(groups.unique())
+        if self._groups is None:  # bound at construction; should be unreachable
+            raise RuntimeError(
+                "PurgedGroupKFold._groups was unbound after construction. "
+                "This is an internal invariant violation."
+            )
+        unique = list(pd.unique(self._groups))
         if n_splits > len(unique):
             raise ValueError(
                 f"n_splits={n_splits} exceeds number of unique groups ({len(unique)})."
@@ -212,7 +217,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
                 "PurgedGroupKFold._groups was unbound at split time. "
                 "This is an internal invariant violation."
             )
-        groups_array = self._groups.to_numpy()
+        groups_array = np.asarray(self._groups)
         n_groups = len(self._unique_groups)
         block_size, remainder = divmod(n_groups, self.n_splits)
         cursor = 0
