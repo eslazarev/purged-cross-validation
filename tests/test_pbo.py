@@ -193,8 +193,8 @@ def test_pbo_rejects_scalar_times() -> None:
         probability_of_backtest_overfitting(
             returns,
             n_splits=4,
-            prediction_times=np.datetime64("2024-01-01"),  # type: ignore[arg-type]
-            evaluation_times=np.datetime64("2024-01-02"),  # type: ignore[arg-type]
+            prediction_times=np.datetime64("2024-01-01"),  # type: ignore[arg-type, unused-ignore]
+            evaluation_times=np.datetime64("2024-01-02"),  # type: ignore[arg-type, unused-ignore]
         )
 
 

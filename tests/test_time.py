@@ -343,13 +343,13 @@ class TestCoerce1dDimensionality:
         from purgedcv._time import _coerce_1d
 
         with pytest.raises(ValueError, match="1-D array-like"):
-            _coerce_1d(np.datetime64("2024-01-01"), name="prediction_times")  # type: ignore[arg-type]
+            _coerce_1d(np.datetime64("2024-01-01"), name="prediction_times")  # type: ignore[arg-type, unused-ignore]
 
     def test_rejects_pandas_timestamp_scalar(self) -> None:
         from purgedcv._time import _coerce_1d
 
         with pytest.raises(ValueError, match="1-D array-like"):
-            _coerce_1d(pd.Timestamp("2024-01-01"), name="prediction_times")  # type: ignore[arg-type]
+            _coerce_1d(pd.Timestamp("2024-01-01"), name="prediction_times")  # type: ignore[arg-type, unused-ignore]
 
     def test_rejects_dataframe(self) -> None:
         from purgedcv._time import _coerce_1d
