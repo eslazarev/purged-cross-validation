@@ -135,7 +135,6 @@ line-length = 100
 target-version = ["py310", "py311", "py312", "py313", "py314"]
 
 [tool.mypy]
-python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = false
