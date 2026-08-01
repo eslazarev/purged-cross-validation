@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -517,6 +517,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Unreleased">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -560,7 +577,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#added_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -588,7 +605,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_1" class="md-nav__link">
+  <a href="#added_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -638,7 +655,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_2" class="md-nav__link">
+  <a href="#added_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -688,7 +705,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_3" class="md-nav__link">
+  <a href="#added_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -873,6 +890,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Unreleased">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -916,7 +950,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
+  <a href="#added_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -944,7 +978,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_1" class="md-nav__link">
+  <a href="#added_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -994,7 +1028,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_2" class="md-nav__link">
+  <a href="#added_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -1044,7 +1078,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_3" class="md-nav__link">
+  <a href="#added_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -1217,6 +1251,20 @@ work was organised internally as Plans A–D (foundations → splitters →
 backtest paths → metrics); the cumulative feature set delivered by each
 Plan is listed under the published version it shipped in.</p>
 <h2 id="unreleased"><a href="https://github.com/eslazarev/purged-cross-validation/compare/v0.1.2...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Time inputs are now framework-agnostic. <code>prediction_times</code> and
+  <code>evaluation_times</code> on every splitter, together with <code>purge</code>, <code>apply_embargo</code>,
+  <code>validate_times</code>, and the <code>diagnostics</code> functions, accept pandas
+  <code>Series</code>/<code>DatetimeIndex</code>, NumPy <code>datetime64</code>/<code>timedelta64</code> arrays, Python
+  lists of datetime/Timestamp/timedelta values, and polars <code>Series</code>. Inputs are
+  coerced to a 1-D NumPy array once at the public boundary; polars is
+  duck-typed through <code>.to_numpy()</code> and never imported, so it stays out of the
+  runtime dependencies. tz-aware pandas input is normalized to UTC. <code>groups</code>
+  accepts the same containers but holds arbitrary 1-D labels, not timestamps.
+  The pandas input path is unchanged; the widened public signatures use the new
+  exported <code>TimesLike</code> (times) and <code>ArrayLike1D</code> (labels) type aliases.</li>
+</ul>
 <h2 id="012-2026-06-13"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.2">0.1.2</a> - 2026-06-13<a class="headerlink" href="#012-2026-06-13" title="Permanent link">&para;</a></h2>
 <h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1232,7 +1280,7 @@ Plan is listed under the published version it shipped in.</p>
   matching the note already in <code>default_backtest_metrics</code>.</li>
 </ul>
 <h2 id="011-2026-06-05"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.1">0.1.1</a> - 2026-06-05<a class="headerlink" href="#011-2026-06-05" title="Permanent link">&para;</a></h2>
-<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>minimum_backtest_length</code> (MinBTL): the backtest length, in years, below
   which a reported annualised Sharpe is within what selecting the best of
@@ -1250,7 +1298,7 @@ maintained deliberately: the splitters, backtest-path reconstruction, and
 the Sharpe-ratio metric family are stable enough to build on. Breaking
 changes will still happen before <code>1.0.0</code>, but they will be noted here
 rather than slipped into a patch release.</p>
-<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>probability_of_backtest_overfitting</code> (PBO): estimates how often the
   configuration chosen as best in-sample lands below the median
@@ -1377,7 +1425,7 @@ rather than slipped into a patch release.</p>
 <h2 id="009-2026-05-22"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.9">0.0.9</a> - 2026-05-22<a class="headerlink" href="#009-2026-05-22" title="Permanent link">&para;</a></h2>
 <p>No library code changed in this release; the published wheel is
 identical to v0.0.7. The release carried CI and example tooling only.</p>
-<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The CI workflow detects whether a push touched files outside the
   documentation surface and skips the automated release job for
@@ -1397,7 +1445,7 @@ changes.</p>
 <code>main</code>. Versions 0.0.5 and 0.0.6 were intermediate same-day auto-release
 patches; this entry records the work delivered across 0.0.5 through
 0.0.7.</p>
-<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li>JOSS submission paper at <code>docs/paper.md</code> (<code>docs/paper.bib</code>) with the
   real ORCID baked in.</li>
@@ -1582,7 +1630,7 @@ delivered.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "navigation.tracking", "content.code.copy", "content.tabs.link", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../javascripts/mathjax.js"></script>
       

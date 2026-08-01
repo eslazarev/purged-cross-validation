@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -401,6 +401,39 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#input-type-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input type aliases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#purgedcv.TimesLike" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TimesLike
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#purgedcv.ArrayLike1D" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ArrayLike1D
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#splitters" class="md-nav__link">
@@ -1119,6 +1152,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#input-type-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input type aliases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#purgedcv.TimesLike" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TimesLike
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#purgedcv.ArrayLike1D" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ArrayLike1D
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#splitters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1719,7 +1785,52 @@ keyword arguments (<code>prediction_times</code>, <code>evaluation_times</code>,
 <code>purge_horizon</code>, <code>embargo</code>, <code>groups</code>); see
 <a href="#purgedcv.BaseTemporalSplitter"><code>BaseTemporalSplitter</code></a> for the shared
 contract.</p>
-<h2 id="splitters">Splitters<a class="headerlink" href="#splitters" title="Permanent link">&para;</a></h2>
+<h2 id="input-type-aliases">Input type aliases<a class="headerlink" href="#input-type-aliases" title="Permanent link">&para;</a></h2>
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="purgedcv.TimesLike" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">purgedcv.TimesLike</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#purgedcv.TimesLike" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">TimesLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">ArrayLike1D</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="purgedcv.ArrayLike1D" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">purgedcv.ArrayLike1D</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#purgedcv.ArrayLike1D" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">ArrayLike1D</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">NDArrayAny</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">SupportsToNumpy</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+    </div>
+
+</div><h2 id="splitters">Splitters<a class="headerlink" href="#splitters" title="Permanent link">&para;</a></h2>
 
 
 <div class="doc doc-object doc-class">
@@ -1731,7 +1842,7 @@ contract.</p>
 
 
 <a href="#purgedcv.BaseTemporalSplitter" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">BaseTemporalSplitter</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">BaseTemporalSplitter</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">ArrayLike1D</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -1834,7 +1945,7 @@ group identifier appears in both train and test of the same fold.</p>
 
 
 <a href="#purgedcv.BaseTemporalSplitter.with_times" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_times</span><span class="p">(</span><span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTemporalSplitter</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_times</span><span class="p">(</span><span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTemporalSplitter</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -1869,7 +1980,7 @@ interactions between cached state and rebound inputs.</p>
 
 
 <a href="#purgedcv.WalkForwardSplit" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WalkForwardSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">test_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowMode</span> <span class="o">=</span> <span class="s1">&#39;expanding&#39;</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">WalkForwardSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">test_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowMode</span> <span class="o">=</span> <span class="s1">&#39;expanding&#39;</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -1995,7 +2106,12 @@ purge and embargo.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2013,7 +2129,12 @@ signature.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2157,7 +2278,7 @@ compatibility but ignored.</p>
 
 
 <a href="#purgedcv.PurgedKFold" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PurgedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PurgedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2235,7 +2356,12 @@ empty arrays gracefully.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2252,7 +2378,12 @@ construction so :meth:<code>split</code> matches the sklearn signature.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2365,7 +2496,7 @@ are dropped.
 
 
 <a href="#purgedcv.PurgedGroupKFold" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PurgedGroupKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PurgedGroupKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2444,7 +2575,12 @@ exceed the number of unique group identifiers.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2460,7 +2596,12 @@ exceed the number of unique group identifiers.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2476,7 +2617,12 @@ exceed the number of unique group identifiers.</p>
                 <code>groups</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.ArrayLike1D
+
+
+  
+      module-attribute
+   (purgedcv._typing.ArrayLike1D)" href="#purgedcv.ArrayLike1D">ArrayLike1D</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2591,7 +2737,7 @@ embargo.</p>
 
 
 <a href="#purgedcv.CombinatorialPurgedCV" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CombinatorialPurgedCV</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_test_groups</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CombinatorialPurgedCV</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_test_groups</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -2681,7 +2827,12 @@ set in each fold. Must be in <code>[1, n_splits - 1]</code>.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -2697,7 +2848,12 @@ set in each fold. Must be in <code>[1, n_splits - 1]</code>.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3149,7 +3305,7 @@ order. There must be <code>C(n_splits, n_test_groups)</code> arrays.</p>
 
 
 <a href="#purgedcv.CombinatoriallySymmetricCV" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CombinatoriallySymmetricCV</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CombinatoriallySymmetricCV</span><span class="p">(</span><span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -3218,7 +3374,12 @@ groups in each fold.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3234,7 +3395,12 @@ groups in each fold.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3879,7 +4045,7 @@ total return.</p>
 
 
 <a href="#purgedcv.purge" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">purge</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">Timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArrayAny</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">purge</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">Timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArrayAny</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -3942,7 +4108,12 @@ its label horizon overlaps none of those merged test horizons.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3958,7 +4129,12 @@ its label horizon overlaps none of those merged test horizons.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4047,7 +4223,7 @@ its label horizon overlaps none of those merged test horizons.</p>
 
 
 <a href="#purgedcv.apply_embargo" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">apply_embargo</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">Timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArrayAny</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">apply_embargo</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">Timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArrayAny</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -4108,7 +4284,12 @@ degenerate single-point windows.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4124,7 +4305,12 @@ degenerate single-point windows.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4375,7 +4561,7 @@ is symmetric in its arguments.</p>
 
 
 <a href="#purgedcv.validate_times" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">validate_times</span><span class="p">(</span><span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">require_monotonic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">validate_times</span><span class="p">(</span><span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">require_monotonic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5233,7 +5419,7 @@ extreme for the Gaussian approximation.</p>
 
 
 <a href="#purgedcv.minimum_backtest_length" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">minimum_backtest_length</span><span class="p">(</span><span class="n">n_trials</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target_sharpe</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">minimum_backtest_length</span><span class="p">(</span><span class="n">n_trials</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">integer</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">target_sharpe</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5280,7 +5466,7 @@ financial charlatanism", Notices of the AMS 61(5). AFML Chapter 11.</p>
                 <code>n_trials</code>
             </td>
             <td>
-                  <code><span title="int">int</span></code>
+                  <code><span title="int">int</span> | <span title="numpy.integer">integer</span>[<span title="typing.Any">Any</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5599,7 +5785,7 @@ non-finite values.</p>
 
 
 <a href="#purgedcv.probability_of_backtest_overfitting" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">probability_of_backtest_overfitting</span><span class="p">(</span><span class="n">returns</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">PerformanceMetric</span> <span class="o">=</span> <span class="n">sharpe</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PBOResult</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">probability_of_backtest_overfitting</span><span class="p">(</span><span class="n">returns</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">PerformanceMetric</span> <span class="o">=</span> <span class="n">sharpe</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PBOResult</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -5682,7 +5868,12 @@ choice is 16.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span> | None</code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5700,7 +5891,12 @@ boundaries. Length must equal <code>n_obs</code>.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span> | None</code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6057,7 +6253,7 @@ per-period Sharpe in each trial (the same convention as the
 
 
 <a href="#purgedcv.diagnostics.compute_overlap_fraction" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_overlap_fraction</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_overlap_fraction</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6097,7 +6293,7 @@ a splitter that produces unexpected behavior.</p>
 
 
 <a href="#purgedcv.diagnostics.assert_no_temporal_leakage" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">assert_no_temporal_leakage</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">assert_no_temporal_leakage</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6158,7 +6354,12 @@ intentionally non-contiguous.</p>
                 <code>prediction_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6174,7 +6375,12 @@ intentionally non-contiguous.</p>
                 <code>evaluation_times</code>
             </td>
             <td>
-                  <code><span title="pandas.Series">Series</span></code>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6251,7 +6457,7 @@ two overlapping intervals in the message.</p>
 
 
 <a href="#purgedcv.diagnostics.assert_groups_disjoint" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">assert_groups_disjoint</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">assert_groups_disjoint</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">ArrayLike1D</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6285,7 +6491,7 @@ total count of overlapping groups, so the caller can scope follow-up.</p>
 
 
 <a href="#purgedcv.diagnostics.assert_embargo_respected" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">assert_embargo_respected</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">assert_embargo_respected</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">embargo</span><span class="p">:</span> <span class="n">HorizonLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
@@ -6526,7 +6732,7 @@ zero width.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "navigation.tracking", "content.code.copy", "content.tabs.link", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../javascripts/mathjax.js"></script>
       
