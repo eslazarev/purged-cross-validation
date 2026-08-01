@@ -29,7 +29,8 @@ def timestamps(draw: st.DrawFn) -> pd.Timestamp:
             max_value=datetime(2050, 12, 31),
         )
     )
-    return pd.Timestamp(dt)
+    ts: pd.Timestamp = pd.Timestamp(dt)
+    return ts
 
 
 @st.composite

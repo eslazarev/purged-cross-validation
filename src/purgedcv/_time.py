@@ -51,7 +51,8 @@ def _coerce_1d(x: TimesLike, *, name: str) -> NDArrayAny:
         # constructor's overloads under mypy --strict.
         x_pandas: Any = x
         idx = pd.DatetimeIndex(x_pandas)  # accepts both Series and Index
-        return idx.tz_convert("UTC").tz_localize(None).to_numpy()
+        out: NDArrayAny = idx.tz_convert("UTC").tz_localize(None).to_numpy()
+        return out
     if isinstance(x, np.ndarray):
         arr: NDArrayAny = x
     elif hasattr(x, "to_numpy"):  # pandas Series/Index, polars Series
@@ -116,7 +117,8 @@ def parse_horizon(value: HorizonLike) -> pd.Timedelta:
     if td < pd.Timedelta(0):
         raise ValueError(f"Horizon must be non-negative, got {td}.")
 
-    return td
+    horizon: pd.Timedelta = td
+    return horizon
 
 
 def horizons_overlap(
