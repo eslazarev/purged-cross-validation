@@ -58,8 +58,8 @@ def test_user_story_with_times_adapter() -> None:
     X = np.zeros((50, 1))  # noqa: N806
     # Verify the rebind actually happened: a bug where with_times silently
     # returned self would leave cv2._prediction_times pointing at pred1.
-    assert cv2._prediction_times.iloc[0] == pred2.iloc[0]
-    assert cv2._evaluation_times.iloc[0] == evalu2.iloc[0]
+    assert cv2._prediction_times[0] == pred2.iloc[0]
+    assert cv2._evaluation_times[0] == evalu2.iloc[0]
     # And the diagnostic against the new times must still succeed:
     for train_idx, test_idx in cv2.split(X):
         assert_no_temporal_leakage(train_idx, test_idx, pred2, evalu2)

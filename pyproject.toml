@@ -69,6 +69,7 @@ dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "hypothesis>=6.80",
+    "polars>=0.20",
     "black>=24.0",
     "ruff>=0.5",
     "mypy>=1.10",
@@ -134,7 +135,6 @@ line-length = 100
 target-version = ["py310", "py311", "py312", "py313", "py314"]
 
 [tool.mypy]
-python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = false

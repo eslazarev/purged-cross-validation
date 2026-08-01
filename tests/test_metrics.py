@@ -687,6 +687,4 @@ class TestMinimumBacktestLength:
     def test_accepts_numpy_integer(self) -> None:
         """A numpy integer (the natural type from len(study.trials) wrappers)
         is accepted like a Python int."""
-        assert minimum_backtest_length(np.int64(10)) == pytest.approx(  # type: ignore[arg-type]
-            minimum_backtest_length(10)
-        )
+        assert minimum_backtest_length(np.int64(10)) == pytest.approx(minimum_backtest_length(10))

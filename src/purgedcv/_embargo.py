@@ -10,17 +10,17 @@ import numpy as np
 import pandas as pd
 
 from purgedcv._intervals import points_in_any_closed_interval
-from purgedcv._time import validate_times
+from purgedcv._time import _coerce_1d, validate_times
 from purgedcv._validation import _validate_positional_indices
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 
 def apply_embargo(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    prediction_times: pd.Series,
-    evaluation_times: pd.Series,
+    prediction_times: TimesLike,
+    evaluation_times: TimesLike,
     embargo: pd.Timedelta,
 ) -> NDArrayAny:
     """Drop training rows whose ``prediction_time`` falls inside any closed
@@ -57,6 +57,8 @@ def apply_embargo(
         raise ValueError("embargo must be non-missing, got NaT.")
     if embargo < pd.Timedelta(0):
         raise ValueError(f"embargo must be non-negative, got {embargo}.")
+    prediction_times = _coerce_1d(prediction_times, name="prediction_times")
+    evaluation_times = _coerce_1d(evaluation_times, name="evaluation_times")
     validate_times(prediction_times, evaluation_times, require_monotonic=False)
     n_samples = len(prediction_times)
     train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
@@ -66,9 +68,9 @@ def apply_embargo(
     if embargo == pd.Timedelta(0):
         return np.asarray(train_idx)
 
-    train_pred = prediction_times.iloc[train_idx].to_numpy()
-    embargo_starts = evaluation_times.iloc[test_idx].to_numpy()
-    embargo_ends = (evaluation_times.iloc[test_idx] + embargo).to_numpy()
+    train_pred = prediction_times[train_idx]
+    embargo_starts = evaluation_times[test_idx]
+    embargo_ends = evaluation_times[test_idx] + embargo
     in_embargo = points_in_any_closed_interval(train_pred, embargo_starts, embargo_ends)
     kept: NDArrayAny = train_idx[~in_embargo]
     return kept

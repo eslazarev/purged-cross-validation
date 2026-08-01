@@ -156,4 +156,5 @@ def path_metrics(
     )
     rows = [dict(fn(arr[i])) for i in range(arr.shape[0])]
     index = pd.RangeIndex(arr.shape[0], name="path")
-    return pd.DataFrame(rows, index=index)
+    frame: pd.DataFrame = pd.DataFrame(rows, index=index)
+    return frame

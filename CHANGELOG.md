@@ -9,6 +9,20 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Added
+
+- Time inputs are now framework-agnostic. `prediction_times` and
+  `evaluation_times` on every splitter, together with `purge`, `apply_embargo`,
+  `validate_times`, and the `diagnostics` functions, accept pandas
+  `Series`/`DatetimeIndex`, NumPy `datetime64`/`timedelta64` arrays, Python
+  lists of datetime/Timestamp/timedelta values, and polars `Series`. Inputs are
+  coerced to a 1-D NumPy array once at the public boundary; polars is
+  duck-typed through `.to_numpy()` and never imported, so it stays out of the
+  runtime dependencies. tz-aware pandas input is normalized to UTC. `groups`
+  accepts the same containers but holds arbitrary 1-D labels, not timestamps.
+  The pandas input path is unchanged; the widened public signatures use the new
+  exported `TimesLike` (times) and `ArrayLike1D` (labels) type aliases.
+
 ## [0.1.2] - 2026-06-13
 
 ### Documentation

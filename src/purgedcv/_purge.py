@@ -10,17 +10,17 @@ import numpy as np
 import pandas as pd
 
 from purgedcv._intervals import overlaps_any_half_open_interval
-from purgedcv._time import validate_times
+from purgedcv._time import _coerce_1d, validate_times
 from purgedcv._validation import _validate_positional_indices
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 
 def purge(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    prediction_times: pd.Series,
-    evaluation_times: pd.Series,
+    prediction_times: TimesLike,
+    evaluation_times: TimesLike,
     purge_horizon: pd.Timedelta | None = None,
 ) -> NDArrayAny:
     """Drop training rows whose half-open label horizon overlaps any test horizon.
@@ -61,6 +61,8 @@ def purge(
         raise ValueError("purge_horizon must be non-missing, got NaT.")
     if horizon < pd.Timedelta(0):
         raise ValueError(f"purge_horizon must be non-negative, got {horizon}.")
+    prediction_times = _coerce_1d(prediction_times, name="prediction_times")
+    evaluation_times = _coerce_1d(evaluation_times, name="evaluation_times")
     validate_times(prediction_times, evaluation_times, require_monotonic=False)
     n_samples = len(prediction_times)
     train_idx = _validate_positional_indices("train_idx", train_idx, n_samples=n_samples)
@@ -68,10 +70,10 @@ def purge(
     if len(train_idx) == 0 or len(test_idx) == 0:
         return np.asarray(train_idx)
 
-    train_pred = prediction_times.iloc[train_idx].to_numpy()
-    train_eval = evaluation_times.iloc[train_idx].to_numpy()
-    test_starts = (prediction_times.iloc[test_idx] - horizon).to_numpy()
-    test_ends = (evaluation_times.iloc[test_idx] + horizon).to_numpy()
+    train_pred = prediction_times[train_idx]
+    train_eval = evaluation_times[train_idx]
+    test_starts = prediction_times[test_idx] - horizon
+    test_ends = evaluation_times[test_idx] + horizon
 
     keep = ~overlaps_any_half_open_interval(train_pred, train_eval, test_starts, test_ends)
     kept: NDArrayAny = train_idx[keep]

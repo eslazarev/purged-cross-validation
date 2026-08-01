@@ -11,6 +11,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
+import numpy as np
+import pandas as pd
 import pytest
 
 import purgedcv
@@ -19,6 +21,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
     {
         "__version__",
         "apply_embargo",
+        "ArrayLike1D",
         "BaseTemporalSplitter",
         "CombinatorialPurgedCV",
         "CombinatoriallySymmetricCV",
@@ -42,6 +45,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "PurgedKFold",
         "TemporalCVError",
         "TemporalLeakageError",
+        "TimesLike",
         "validate_times",
         "WalkForwardSplit",
     }
@@ -125,3 +129,22 @@ def test_subprocess_can_import_every_public_name() -> None:
     )
     assert result.stdout.strip() == "OK"
     assert result.stderr == ""
+
+
+def test_splitters_accept_numpy_times_no_typeerror() -> None:
+    import purgedcv as pcv
+
+    n = 18
+    pred = pd.date_range("2024-01-01", periods=n, freq="D").to_numpy()
+    evalu = pred + np.timedelta64(1, "D")
+    X = np.zeros((n, 1))  # noqa: N806
+    for splitter in (
+        pcv.PurgedKFold(n_splits=3, prediction_times=pred, evaluation_times=evalu),
+        pcv.CombinatorialPurgedCV(
+            n_splits=4, n_test_groups=2, prediction_times=pred, evaluation_times=evalu
+        ),
+        pcv.WalkForwardSplit(
+            n_splits=3, test_size=2, prediction_times=pred, evaluation_times=evalu
+        ),
+    ):
+        assert len(list(splitter.split(X))) >= 1

@@ -36,8 +36,8 @@ class _GroupRespectingStub(BaseTemporalSplitter):
 
     def _iter_test_indices(self, n_samples: int) -> list[NDArrayAny]:
         assert self._groups is not None  # by construction in the test
-        groups_array = self._groups.to_numpy()
-        return [np.where(groups_array == g)[0] for g in self._groups.unique()]
+        groups_array = np.asarray(self._groups)
+        return [np.where(groups_array == g)[0] for g in pd.unique(self._groups)]
 
     def get_n_splits(
         self,
@@ -46,7 +46,7 @@ class _GroupRespectingStub(BaseTemporalSplitter):
         groups: object = None,
     ) -> int:
         assert self._groups is not None
-        return int(self._groups.nunique())
+        return len(pd.unique(self._groups))
 
 
 class _LeakyStub(BaseTemporalSplitter):
@@ -146,13 +146,16 @@ class TestBaseTemporalSplitterSkeleton:
             )
 
     def test_constructor_resets_series_index(self) -> None:
-        """Stored times must use a 0-based integer index regardless of input."""
+        """Stored times are coerced to numpy, so any custom pandas index on
+        the input is dropped rather than leaking into the stored positions."""
         idx = pd.RangeIndex(start=5, stop=25)
         pred = pd.Series(pd.date_range("2024-01-01", periods=20, freq="D"), index=idx)
         evalu = pred + pd.Timedelta(days=1)
         cv = _TwoFoldStub(prediction_times=pred, evaluation_times=evalu)
-        assert list(cv._prediction_times.index) == list(range(20))
-        assert list(cv._evaluation_times.index) == list(range(20))
+        assert isinstance(cv._prediction_times, np.ndarray)
+        assert isinstance(cv._evaluation_times, np.ndarray)
+        np.testing.assert_array_equal(cv._prediction_times, pred.to_numpy())
+        np.testing.assert_array_equal(cv._evaluation_times, evalu.to_numpy())
 
 
 class TestBaseTemporalSplitterSplit:
@@ -257,9 +260,9 @@ class TestBaseTemporalSplitterWithTimes:
         # New instance, not the same object.
         assert cv2 is not cv
         # Times rebound.
-        assert cv2._prediction_times.iloc[0] == pd.Timestamp("2025-01-01")
+        assert cv2._prediction_times[0] == pd.Timestamp("2025-01-01")
         # Original unchanged.
-        assert cv._prediction_times.iloc[0] == pd.Timestamp("2024-01-01")
+        assert cv._prediction_times[0] == pd.Timestamp("2024-01-01")
         # Other attributes preserved.
         assert cv2.purge_horizon == cv.purge_horizon
         assert cv2.embargo == cv.embargo
@@ -306,7 +309,7 @@ class TestBaseTemporalSplitterWithTimes:
         # _groups attribute is preserved by reference (shallow copy).
         assert cv2._groups is not None
         assert cv._groups is not None
-        pd.testing.assert_series_equal(cv2._groups, cv._groups)
+        np.testing.assert_array_equal(cv2._groups, cv._groups)
 
 
 class TestBaseTemporalSplitterGroups:
@@ -347,3 +350,20 @@ class TestBaseTemporalSplitterGroups:
         X = np.zeros((20, 1))  # noqa: N806
         with pytest.raises(GroupLeakageError):
             list(cv.split(X))
+
+
+def test_splitter_from_numpy_inputs_matches_pandas() -> None:
+    from purgedcv import PurgedKFold
+
+    n = 30
+    pred_pd = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+    evalu_pd = pred_pd + pd.Timedelta(days=2)
+    X = np.zeros((n, 1))  # noqa: N806
+
+    sp_pd = PurgedKFold(n_splits=3, prediction_times=pred_pd, evaluation_times=evalu_pd)
+    sp_np = PurgedKFold(
+        n_splits=3, prediction_times=pred_pd.to_numpy(), evaluation_times=evalu_pd.to_numpy()
+    )
+    for (tr_pd, te_pd), (tr_np, te_np) in zip(sp_pd.split(X), sp_np.split(X), strict=True):
+        np.testing.assert_array_equal(tr_pd, tr_np)
+        np.testing.assert_array_equal(te_pd, te_np)

@@ -14,6 +14,7 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![CodeFactor](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation/badge)](https://www.codefactor.io/repository/github/eslazarev/purged-cross-validation)
+[![Mentioned in Awesome Quant](https://awesome.re/mentioned-badge.svg)](https://github.com/wilsonfreitas/awesome-quant)
 
 **[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](https://github.com/eslazarev/purged-cross-validation/tree/main/examples)** · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 

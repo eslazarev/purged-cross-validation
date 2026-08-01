@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -482,7 +483,7 @@ def min_track_record_length(
     return float(np.ceil(n_minus_1) + 1)
 
 
-def minimum_backtest_length(n_trials: int, target_sharpe: float = 1.0) -> float:
+def minimum_backtest_length(n_trials: int | np.integer[Any], target_sharpe: float = 1.0) -> float:
     r"""Minimum backtest length, in years, below which a high in-sample Sharpe
     is not evidence of skill once ``n_trials`` configurations were tried.
 

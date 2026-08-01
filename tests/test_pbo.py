@@ -183,3 +183,27 @@ class TestPBOValidation:
                 n_splits=4,
                 metric=lambda r: r[:2],  # type: ignore[arg-type,return-value]
             )
+
+
+def test_pbo_rejects_scalar_times() -> None:
+    """A 0-D time input is rejected with the 1-D message, not a len() TypeError."""
+    rng = np.random.default_rng(0)
+    returns = rng.normal(size=(4, 40))
+    with pytest.raises(ValueError, match="1-D array-like"):
+        probability_of_backtest_overfitting(
+            returns,
+            n_splits=4,
+            prediction_times=np.datetime64("2024-01-01"),  # type: ignore[arg-type, unused-ignore]
+            evaluation_times=np.datetime64("2024-01-02"),  # type: ignore[arg-type, unused-ignore]
+        )
+
+
+def test_pbo_rejects_2d_times() -> None:
+    """A 2-D (n, 1) time input is rejected up front, not deep in the split loop."""
+    rng = np.random.default_rng(0)
+    returns = rng.normal(size=(4, 40))
+    pred = pd.date_range("2024-01-01", periods=40, freq="D").to_numpy().reshape(-1, 1)
+    with pytest.raises(ValueError, match="1-D array-like"):
+        probability_of_backtest_overfitting(
+            returns, n_splits=4, prediction_times=pred, evaluation_times=pred
+        )

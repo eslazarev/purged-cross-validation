@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_datetime64_any_dtype, is_timedelta64_dtype
+
+from ._typing import NDArrayAny, SupportsToNumpy, TimesLike
 
 HorizonLike = str | pd.Timedelta | timedelta | np.timedelta64
 
@@ -15,12 +17,61 @@ _AMBIGUOUS_OFFSETS = frozenset(
 )
 
 
-def _temporal_kind(values: pd.Series) -> str | None:
-    if is_datetime64_any_dtype(values.dtype):
+def _temporal_kind(arr: NDArrayAny) -> str | None:
+    if np.issubdtype(arr.dtype, np.datetime64):
         return "datetime"
-    if is_timedelta64_dtype(values.dtype):
+    if np.issubdtype(arr.dtype, np.timedelta64):
         return "timedelta"
     return None
+
+
+def _coerce_1d(x: TimesLike, *, name: str) -> NDArrayAny:
+    """Coerce any accepted time-like input to a 1-D numpy array.
+
+    Handles pandas ``Series`` / ``Index`` (including tz-aware), numpy
+    ``datetime64`` / ``timedelta64`` arrays, polars ``Series`` (duck-typed
+    via ``.to_numpy()``, never imported), and Python sequences of
+    ``datetime`` / ``Timestamp`` / ``datetime64`` / ``timedelta``.
+
+    tz-aware pandas input is converted to UTC and made tz-naive
+    ``datetime64``. Sequences that land as ``object`` dtype (or as numpy's
+    fixed-width string dtype, which is what a plain Python list of strings
+    becomes under ``np.asarray``) are routed through pandas so lists of
+    datetime/Timedelta objects resolve to ``datetime64`` / ``timedelta64``.
+    Inputs that stay ``object`` after that (for example a list of strings)
+    are returned as-is; ``validate_times`` then rejects them with a clear
+    dtype message. A 0-D (scalar) or 2-D input raises ``ValueError``. ``name``
+    labels the offending input in that error message.
+    """
+    dtype = getattr(x, "dtype", None)
+    if isinstance(dtype, pd.DatetimeTZDtype):
+        # x is a pandas Series/Index here (only those expose a real .dtype
+        # attribute equal to a DatetimeTZDtype instance); narrow explicitly
+        # since TimesLike's Sequence[Any] member confuses the DatetimeIndex
+        # constructor's overloads under mypy --strict.
+        x_pandas: Any = x
+        idx = pd.DatetimeIndex(x_pandas)  # accepts both Series and Index
+        out: NDArrayAny = idx.tz_convert("UTC").tz_localize(None).to_numpy()
+        return out
+    if isinstance(x, np.ndarray):
+        arr: NDArrayAny = x
+    elif isinstance(x, SupportsToNumpy):  # pandas Series/Index, polars Series
+        arr = x.to_numpy()
+    else:
+        arr = np.asarray(x)
+    arr = np.asarray(arr)
+    # Check dimensionality before the object/string coercion below: a 0-D
+    # scalar routed through ``pd.Series(...).to_numpy()`` would be reshaped to a
+    # length-1 1-D array and slip past this guard.
+    if arr.ndim != 1:
+        raise ValueError(
+            f"{name} must be a 1-D array-like; got a {arr.ndim}-D input of shape "
+            f"{arr.shape}. Pass a 1-D sequence, not a scalar or a 2-D array/"
+            f"DataFrame (select a single column first)."
+        )
+    if arr.dtype == object or arr.dtype.kind in "US":
+        arr = pd.Series(arr).to_numpy()
+    return arr
 
 
 def parse_horizon(value: HorizonLike) -> pd.Timedelta:
@@ -75,7 +126,8 @@ def parse_horizon(value: HorizonLike) -> pd.Timedelta:
     if td < pd.Timedelta(0):
         raise ValueError(f"Horizon must be non-negative, got {td}.")
 
-    return td
+    horizon: pd.Timedelta = td
+    return horizon
 
 
 def horizons_overlap(
@@ -121,8 +173,8 @@ def horizons_overlap(
 
 
 def validate_times(
-    prediction_times: pd.Series,
-    evaluation_times: pd.Series,
+    prediction_times: TimesLike,
+    evaluation_times: TimesLike,
     *,
     require_monotonic: bool = True,
 ) -> None:
@@ -141,13 +193,15 @@ def validate_times(
         >>> evalu = pred + pd.Timedelta(days=1)
         >>> validate_times(pred, evalu)
     """
-    if len(prediction_times) != len(evaluation_times):
+    pred = _coerce_1d(prediction_times, name="prediction_times")
+    evalu = _coerce_1d(evaluation_times, name="evaluation_times")
+    if len(pred) != len(evalu):
         raise ValueError(
-            f"length mismatch: prediction_times has {len(prediction_times)} rows, "
-            f"evaluation_times has {len(evaluation_times)} rows."
+            f"length mismatch: prediction_times has {len(pred)} rows, "
+            f"evaluation_times has {len(evalu)} rows."
         )
-    prediction_kind = _temporal_kind(prediction_times)
-    evaluation_kind = _temporal_kind(evaluation_times)
+    prediction_kind = _temporal_kind(pred)
+    evaluation_kind = _temporal_kind(evalu)
     if prediction_kind is None:
         raise ValueError("prediction_times must have a datetime-like or timedelta-like dtype.")
     if evaluation_kind is None:
@@ -156,16 +210,16 @@ def validate_times(
         raise ValueError(
             "prediction_times and evaluation_times must use the same temporal dtype family."
         )
-    if prediction_times.isna().any():
+    if np.isnat(pred).any():
         raise ValueError("prediction_times contains NaT values.")
-    if evaluation_times.isna().any():
+    if np.isnat(evalu).any():
         raise ValueError("evaluation_times contains NaT values.")
-    bad = evaluation_times.to_numpy() < prediction_times.to_numpy()
+    bad = evalu < pred
     if bad.any():
         first = int(bad.argmax())
         raise ValueError(
             f"evaluation_times falls before prediction_times at index {first}: "
-            f"{evaluation_times.iloc[first]} < {prediction_times.iloc[first]}."
+            f"{evalu[first]} < {pred[first]}."
         )
-    if require_monotonic and not prediction_times.is_monotonic_increasing:
+    if require_monotonic and not bool(np.all(pred[1:] >= pred[:-1])):
         raise ValueError("prediction_times must be monotonic non-decreasing.")

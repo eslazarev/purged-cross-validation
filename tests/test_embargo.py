@@ -159,3 +159,17 @@ class TestApplyEmbargo:
         # test block.
         expected = np.array([5, 6, 7, 8])
         np.testing.assert_array_equal(result, expected)
+
+
+def test_apply_embargo_numpy_matches_pandas() -> None:
+    from purgedcv import apply_embargo
+
+    pred_pd = pd.Series(pd.date_range("2024-01-01", periods=20, freq="D"))
+    evalu_pd = pred_pd + pd.Timedelta(days=1)
+    train_idx = np.array([11, 12, 13, 14])
+    test_idx = np.arange(5, 10)
+    out_pd = apply_embargo(train_idx, test_idx, pred_pd, evalu_pd, pd.Timedelta(days=1))
+    out_np = apply_embargo(
+        train_idx, test_idx, pred_pd.to_numpy(), evalu_pd.to_numpy(), pd.Timedelta(days=1)
+    )
+    np.testing.assert_array_equal(out_pd, out_np)

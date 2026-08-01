@@ -212,3 +212,202 @@ class TestValidateTimes:
         evalu = pred + pd.Timedelta(days=1)
         with pytest.raises(ValueError, match="monotonic"):
             validate_times(pred, evalu, require_monotonic=True)
+
+
+class TestCoerce1d:
+    def test_numpy_datetime64_passthrough(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        arr = np.array(["2024-01-01", "2024-01-02"], dtype="datetime64[ns]")
+        out = _coerce_1d(arr, name="t")
+        assert np.issubdtype(out.dtype, np.datetime64)
+        np.testing.assert_array_equal(out, arr)
+
+    def test_numpy_timedelta64_passthrough(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        arr = np.array([1, 2], dtype="timedelta64[D]")
+        out = _coerce_1d(arr, name="t")
+        assert np.issubdtype(out.dtype, np.timedelta64)
+
+    def test_pandas_series_to_numpy(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        s = pd.Series(pd.date_range("2024-01-01", periods=3, freq="D"))
+        out = _coerce_1d(s, name="t")
+        assert np.issubdtype(out.dtype, np.datetime64)
+        assert len(out) == 3
+
+    def test_datetimeindex(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        idx = pd.date_range("2024-01-01", periods=3, freq="D")
+        out = _coerce_1d(idx, name="t")
+        assert np.issubdtype(out.dtype, np.datetime64)
+
+    def test_list_of_timestamps(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        out = _coerce_1d([pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-02")], name="t")
+        assert np.issubdtype(out.dtype, np.datetime64)
+
+    def test_list_of_timedeltas(self) -> None:
+        from datetime import timedelta
+
+        from purgedcv._time import _coerce_1d
+
+        out = _coerce_1d([timedelta(days=1), timedelta(days=2)], name="t")
+        assert np.issubdtype(out.dtype, np.timedelta64)
+
+    def test_tz_aware_normalized_to_utc_naive(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        s = pd.Series(pd.date_range("2024-01-01", periods=2, freq="D", tz="US/Eastern"))
+        out = _coerce_1d(s, name="t")
+        assert np.issubdtype(out.dtype, np.datetime64)
+        # 2024-01-01 00:00 US/Eastern == 2024-01-01 05:00 UTC
+        assert out[0] == np.datetime64("2024-01-01T05:00:00")
+
+    def test_object_list_of_strings_stays_object(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        out = _coerce_1d(["2024-01-01", "2024-01-02"], name="t")
+        assert out.dtype == object
+
+
+class TestValidateTimesInputTypes:
+    def test_numpy_datetime64_ok(self) -> None:
+        from purgedcv import validate_times
+
+        pred = pd.date_range("2024-01-01", periods=5, freq="D").to_numpy()
+        evalu = pred + np.timedelta64(1, "D")
+        validate_times(pred, evalu)
+
+    def test_numpy_timedelta64_ok(self) -> None:
+        from purgedcv import validate_times
+
+        pred = np.array([1, 2, 3], dtype="timedelta64[D]")
+        evalu = np.array([2, 3, 4], dtype="timedelta64[D]")
+        validate_times(pred, evalu)
+
+    def test_list_input_ok(self) -> None:
+        from purgedcv import validate_times
+
+        pred = [pd.Timestamp("2024-01-01"), pd.Timestamp("2024-01-02")]
+        evalu = [pd.Timestamp("2024-01-02"), pd.Timestamp("2024-01-03")]
+        validate_times(pred, evalu)
+
+    def test_mixed_kind_rejected(self) -> None:
+        from purgedcv import validate_times
+
+        pred = pd.date_range("2024-01-01", periods=3, freq="D").to_numpy()
+        evalu = np.array([1, 2, 3], dtype="timedelta64[D]")
+        with pytest.raises(ValueError, match="same temporal dtype family"):
+            validate_times(pred, evalu)
+
+    def test_non_temporal_rejected(self) -> None:
+        from purgedcv import validate_times
+
+        with pytest.raises(ValueError, match="datetime-like or timedelta-like"):
+            validate_times([1, 2, 3], [2, 3, 4])
+
+    def test_nat_in_numpy_rejected(self) -> None:
+        from purgedcv import validate_times
+
+        pred = np.array(["2024-01-01", "NaT"], dtype="datetime64[ns]")
+        evalu = np.array(["2024-01-02", "2024-01-03"], dtype="datetime64[ns]")
+        with pytest.raises(ValueError, match="NaT"):
+            validate_times(pred, evalu, require_monotonic=False)
+
+    def test_inverted_row_message_has_date(self) -> None:
+        from purgedcv import validate_times
+
+        pred = np.array(["2024-01-01", "2024-01-10"], dtype="datetime64[ns]")
+        evalu = np.array(["2024-01-02", "2024-01-09"], dtype="datetime64[ns]")
+        with pytest.raises(ValueError) as exc:
+            validate_times(pred, evalu, require_monotonic=False)
+        msg = str(exc.value)
+        assert "index 1" in msg
+        assert "2024-01-09" in msg
+
+
+class TestCoerce1dDimensionality:
+    def test_rejects_2d_array(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        arr = np.arange(10).reshape(-1, 1)
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(arr, name="prediction_times")
+
+    def test_rejects_0d_numpy_scalar(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(np.datetime64("2024-01-01"), name="prediction_times")  # type: ignore[arg-type, unused-ignore]
+
+    def test_rejects_pandas_timestamp_scalar(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(pd.Timestamp("2024-01-01"), name="prediction_times")  # type: ignore[arg-type, unused-ignore]
+
+    def test_rejects_dataframe(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        df = pd.DataFrame({"t": pd.date_range("2024-01-01", periods=5, freq="D")})
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(df, name="prediction_times")
+
+    def test_message_names_the_input_and_shape(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        arr = np.arange(6).reshape(-1, 1)
+        with pytest.raises(ValueError) as exc:
+            _coerce_1d(arr, name="groups")
+        msg = str(exc.value)
+        assert "groups" in msg
+        assert "2-D" in msg
+
+
+class TestDimensionalityAtPublicBoundary:
+    def test_validate_times_rejects_2d(self) -> None:
+        pred = pd.Series(pd.date_range("2024-01-01", periods=10, freq="D")).to_numpy()
+        with pytest.raises(ValueError, match="1-D array-like"):
+            validate_times(pred.reshape(-1, 1), pred.reshape(-1, 1))
+
+    def test_splitter_rejects_2d_times(self) -> None:
+        from purgedcv import PurgedKFold
+
+        pred = pd.Series(pd.date_range("2024-01-01", periods=10, freq="D")).to_numpy()
+        with pytest.raises(ValueError, match="1-D array-like"):
+            PurgedKFold(
+                n_splits=3,
+                prediction_times=pred.reshape(-1, 1),
+                evaluation_times=pred.reshape(-1, 1),
+            )
+
+    def test_group_splitter_rejects_2d_groups(self) -> None:
+        from purgedcv import PurgedGroupKFold
+
+        n = 9
+        pred = pd.date_range("2024-01-01", periods=n, freq="D").to_numpy()
+        evalu = pred + np.timedelta64(1, "D")
+        groups = np.repeat(np.arange(3), 3).reshape(-1, 1)
+        with pytest.raises(ValueError, match="1-D array-like"):
+            PurgedGroupKFold(
+                n_splits=2, prediction_times=pred, evaluation_times=evalu, groups=groups
+            )
+
+
+class TestRuntimeIntrospection:
+    def test_get_type_hints_resolves_on_public_functions(self) -> None:
+        import typing
+
+        from purgedcv import apply_embargo, purge, validate_times
+
+        # Regression: TimesLike used to be a string alias referencing names not
+        # present in these modules' namespaces, so get_type_hints raised
+        # NameError. It is now a concrete Union and must resolve cleanly.
+        for fn in (validate_times, purge, apply_embargo):
+            hints = typing.get_type_hints(fn)
+            assert "prediction_times" in hints

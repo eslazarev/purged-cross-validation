@@ -20,7 +20,7 @@ from purgedcv._paths import reconstruct_paths
 from purgedcv._time import HorizonLike
 from purgedcv._validation import _validate_integer
 
-from ._typing import NDArrayAny
+from ._typing import NDArrayAny, TimesLike
 
 
 class CombinatorialPurgedCV(BaseTemporalSplitter):
@@ -60,8 +60,8 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         n_splits: int,
         n_test_groups: int,
         *,
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
     ) -> None:
@@ -315,8 +315,8 @@ class CombinatoriallySymmetricCV(CombinatorialPurgedCV):
         self,
         n_splits: int,
         *,
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
     ) -> None:

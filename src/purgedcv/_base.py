@@ -11,11 +11,11 @@ import pandas as pd
 
 from purgedcv._embargo import apply_embargo
 from purgedcv._purge import purge
-from purgedcv._time import HorizonLike, parse_horizon, validate_times
+from purgedcv._time import HorizonLike, _coerce_1d, parse_horizon, validate_times
 from purgedcv._validation import _validate_positional_indices
 from purgedcv.diagnostics import assert_groups_disjoint
 
-from ._typing import NDArrayAny
+from ._typing import ArrayLike1D, NDArrayAny, TimesLike
 
 
 class BaseTemporalSplitter(ABC):
@@ -39,29 +39,32 @@ class BaseTemporalSplitter(ABC):
     def __init__(
         self,
         *,
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
-        groups: pd.Series | None = None,
+        groups: ArrayLike1D | None = None,
     ) -> None:
-        validate_times(prediction_times, evaluation_times, require_monotonic=True)
-        self._prediction_times = prediction_times.reset_index(drop=True)
-        self._evaluation_times = evaluation_times.reset_index(drop=True)
+        pred = _coerce_1d(prediction_times, name="prediction_times")
+        evalu = _coerce_1d(evaluation_times, name="evaluation_times")
+        validate_times(pred, evalu, require_monotonic=True)
+        self._prediction_times = pred
+        self._evaluation_times = evalu
         self.purge_horizon = (
             parse_horizon(purge_horizon) if purge_horizon is not None else pd.Timedelta(0)
         )
         self.embargo = parse_horizon(embargo) if embargo is not None else pd.Timedelta(0)
-        self._groups: pd.Series | None
+        self._groups: NDArrayAny | None
         if groups is not None:
-            if len(groups) != len(self._prediction_times):
+            groups_arr = _coerce_1d(groups, name="groups")
+            if len(groups_arr) != len(self._prediction_times):
                 raise ValueError(
-                    f"groups length {len(groups)} does not match "
+                    f"groups length {len(groups_arr)} does not match "
                     f"prediction_times length {len(self._prediction_times)}."
                 )
-            if groups.isna().any():
+            if pd.isna(groups_arr).any():
                 raise ValueError("groups contains missing values.")
-            self._groups = groups.reset_index(drop=True)
+            self._groups = groups_arr
         else:
             self._groups = None
 
@@ -136,8 +139,8 @@ class BaseTemporalSplitter(ABC):
 
     def with_times(
         self,
-        prediction_times: pd.Series,
-        evaluation_times: pd.Series,
+        prediction_times: TimesLike,
+        evaluation_times: TimesLike,
     ) -> BaseTemporalSplitter:
         """Return a copy of this splitter with new times bound. All other
         parameters (``n_splits``, ``purge_horizon``, ``embargo``, ``groups``,
@@ -148,16 +151,18 @@ class BaseTemporalSplitter(ABC):
         fresh splitter via the constructor — this avoids surprising
         interactions between cached state and rebound inputs.
         """
-        validate_times(prediction_times, evaluation_times, require_monotonic=True)
-        if len(prediction_times) != len(self._prediction_times):
+        pred = _coerce_1d(prediction_times, name="prediction_times")
+        evalu = _coerce_1d(evaluation_times, name="evaluation_times")
+        validate_times(pred, evalu, require_monotonic=True)
+        if len(pred) != len(self._prediction_times):
             raise ValueError(
-                f"with_times got prediction_times of length {len(prediction_times)}; "
+                f"with_times got prediction_times of length {len(pred)}; "
                 f"this splitter was constructed for length "
                 f"{len(self._prediction_times)}."
             )
         new = copy.copy(self)
-        new._prediction_times = prediction_times.reset_index(drop=True)
-        new._evaluation_times = evaluation_times.reset_index(drop=True)
+        new._prediction_times = pred
+        new._evaluation_times = evalu
         return new
 
     def _n_samples_or_check(self, X: NDArrayAny | pd.DataFrame) -> int:  # noqa: N803

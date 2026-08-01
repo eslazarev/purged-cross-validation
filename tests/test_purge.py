@@ -237,3 +237,15 @@ class TestPurgeAFMLSnippet71:
 
         expected = np.array([0, 1])
         np.testing.assert_array_equal(result, expected)
+
+
+def test_purge_numpy_matches_pandas() -> None:
+    from purgedcv import purge
+
+    pred_pd = pd.Series(pd.date_range("2024-01-01", periods=10, freq="D"))
+    evalu_pd = pred_pd + pd.Timedelta(days=3)
+    train_idx = np.array([0, 1, 2, 3, 4, 8, 9])
+    test_idx = np.array([5, 6, 7])
+    out_pd = purge(train_idx, test_idx, pred_pd, evalu_pd)
+    out_np = purge(train_idx, test_idx, pred_pd.to_numpy(), evalu_pd.to_numpy())
+    np.testing.assert_array_equal(out_pd, out_np)
