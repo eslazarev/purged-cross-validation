@@ -14,7 +14,7 @@ from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
 from purgedcv._validation import _validate_integer
 
-from ._typing import NDArrayAny, TimesLike
+from ._typing import ArrayLike1D, NDArrayAny, TimesLike
 
 
 class PurgedKFold(BaseTemporalSplitter):
@@ -156,7 +156,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
         *,
         prediction_times: TimesLike,
         evaluation_times: TimesLike,
-        groups: TimesLike,
+        groups: ArrayLike1D,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
     ) -> None:

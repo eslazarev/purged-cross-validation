@@ -15,7 +15,7 @@ from purgedcv._time import HorizonLike, _coerce_1d, parse_horizon, validate_time
 from purgedcv._validation import _validate_positional_indices
 from purgedcv.diagnostics import assert_groups_disjoint
 
-from ._typing import NDArrayAny, TimesLike
+from ._typing import ArrayLike1D, NDArrayAny, TimesLike
 
 
 class BaseTemporalSplitter(ABC):
@@ -43,7 +43,7 @@ class BaseTemporalSplitter(ABC):
         evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
-        groups: TimesLike | None = None,
+        groups: ArrayLike1D | None = None,
     ) -> None:
         pred = _coerce_1d(prediction_times, name="prediction_times")
         evalu = _coerce_1d(evaluation_times, name="evaluation_times")

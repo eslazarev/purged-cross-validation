@@ -25,7 +25,7 @@ from purgedcv.exceptions import (
     TemporalLeakageError,
 )
 
-from ._typing import NDArrayAny, TimesLike
+from ._typing import ArrayLike1D, NDArrayAny, TimesLike
 
 __all__ = [
     "assert_embargo_respected",
@@ -151,7 +151,7 @@ def assert_embargo_respected(
 def assert_groups_disjoint(
     train_idx: NDArrayAny,
     test_idx: NDArrayAny,
-    groups: TimesLike,
+    groups: ArrayLike1D,
 ) -> None:
     """Raise :class:`GroupLeakageError` if any group identifier appears in
     both ``train_idx`` and ``test_idx``.

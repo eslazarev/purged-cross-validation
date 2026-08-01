@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ._typing import NDArrayAny, TimesLike
+from ._typing import NDArrayAny, SupportsToNumpy, TimesLike
 
 HorizonLike = str | pd.Timedelta | timedelta | np.timedelta64
 
@@ -55,11 +55,20 @@ def _coerce_1d(x: TimesLike, *, name: str) -> NDArrayAny:
         return out
     if isinstance(x, np.ndarray):
         arr: NDArrayAny = x
-    elif hasattr(x, "to_numpy"):  # pandas Series/Index, polars Series
+    elif isinstance(x, SupportsToNumpy):  # pandas Series/Index, polars Series
         arr = x.to_numpy()
     else:
         arr = np.asarray(x)
     arr = np.asarray(arr)
+    # Check dimensionality before the object/string coercion below: a 0-D
+    # scalar routed through ``pd.Series(...).to_numpy()`` would be reshaped to a
+    # length-1 1-D array and slip past this guard.
+    if arr.ndim != 1:
+        raise ValueError(
+            f"{name} must be a 1-D array-like; got a {arr.ndim}-D input of shape "
+            f"{arr.shape}. Pass a 1-D sequence, not a scalar or a 2-D array/"
+            f"DataFrame (select a single column first)."
+        )
     if arr.dtype == object or arr.dtype.kind in "US":
         arr = pd.Series(arr).to_numpy()
     return arr

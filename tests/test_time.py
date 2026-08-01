@@ -329,3 +329,85 @@ class TestValidateTimesInputTypes:
         msg = str(exc.value)
         assert "index 1" in msg
         assert "2024-01-09" in msg
+
+
+class TestCoerce1dDimensionality:
+    def test_rejects_2d_array(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        arr = np.arange(10).reshape(-1, 1)
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(arr, name="prediction_times")
+
+    def test_rejects_0d_numpy_scalar(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(np.datetime64("2024-01-01"), name="prediction_times")  # type: ignore[arg-type]
+
+    def test_rejects_pandas_timestamp_scalar(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(pd.Timestamp("2024-01-01"), name="prediction_times")  # type: ignore[arg-type]
+
+    def test_rejects_dataframe(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        df = pd.DataFrame({"t": pd.date_range("2024-01-01", periods=5, freq="D")})
+        with pytest.raises(ValueError, match="1-D array-like"):
+            _coerce_1d(df, name="prediction_times")
+
+    def test_message_names_the_input_and_shape(self) -> None:
+        from purgedcv._time import _coerce_1d
+
+        arr = np.arange(6).reshape(-1, 1)
+        with pytest.raises(ValueError) as exc:
+            _coerce_1d(arr, name="groups")
+        msg = str(exc.value)
+        assert "groups" in msg
+        assert "2-D" in msg
+
+
+class TestDimensionalityAtPublicBoundary:
+    def test_validate_times_rejects_2d(self) -> None:
+        pred = pd.Series(pd.date_range("2024-01-01", periods=10, freq="D")).to_numpy()
+        with pytest.raises(ValueError, match="1-D array-like"):
+            validate_times(pred.reshape(-1, 1), pred.reshape(-1, 1))
+
+    def test_splitter_rejects_2d_times(self) -> None:
+        from purgedcv import PurgedKFold
+
+        pred = pd.Series(pd.date_range("2024-01-01", periods=10, freq="D")).to_numpy()
+        with pytest.raises(ValueError, match="1-D array-like"):
+            PurgedKFold(
+                n_splits=3,
+                prediction_times=pred.reshape(-1, 1),
+                evaluation_times=pred.reshape(-1, 1),
+            )
+
+    def test_group_splitter_rejects_2d_groups(self) -> None:
+        from purgedcv import PurgedGroupKFold
+
+        n = 9
+        pred = pd.date_range("2024-01-01", periods=n, freq="D").to_numpy()
+        evalu = pred + np.timedelta64(1, "D")
+        groups = np.repeat(np.arange(3), 3).reshape(-1, 1)
+        with pytest.raises(ValueError, match="1-D array-like"):
+            PurgedGroupKFold(
+                n_splits=2, prediction_times=pred, evaluation_times=evalu, groups=groups
+            )
+
+
+class TestRuntimeIntrospection:
+    def test_get_type_hints_resolves_on_public_functions(self) -> None:
+        import typing
+
+        from purgedcv import apply_embargo, purge, validate_times
+
+        # Regression: TimesLike used to be a string alias referencing names not
+        # present in these modules' namespaces, so get_type_hints raised
+        # NameError. It is now a concrete Union and must resolve cleanly.
+        for fn in (validate_times, purge, apply_embargo):
+            hints = typing.get_type_hints(fn)
+            assert "prediction_times" in hints
