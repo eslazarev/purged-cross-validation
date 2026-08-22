@@ -655,17 +655,18 @@ project's CHANGELOG.</p>
 <p>Three small invariants keep the surface honest.</p>
 <ol>
 <li>
-<p><strong>One interval implementation.</strong> All overlap and embargo checks go
-   through <code>src/purgedcv/_intervals.py</code>. <code>purge</code>, <code>apply_embargo</code>, and the
-   diagnostics all sort and merge per-test-row intervals once and then
-   stab them with <code>searchsorted</code>. Splitters do not duplicate boundary
-   logic, and a CPCV fold with non-adjacent test groups is filtered by
-   the <em>union</em> of local windows rather than by the convex hull between
-   them.</p>
+<p><strong>One implementation per boundary kind.</strong> Time-based overlap and embargo
+   checks go through <code>src/purgedcv/_intervals.py</code>; positional embargo windows
+   are implemented once in <code>src/purgedcv/_embargo.py</code>. Splitters do not
+   duplicate either boundary rule. A CPCV fold with non-adjacent test groups
+   is filtered by the <em>union</em> of local windows rather than by the convex hull
+   between them.</p>
 </li>
 <li>
-<p><strong>Label-aware purge.</strong> Splitters take <code>prediction_times</code> and
-   <code>evaluation_times</code> as pandas Series rather than a single integer gap.
+<p><strong>Label-aware purge.</strong> Splitters take framework-agnostic
+   <code>prediction_times</code> and <code>evaluation_times</code> containers rather than a single
+   integer gap. pandas, NumPy, Python sequences, and Polars are accepted and
+   coerced to one-dimensional NumPy arrays at the public boundary.
    The purge follows the real label horizon, so a label that overlaps by
    twelve half-hours and one that overlaps by twenty cannot share a
    single hand-tuned <code>gap</code> and still be correct — the user passes the

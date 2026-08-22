@@ -537,6 +537,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#013-2026-08-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.1.3 - 2026-08-01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.1.3 - 2026-08-01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#012-2026-06-13" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -577,7 +605,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_1" class="md-nav__link">
+  <a href="#added_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -605,7 +633,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_2" class="md-nav__link">
+  <a href="#added_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -655,7 +683,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_3" class="md-nav__link">
+  <a href="#added_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -705,7 +733,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_4" class="md-nav__link">
+  <a href="#added_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -910,6 +938,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#013-2026-08-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.1.3 - 2026-08-01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0.1.3 - 2026-08-01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#012-2026-06-13" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -950,7 +1006,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_1" class="md-nav__link">
+  <a href="#added_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -978,7 +1034,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_2" class="md-nav__link">
+  <a href="#added_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -1028,7 +1084,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_3" class="md-nav__link">
+  <a href="#added_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -1078,7 +1134,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#added_4" class="md-nav__link">
+  <a href="#added_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         Added
@@ -1250,8 +1306,19 @@ The 0.0.x series is the pre-1.0 development line. The library's feature
 work was organised internally as Plans A–D (foundations → splitters →
 backtest paths → metrics); the cumulative feature set delivered by each
 Plan is listed under the published version it shipped in.</p>
-<h2 id="unreleased"><a href="https://github.com/eslazarev/purged-cross-validation/compare/v0.1.2...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h2 id="unreleased"><a href="https://github.com/eslazarev/purged-cross-validation/compare/v0.1.3...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Embargo can now be expressed in three mutually exclusive ways throughout
+  the splitter, PBO, row-level, and diagnostics APIs: a wall-clock duration
+  (<code>embargo</code>), a fixed number of post-test rows (<code>embargo_observations</code>), or a
+  fraction of the full dataset (<code>embargo_fraction</code>). Fractional embargo uses
+  <code>floor(n_samples * embargo_fraction)</code> observations. Positional modes apply
+  independently after every contiguous test block, including non-adjacent
+  CPCV groups, and preserve the established duration-based behavior.</li>
+</ul>
+<h2 id="013-2026-08-01"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.3">0.1.3</a> - 2026-08-01<a class="headerlink" href="#013-2026-08-01" title="Permanent link">&para;</a></h2>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Time inputs are now framework-agnostic. <code>prediction_times</code> and
   <code>evaluation_times</code> on every splitter, together with <code>purge</code>, <code>apply_embargo</code>,
@@ -1280,7 +1347,7 @@ Plan is listed under the published version it shipped in.</p>
   matching the note already in <code>default_backtest_metrics</code>.</li>
 </ul>
 <h2 id="011-2026-06-05"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.1">0.1.1</a> - 2026-06-05<a class="headerlink" href="#011-2026-06-05" title="Permanent link">&para;</a></h2>
-<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>minimum_backtest_length</code> (MinBTL): the backtest length, in years, below
   which a reported annualised Sharpe is within what selecting the best of
@@ -1298,7 +1365,7 @@ maintained deliberately: the splitters, backtest-path reconstruction, and
 the Sharpe-ratio metric family are stable enough to build on. Breaking
 changes will still happen before <code>1.0.0</code>, but they will be noted here
 rather than slipped into a patch release.</p>
-<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>probability_of_backtest_overfitting</code> (PBO): estimates how often the
   configuration chosen as best in-sample lands below the median
@@ -1425,7 +1492,7 @@ rather than slipped into a patch release.</p>
 <h2 id="009-2026-05-22"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.0.9">0.0.9</a> - 2026-05-22<a class="headerlink" href="#009-2026-05-22" title="Permanent link">&para;</a></h2>
 <p>No library code changed in this release; the published wheel is
 identical to v0.0.7. The release carried CI and example tooling only.</p>
-<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The CI workflow detects whether a push touched files outside the
   documentation surface and skips the automated release job for
@@ -1445,7 +1512,7 @@ changes.</p>
 <code>main</code>. Versions 0.0.5 and 0.0.6 were intermediate same-day auto-release
 patches; this entry records the work delivered across 0.0.5 through
 0.0.7.</p>
-<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
+<h3 id="added_5">Added<a class="headerlink" href="#added_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li>JOSS submission paper at <code>docs/paper.md</code> (<code>docs/paper.bib</code>) with the
   real ORCID baked in.</li>
