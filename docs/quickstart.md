@@ -40,6 +40,32 @@ train_kept = apply_embargo(
 print(len(train_idx), "->", len(train_kept), "after purge + embargo")
 ```
 
+### Choosing an embargo unit
+
+Every splitter, `apply_embargo`, PBO, and `assert_embargo_respected` accepts
+the same three mutually exclusive modes:
+
+```python
+# Wall-clock duration
+apply_embargo(train_idx, test_idx, pred, evalu, embargo="2D")
+
+# Fixed number of rows after each contiguous test block
+apply_embargo(train_idx, test_idx, pred, evalu, embargo_observations=10)
+
+# floor(n_samples * 0.01) rows after each contiguous test block
+apply_embargo(train_idx, test_idx, pred, evalu, embargo_fraction=0.01)
+```
+
+Use a duration when elapsed time carries the dependency. Use rows or a
+fraction for bar-based data where serial dependence is naturally expressed in
+observations. CPCV applies the positional window separately after every
+non-adjacent test block. Supplying more than one mode raises `ValueError`.
+
+`WalkForwardSplit` accepts the same parameters for constructor consistency,
+but its training candidates are always strictly before the test fold, so an
+asymmetric post-test embargo has no rows to remove. Its effective boundary
+control is `purge_horizon`.
+
 ## 2. PurgedKFold in `cross_val_score`
 
 Every splitter follows the scikit-learn splitter protocol, so it works

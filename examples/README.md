@@ -17,6 +17,12 @@ pip install purgedcv[examples]
 jupyter notebook examples/
 ```
 
+All splitter examples continue to use pandas timestamps, but the same APIs
+also accept NumPy datetime arrays, Python datetime sequences, and Polars
+`Series`. Time-based examples use `embargo="..."`; bar-based workflows can
+instead use `embargo_observations=...` or `embargo_fraction=...` (never more
+than one mode at once).
+
 ---
 
 ## Controlled proof (no download, deterministic)
@@ -27,6 +33,26 @@ and `PurgedKFold` run side by side. Naive scores R² ≈ 0.83–0.91 on a target
 nothing can predict; `PurgedKFold` drops the train/test label overlap from 100%
 to 0% and that fabricated skill collapses below a predict-the-mean baseline.
 Deterministic (fixed seed) and offline — no download.
+
+`cv-leakage-controlled-study.ipynb` expands the same known-zero-skill setup to
+30 independent realisations and compares four splitters: shuffled and
+unshuffled KFold, `WalkForwardSplit`, and `PurgedKFold`. Only shuffled KFold
+reports positive RandomForest skill. It is also deterministic and requires no
+download.
+
+## Selection-regret studies
+
+`selection_regret_lcl.ipynb` selects models on 48 Low Carbon London households
+and deploys them to 12 unseen households. Naive shuffled KFold chooses a model
+that memorises household identity; `PurgedGroupKFold` chooses a regularised
+model that deploys at lower MAE. It uses the same cached LCL dataset described
+below.
+
+`selection_regret_crypto.ipynb` repeats the selection/deployment protocol on
+daily BTC/USDT. Naive KFold chooses a deep RandomForest that fails on a frozen
+180-bar future window; `PurgedKFold` chooses a strongly regularised Ridge that
+correctly stays near the no-edge baseline. It shares the cached crypto data
+used by the OHLC examples below.
 
 ---
 

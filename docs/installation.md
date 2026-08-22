@@ -26,7 +26,7 @@ Each extra is independent; install only what you need.
 
 === "Examples"
 
-    To run the eleven worked notebooks in `examples/` (Jupyter,
+    To run the fifteen worked notebooks in `examples/` (Jupyter,
     Matplotlib, the `pricehub` OHLC fetcher for the crypto examples):
 
     ```bash

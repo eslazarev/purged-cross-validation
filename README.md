@@ -27,7 +27,7 @@
 | Symbol | Domain | Description |
 |---|---|---|
 | `purge` | D2 | Remove overlapping-horizon training rows |
-| `apply_embargo` | D3 | Remove post-test buffer rows |
+| `apply_embargo` | D3 | Remove time-, row-, or fraction-based post-test buffers |
 | `WalkForwardSplit` | D5.1 | Sliding / expanding walk-forward CV |
 | `PurgedKFold` | D5.2 | Contiguous test folds with purge + embargo |
 | `PurgedGroupKFold` | D5.3 | Group-aware purged k-fold |
@@ -148,6 +148,11 @@ mamba install -c conda-forge purgedcv
 pip install git+https://github.com/eslazarev/purged-cross-validation.git
 ```
 
+Time inputs are framework-agnostic: pandas `Series`/`DatetimeIndex`, NumPy
+`datetime64`/`timedelta64` arrays, Python datetime sequences, and Polars
+`Series` are accepted. Polars remains optional; inputs are converted to a
+one-dimensional NumPy array at the API boundary.
+
 ---
 
 ## Quickstart
@@ -215,11 +220,28 @@ Each bar below is one row's label horizon. Every training row whose start falls 
 
 ![apply_embargo on a mid-series test block: training rows whose prediction time falls inside the post-test buffer are dropped, while rows before the test are kept.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/embargo_example.png)
 
+The buffer can use exactly one of three units:
+
+| Parameter | Meaning |
+|---|---|
+| `embargo="3D"` | Drop rows inside the three-day window after each test block |
+| `embargo_observations=10` | Drop the next 10 row positions after each test block |
+| `embargo_fraction=0.01` | Drop the next `floor(n_samples * 0.01)` row positions |
+
+Observation and fractional modes are useful for bar-based datasets where
+"the next 10 bars" is more stable than a wall-clock duration. For CPCV, each
+non-adjacent test block gets its own local embargo window. Supplying more than
+one mode raises `ValueError` rather than silently choosing one.
+
+`WalkForwardSplit` accepts these options for API consistency, but its train
+rows are strictly before each test fold, so a post-test embargo is a no-op;
+use `purge_horizon` for its pre-test boundary.
+
 ---
 
 ### 3. Walk-forward CV: `WalkForwardSplit`
 
-`WalkForwardSplit` walks the train/test split forward in time: every fold trains only on data *before* its test block, the way a model is actually deployed. Purge and embargo are applied automatically on each fold. Use `window="expanding"` to keep all history, or `window="sliding"` to cap training at a fixed-size recent window.
+`WalkForwardSplit` walks the train/test split forward in time: every fold trains only on data *before* its test block, the way a model is actually deployed. Purge is applied automatically on each fold; an asymmetric post-test embargo has no rows to remove in this layout. Use `window="expanding"` to keep all history, or `window="sliding"` to cap training at a fixed-size recent window.
 
 ```python
 import numpy as np
@@ -287,6 +309,9 @@ for i, (train_idx, test_idx) in enumerate(cv.split(X), 1):
 # fold 3: test 12..17  train rows 11
 # fold 4: test 18..23  train rows 15
 ```
+
+For a bar-count policy, replace `embargo="2D"` with either
+`embargo_observations=2` or, for example, `embargo_fraction=0.01`.
 
 Each test fold is a contiguous block. A middle fold trains on data both before and after it; the red purge gap before the test and the orange purge + embargo buffer after it are removed automatically, so no training row leaks into the fold.
 

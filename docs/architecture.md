@@ -51,16 +51,17 @@ flowchart TB
 
 Three small invariants keep the surface honest.
 
-1. **One interval implementation.** All overlap and embargo checks go
-   through `src/purgedcv/_intervals.py`. `purge`, `apply_embargo`, and the
-   diagnostics all sort and merge per-test-row intervals once and then
-   stab them with `searchsorted`. Splitters do not duplicate boundary
-   logic, and a CPCV fold with non-adjacent test groups is filtered by
-   the *union* of local windows rather than by the convex hull between
-   them.
+1. **One implementation per boundary kind.** Time-based overlap and embargo
+   checks go through `src/purgedcv/_intervals.py`; positional embargo windows
+   are implemented once in `src/purgedcv/_embargo.py`. Splitters do not
+   duplicate either boundary rule. A CPCV fold with non-adjacent test groups
+   is filtered by the *union* of local windows rather than by the convex hull
+   between them.
 
-2. **Label-aware purge.** Splitters take `prediction_times` and
-   `evaluation_times` as pandas Series rather than a single integer gap.
+2. **Label-aware purge.** Splitters take framework-agnostic
+   `prediction_times` and `evaluation_times` containers rather than a single
+   integer gap. pandas, NumPy, Python sequences, and Polars are accepted and
+   coerced to one-dimensional NumPy arrays at the public boundary.
    The purge follows the real label horizon, so a label that overlaps by
    twelve half-hours and one that overlaps by twenty cannot share a
    single hand-tuned `gap` and still be correct — the user passes the

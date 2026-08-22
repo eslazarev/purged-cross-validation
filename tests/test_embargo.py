@@ -161,6 +161,115 @@ class TestApplyEmbargo:
         np.testing.assert_array_equal(result, expected)
 
 
+class TestApplyPositionalEmbargo:
+    def test_observation_count_drops_exact_post_test_rows(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        train_idx = np.concatenate([np.arange(0, 5), np.arange(10, 20)])
+
+        result = apply_embargo(
+            train_idx,
+            np.arange(5, 10),
+            pred,
+            evalu,
+            embargo_observations=3,
+        )
+
+        np.testing.assert_array_equal(result, np.concatenate([np.arange(0, 5), np.arange(13, 20)]))
+
+    def test_fraction_uses_full_dataset_size_and_rounds_down(self) -> None:
+        pred, evalu = _make_horizon_dataset(n=20)
+        train_idx = np.concatenate([np.arange(0, 5), np.arange(10, 20)])
+
+        result = apply_embargo(
+            train_idx,
+            np.arange(5, 10),
+            pred,
+            evalu,
+            embargo_fraction=0.19,
+        )
+
+        # floor(20 * 0.19) == 3
+        np.testing.assert_array_equal(result, np.concatenate([np.arange(0, 5), np.arange(13, 20)]))
+
+    def test_disjoint_test_blocks_each_get_a_positional_window(self) -> None:
+        pred, evalu = _make_horizon_dataset(n=15)
+        train_idx = np.array([3, 4, 5, 6, 7, 8, 12, 13, 14])
+        test_idx = np.array([0, 1, 2, 9, 10, 11])
+
+        result = apply_embargo(
+            train_idx,
+            test_idx,
+            pred,
+            evalu,
+            embargo_observations=2,
+        )
+
+        np.testing.assert_array_equal(result, np.array([5, 6, 7, 8, 14]))
+
+    def test_preserves_unsorted_train_order_and_dtype(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        train_idx = np.array([15, 11, 2, 10, 14], dtype=np.int32)
+
+        result = apply_embargo(
+            train_idx,
+            np.arange(5, 10),
+            pred,
+            evalu,
+            embargo_observations=2,
+        )
+
+        np.testing.assert_array_equal(result, np.array([15, 2, 14], dtype=np.int32))
+        assert result.dtype == np.int32
+
+    @pytest.mark.parametrize(
+        ("kwargs", "error", "message"),
+        [
+            ({"embargo_observations": -1}, ValueError, "at least 0"),
+            ({"embargo_observations": 1.5}, TypeError, "integer"),
+            ({"embargo_observations": True}, TypeError, "integer"),
+            ({"embargo_fraction": -0.01}, ValueError, r"\[0, 1\]"),
+            ({"embargo_fraction": 1.01}, ValueError, r"\[0, 1\]"),
+            ({"embargo_fraction": float("nan")}, ValueError, r"\[0, 1\]"),
+            ({"embargo_fraction": "0.1"}, TypeError, "real number"),
+            ({"embargo_fraction": True}, TypeError, "real number"),
+        ],
+    )
+    def test_rejects_invalid_positional_configuration(
+        self,
+        kwargs: dict[str, object],
+        error: type[Exception],
+        message: str,
+    ) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(error, match=message):
+            apply_embargo(
+                np.arange(10, 20),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                **kwargs,  # type: ignore[arg-type]
+            )
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"embargo": "1D", "embargo_observations": 1},
+            {"embargo": "1D", "embargo_fraction": 0.1},
+            {"embargo_observations": 1, "embargo_fraction": 0.1},
+        ],
+    )
+    def test_embargo_modes_are_mutually_exclusive(self, kwargs: dict[str, object]) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            apply_embargo(
+                np.arange(10, 20),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                **kwargs,  # type: ignore[arg-type]
+            )
+
+
 def test_apply_embargo_numpy_matches_pandas() -> None:
     from purgedcv import apply_embargo
 

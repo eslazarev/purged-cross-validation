@@ -17,6 +17,22 @@ def _times(n: int = 20, horizon_days: int = 1) -> tuple[pd.Series, pd.Series]:
 
 
 class TestPurgedKFold:
+    def test_fractional_embargo_drops_post_test_rows(self) -> None:
+        pred, evalu = _times(n=20, horizon_days=1)
+        cv = PurgedKFold(
+            n_splits=4,
+            prediction_times=pred,
+            evaluation_times=evalu,
+            embargo_fraction=0.1,
+        )
+
+        train_idx, test_idx = list(cv.split(np.zeros((20, 1))))[1]
+
+        np.testing.assert_array_equal(test_idx, np.arange(5, 10))
+        assert 10 not in train_idx
+        assert 11 not in train_idx
+        assert 12 in train_idx
+
     def test_yields_n_splits_folds(self) -> None:
         pred, evalu = _times(n=20)
         cv = PurgedKFold(
@@ -139,6 +155,22 @@ class TestPurgedKFold:
 
 
 class TestPurgedGroupKFold:
+    def test_positional_embargo_applies_after_each_interleaved_test_run(self) -> None:
+        pred, evalu = _times(n=24)
+        groups = np.arange(24) % 6
+        cv = PurgedGroupKFold(
+            n_splits=3,
+            prediction_times=pred,
+            evaluation_times=evalu,
+            groups=groups,
+            embargo_observations=2,
+        )
+
+        train_idx, test_idx = next(cv.split(np.zeros((24, 1))))
+
+        np.testing.assert_array_equal(test_idx, np.array([0, 1, 6, 7, 12, 13, 18, 19]))
+        np.testing.assert_array_equal(train_idx, np.array([4, 5, 10, 11, 16, 17, 22, 23]))
+
     def test_yields_n_splits_folds(self) -> None:
         """6 patients, 5 observations each (30 rows), n_splits=3."""
         pred = pd.Series(pd.date_range("2024-01-01", periods=30, freq="D"))

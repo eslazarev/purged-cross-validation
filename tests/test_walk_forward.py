@@ -16,6 +16,29 @@ def _times(n: int = 20, horizon_days: int = 1) -> tuple[pd.Series, pd.Series]:
 
 
 class TestWalkForwardSplit:
+    def test_post_test_observation_embargo_is_noop_by_design(self) -> None:
+        pred, evalu = _times(n=24)
+        baseline = WalkForwardSplit(
+            n_splits=3,
+            test_size=4,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+        with_embargo = WalkForwardSplit(
+            n_splits=3,
+            test_size=4,
+            prediction_times=pred,
+            evaluation_times=evalu,
+            embargo_observations=5,
+        )
+        X = np.zeros((24, 1))  # noqa: N806
+
+        for (base_train, base_test), (emb_train, emb_test) in zip(
+            baseline.split(X), with_embargo.split(X), strict=True
+        ):
+            np.testing.assert_array_equal(emb_train, base_train)
+            np.testing.assert_array_equal(emb_test, base_test)
+
     def test_yields_n_splits_folds(self) -> None:
         pred, evalu = _times(n=20)
         cv = WalkForwardSplit(

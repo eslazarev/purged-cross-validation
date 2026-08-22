@@ -123,6 +123,11 @@ class TestAssertNoTemporalLeakage:
 
 
 class TestAssertEmbargoRespected:
+    def test_requires_an_embargo_mode(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(ValueError, match="requires one of embargo"):
+            assert_embargo_respected(np.array([15]), np.arange(10, 15), pred, evalu)
+
     def test_zero_embargo_is_identity(self) -> None:
         """embargo=0 always returns silently, regardless of split layout."""
         pred, evalu = _make_horizon_dataset()
@@ -196,6 +201,27 @@ class TestAssertEmbargoRespected:
                 evalu,
                 embargo=pd.Timedelta(days=1),
             )
+
+    def test_observation_embargo_violation_raises(self) -> None:
+        pred, evalu = _make_horizon_dataset()
+        with pytest.raises(EmbargoViolationError, match="row 10"):
+            assert_embargo_respected(
+                np.array([10, 13]),
+                np.arange(5, 10),
+                pred,
+                evalu,
+                embargo_observations=2,
+            )
+
+    def test_fractional_embargo_clean_split_is_silent(self) -> None:
+        pred, evalu = _make_horizon_dataset(n=20)
+        assert_embargo_respected(
+            np.array([12, 13]),
+            np.arange(5, 10),
+            pred,
+            evalu,
+            embargo_fraction=0.1,
+        )
 
 
 class TestAssertGroupsDisjoint:

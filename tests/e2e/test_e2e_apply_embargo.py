@@ -51,6 +51,33 @@ def test_user_story_zero_embargo_is_identity() -> None:
 
 
 @pytest.mark.e2e
+def test_user_story_fractional_embargo_then_diagnostic_clean() -> None:
+    """A bar-based strategy can use a 10% embargo without translating bars
+    into a wall-clock duration."""
+    pred = pd.Series(pd.date_range("2024-01-01", periods=30, freq="h"))
+    evalu = pred + pd.Timedelta(hours=1)
+    test_idx = np.arange(10, 15)
+    train_idx = np.concatenate([np.arange(0, 10), np.arange(15, 30)])
+
+    embargoed = apply_embargo(
+        train_idx,
+        test_idx,
+        pred,
+        evalu,
+        embargo_fraction=0.1,
+    )
+
+    assert {15, 16, 17}.isdisjoint(embargoed)
+    assert_embargo_respected(
+        embargoed,
+        test_idx,
+        pred,
+        evalu,
+        embargo_fraction=0.1,
+    )
+
+
+@pytest.mark.e2e
 def test_user_story_pre_test_history_preserved() -> None:
     """Asymmetry visible at API level: embargo never drops pre-test data."""
     pred = pd.Series(pd.date_range("2024-01-01", periods=30, freq="D"))

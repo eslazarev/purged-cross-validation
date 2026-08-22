@@ -114,6 +114,21 @@ class TestPBOPurgePath:
         assert 0.0 <= result.pbo <= 1.0
         assert result.n_combos == comb(8, 4)
 
+    def test_fractional_embargo_runs_through_cscv(self) -> None:
+        rng = np.random.default_rng(23)
+        returns = rng.standard_normal((6, 192)) * 0.01
+        pred = pd.Series(pd.date_range("2024-01-01", periods=192, freq="D"))
+        result = probability_of_backtest_overfitting(
+            returns,
+            n_splits=8,
+            prediction_times=pred,
+            evaluation_times=pred,
+            embargo_fraction=0.01,
+        )
+
+        assert 0.0 <= result.pbo <= 1.0
+        assert result.n_combos == comb(8, 4)
+
     def test_custom_metric_is_used(self) -> None:
         rng = np.random.default_rng(22)
         returns = rng.standard_normal((5, 160)) * 0.01
@@ -157,6 +172,10 @@ class TestPBOValidation:
     def test_rejects_purge_without_times(self) -> None:
         with pytest.raises(ValueError, match="prediction_times and evaluation_times"):
             probability_of_backtest_overfitting(self._returns(), n_splits=4, purge_horizon="1D")
+
+    def test_rejects_positional_embargo_without_times(self) -> None:
+        with pytest.raises(ValueError, match="prediction_times and evaluation_times"):
+            probability_of_backtest_overfitting(self._returns(), n_splits=4, embargo_observations=1)
 
     def test_rejects_time_length_mismatch(self) -> None:
         returns = self._returns()  # (5, 160)

@@ -126,6 +126,52 @@ class TestEmbargoProperties:
         identity = apply_embargo(train_idx, test_idx, pred, evalu, embargo=pd.Timedelta(0))
         np.testing.assert_array_equal(identity, train_idx)
 
+    @settings(max_examples=200, deadline=None)
+    @given(dataset_and_split(), st.integers(min_value=0, max_value=10))
+    def test_observation_embargo_matches_diagnostic(
+        self,
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
+        observations: int,
+    ) -> None:
+        pred, evalu, train_idx, test_idx = case
+        embargoed = apply_embargo(
+            train_idx,
+            test_idx,
+            pred,
+            evalu,
+            embargo_observations=observations,
+        )
+        assert_embargo_respected(
+            embargoed,
+            test_idx,
+            pred,
+            evalu,
+            embargo_observations=observations,
+        )
+
+    @settings(max_examples=100, deadline=None)
+    @given(dataset_and_split(), st.floats(min_value=0.0, max_value=1.0))
+    def test_fractional_embargo_matches_diagnostic(
+        self,
+        case: tuple[pd.Series, pd.Series, NDArrayAny, NDArrayAny],
+        fraction: float,
+    ) -> None:
+        pred, evalu, train_idx, test_idx = case
+        embargoed = apply_embargo(
+            train_idx,
+            test_idx,
+            pred,
+            evalu,
+            embargo_fraction=fraction,
+        )
+        assert_embargo_respected(
+            embargoed,
+            test_idx,
+            pred,
+            evalu,
+            embargo_fraction=fraction,
+        )
+
 
 class TestPurgePlusEmbargoComposition:
     @settings(max_examples=200, deadline=None)
