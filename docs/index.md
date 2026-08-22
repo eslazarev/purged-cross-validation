@@ -6,8 +6,9 @@ their neighbours, panel data has repeated customers, and a backtest
 needs more than a single train-then-test cut to be honest about its own
 overfitting. `purgedcv` is the scikit-learn-compatible answer to that.
 
-It ships purging and embargoing of overlapping labels, expanding and
-rolling walk-forward validation, purged and group-purged k-fold,
+It ships purging and time-, observation-, or fraction-based embargoing of
+overlapping labels, expanding and rolling walk-forward validation, purged and
+group-purged k-fold,
 Combinatorial Purged Cross-Validation with backtest-path reconstruction,
 and the Probabilistic, Deflated, and Minimum-Track-Record Sharpe
 statistics. Every splitter speaks the standard sklearn splitter protocol.
@@ -16,14 +17,14 @@ It drops straight into `cross_val_score`, `GridSearchCV`, and `Pipeline`.
 The algorithms are not new. They are Marcos López de Prado's (2018), with
 the statistical metrics from Bailey and López de Prado (2012, 2014). This
 library is an open, MIT-licensed, typed implementation, checked against
-the original papers and pinned by 354 tests (98% line coverage).
+the original papers and pinned by more than 500 tests.
 
 ## Where to start
 
 - [Installation](installation.md) — `pip install purgedcv` or `conda install -c conda-forge purgedcv`, optional extras.
 - [Quickstart](quickstart.md) — three short runnable snippets.
 - [API reference](api.md) — autodoc for every public symbol.
-- [Examples](examples.md) — eleven worked notebooks on real public data.
+- [Examples](examples.md) — fifteen worked notebooks on real public data.
 - [Methodology](methodology.md) — the underlying problem and the prior-art gap.
 - [Paper (JOSS)](https://github.com/eslazarev/purged-cross-validation/blob/main/paper/paper.md) — the software paper.
 

@@ -1,8 +1,9 @@
 # Examples
 
-The repository ships a controlled proof and ten worked notebooks on real
-public data. The point is to show the honest range of outcomes, including
-the undramatic ones, not only the alarming cases.
+The repository ships fifteen worked notebooks: controlled synthetic studies,
+real public datasets, model-selection regret experiments, and a full backtest
+overfitting audit. The point is to show the honest range of outcomes,
+including the undramatic ones, not only the alarming cases.
 
 The notebooks live in
 [`examples/`](https://github.com/eslazarev/purged-cross-validation/tree/main/examples)
@@ -20,6 +21,12 @@ shuffled k-fold scores R² between 0.83 and 0.91 on noise; `PurgedKFold`
 drives the train/test label overlap from 100 % to 0 % and the score
 collapses below a predict-the-mean baseline. Deterministic, fixed seed,
 no network.
+
+[**cv-leakage-controlled-study**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/cv-leakage-controlled-study.ipynb)
+— the same known-zero-skill construction repeated across 30 independent
+realisations. It compares shuffled and unshuffled KFold, walk-forward, and
+purged k-fold; only the shuffled split reports positive RandomForest skill.
+Deterministic and self-contained.
 
 ## Real datasets — dramatic leak
 
@@ -53,16 +60,33 @@ household: scoring on unseen customers is 6.03 % worse than the pooled
 temporal estimate (95 % CI 4.93 – 7.12 %). Which split you need follows
 from what you intend to deploy on.
 
+[**selection_regret_lcl**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_lcl.ipynb)
+— LCL model selection on 48 households followed by deployment to 12 unseen
+households. Naive shuffled KFold chooses a deep RandomForest that memorises
+household identity; `PurgedGroupKFold` chooses a regularised Ridge that
+deploys at lower MAE.
+
 [**model_comparison_honest_cv**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/model_comparison_honest_cv.ipynb)
 — same BTC data, six candidate models. Once the Deflated Sharpe Ratio
 corrects for the number of trials, no model clears DSR ≥ 0.95. Reporting
 no edge is the correct outcome.
+
+[**selection_regret_crypto**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_crypto.ipynb)
+— daily BTC/USDT model selection with a frozen 180-bar deployment window.
+Naive shuffled KFold selects a deep RandomForest that fails badly in the
+future; `PurgedKFold` selects a heavily regularised Ridge that stays near the
+honest no-edge baseline.
 
 [**epl_match_prediction**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/epl_match_prediction.ipynb)
 — Premier League sports modelling. The honest result is calibration drift
 across seasons rather than a headline accuracy gap.
 
 ## API-coverage examples
+
+[**backtest_overfitting_audit**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb)
+— a seeded Optuna search on BTC/USDT audited end to end with PBO,
+effective-trial DSR, CPCV backtest paths, and `path_metrics`. It distinguishes
+a real model-family effect from unreliable selection of one apparent champion.
 
 [**clinical_mortality_physionet**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/clinical_mortality_physionet.ipynb)
 — PhysioNet ICU mortality, `PurgedGroupKFold` holding whole patients out.

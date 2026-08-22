@@ -25,6 +25,12 @@ class WalkForwardSplit(BaseTemporalSplitter):
     ``window="sliding"``, the training window has a fixed maximum length
     (the most recent ``train_size`` samples before the test fold).
 
+    Post-test embargo parameters are accepted for API consistency with the
+    other temporal splitters, but they cannot remove rows here: every
+    candidate training index is strictly before the test fold. Use
+    ``purge_horizon`` to remove pre-test rows whose label horizons overlap the
+    test boundary.
+
     Examples:
         >>> import numpy as np
         >>> import pandas as pd
@@ -50,6 +56,8 @@ class WalkForwardSplit(BaseTemporalSplitter):
         evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
+        embargo_observations: int | None = None,
+        embargo_fraction: float | None = None,
     ) -> None:
         """Configure a walk-forward CV splitter.
 
@@ -60,29 +68,32 @@ class WalkForwardSplit(BaseTemporalSplitter):
             test_size: Number of consecutive rows in each test fold.
                 ``n_splits * test_size`` must be strictly less than
                 ``n_samples``.
-            train_size: Maximum number of training rows per fold AFTER
-                purge and embargo. Counts kept rows, not raw indices, so
-                with a 2-day embargo and ``train_size=100`` the effective
-                training set may use indices spanning more than 100 rows.
+            train_size: Maximum number of training rows per fold after purge.
+                Counts kept rows, not raw indices, so with a purge gap and
+                ``train_size=100`` the effective training set may use indices
+                spanning more than 100 rows.
                 Must be ``None`` when ``window='expanding'`` and a positive
                 integer when ``window='sliding'``.
             window: ``"expanding"`` (default) uses all pre-test data as
                 training; matches :class:`sklearn.model_selection.TimeSeriesSplit`
-                when purge and embargo are zero. ``"sliding"`` caps each
-                training set at the most recent ``train_size`` rows after
-                purge and embargo.
+                when purge is zero. ``"sliding"`` caps each training set at
+                the most recent ``train_size`` rows after purge.
             prediction_times: Per-sample prediction times for the dataset.
                 Bound at construction so :meth:`split` matches the sklearn
                 signature.
-            evaluation_times: Per-sample evaluation times. Required to
-                apply purge and embargo correctly.
+            evaluation_times: Per-sample evaluation times. Required to apply
+                purge correctly.
             purge_horizon: Symmetric padding around the test fold's label
                 window; training rows whose label horizon overlaps the
                 padded test horizon are dropped. ``None`` means no purge.
-            embargo: Post-test embargo duration; training rows whose
-                prediction time falls in the closed window
-                ``[test_eval_max, test_eval_max + embargo]`` are dropped.
-                ``None`` means no embargo.
+            embargo: Accepted for consistency, but has no effect because
+                walk-forward training rows are all before the test fold.
+            embargo_observations: Accepted for consistency; also a no-op for
+                the strictly pre-test candidate training set. Mutually
+                exclusive with the other modes.
+            embargo_fraction: Accepted for consistency; also a no-op for the
+                strictly pre-test candidate training set. Mutually exclusive
+                with the other modes.
 
         Raises:
             ValueError: if ``window`` is not one of the literal values, if
@@ -95,6 +106,8 @@ class WalkForwardSplit(BaseTemporalSplitter):
             evaluation_times=evaluation_times,
             purge_horizon=purge_horizon,
             embargo=embargo,
+            embargo_observations=embargo_observations,
+            embargo_fraction=embargo_fraction,
         )
         if window not in ("sliding", "expanding"):
             raise ValueError(f"window must be 'sliding' or 'expanding', got {window!r}.")

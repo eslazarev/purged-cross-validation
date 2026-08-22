@@ -60,6 +60,14 @@ def test_user_story_pre_test_history_never_flagged() -> None:
 
 
 @pytest.mark.e2e
+def test_user_story_missing_embargo_configuration_is_rejected() -> None:
+    pred = pd.Series(pd.date_range("2024-01-01", periods=20, freq="D"))
+    evalu = pred + pd.Timedelta(days=1)
+    with pytest.raises(ValueError, match="requires one of embargo"):
+        assert_embargo_respected(np.array([15]), np.arange(10, 15), pred, evalu)
+
+
+@pytest.mark.e2e
 def test_subprocess_fresh_interpreter_embargo() -> None:
     snippet = textwrap.dedent("""\
         import numpy as np

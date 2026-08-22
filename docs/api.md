@@ -3,7 +3,7 @@
 All public symbols from `purgedcv.__all__`, auto-rendered from the source
 docstrings. The constructors of the splitters share a single set of
 keyword arguments (`prediction_times`, `evaluation_times`,
-`purge_horizon`, `embargo`, `groups`); see
+`purge_horizon`, the three embargo modes, and `groups`); see
 [`BaseTemporalSplitter`](#purgedcv.BaseTemporalSplitter) for the shared
 contract.
 

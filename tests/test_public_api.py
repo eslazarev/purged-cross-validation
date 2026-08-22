@@ -1,7 +1,7 @@
-"""Pin the v0.3.0a public API surface of purgedcv.
+"""Pin the maintained 0.1.x public API surface of purgedcv.
 
 These tests are an explicit contract: every name listed here is part of
-the v0.3.0a stable surface that users may rely on. Adding or removing
+the 0.1.x stable surface that users may rely on. Adding or removing
 exports must be a deliberate, reviewed change accompanied by an update
 to this file.
 """
@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from collections.abc import Callable
+from inspect import signature
 
 import numpy as np
 import pandas as pd
@@ -89,6 +91,27 @@ class TestTopLevelAPI:
         allowed_extras = {"exceptions", "optuna_integration"}
         truly_unexpected = unexpected - allowed_extras
         assert not truly_unexpected, f"unexpected public names: {sorted(truly_unexpected)}"
+
+    @pytest.mark.parametrize(
+        "callable_obj",
+        [
+            purgedcv.apply_embargo,
+            purgedcv.WalkForwardSplit,
+            purgedcv.PurgedKFold,
+            purgedcv.PurgedGroupKFold,
+            purgedcv.CombinatorialPurgedCV,
+            purgedcv.CombinatoriallySymmetricCV,
+            purgedcv.probability_of_backtest_overfitting,
+            purgedcv.diagnostics.assert_embargo_respected,
+        ],
+    )
+    def test_embargo_modes_are_available_across_public_api(
+        self, callable_obj: Callable[..., object]
+    ) -> None:
+        parameters = signature(callable_obj).parameters
+        assert "embargo" in parameters
+        assert "embargo_observations" in parameters
+        assert "embargo_fraction" in parameters
 
 
 class TestDiagnosticsSubmodule:

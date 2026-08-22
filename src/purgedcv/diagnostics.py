@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from purgedcv._embargo import _positional_embargo_mask, _validate_embargo_modes
 from purgedcv._intervals import overlaps_any_half_open_interval, points_in_any_closed_interval
 from purgedcv._time import HorizonLike, _coerce_1d, parse_horizon, validate_times
 from purgedcv._validation import _validate_positional_indices
@@ -101,16 +102,20 @@ def assert_embargo_respected(
     test_idx: NDArrayAny,
     prediction_times: TimesLike,
     evaluation_times: TimesLike,
-    embargo: HorizonLike,
+    embargo: HorizonLike | None = None,
+    *,
+    embargo_observations: int | None = None,
+    embargo_fraction: float | None = None,
 ) -> None:
-    """Raise :class:`EmbargoViolationError` if any training row's
-    ``prediction_time`` falls inside any closed embargo window
-    ``[test_evaluation_time, test_evaluation_time + embargo]``.
+    """Raise :class:`EmbargoViolationError` when an embargo is violated.
 
-    Embargo is asymmetric: rows whose ``prediction_time`` is strictly before
-    all test evaluation times are never flagged. ``embargo == 0`` is the
-    identity (no rows flagged) — the embargo window is logically empty at
-    zero width.
+    The duration, observation-count, and fractional modes have the same
+    mutually-exclusive semantics as :func:`purgedcv.apply_embargo`. Exactly
+    one mode must be supplied; omitting all three is treated as a configuration
+    error rather than a successful audit.
+
+    Embargo is asymmetric: rows before test boundaries are never flagged.
+    Zero-width modes are identities.
 
     Examples:
         >>> import numpy as np
@@ -122,7 +127,14 @@ def assert_embargo_respected(
         ...     np.array([18]), np.arange(5, 10), pred, evalu, embargo="2D"
         ... )
     """
-    emb = parse_horizon(embargo)
+    duration, observations, fraction = _validate_embargo_modes(
+        embargo, embargo_observations, embargo_fraction
+    )
+    if duration is None and observations is None and fraction is None:
+        raise ValueError(
+            "assert_embargo_respected requires one of embargo, "
+            "embargo_observations, or embargo_fraction."
+        )
     prediction_times = _coerce_1d(prediction_times, name="prediction_times")
     evaluation_times = _coerce_1d(evaluation_times, name="evaluation_times")
     validate_times(prediction_times, evaluation_times, require_monotonic=False)
@@ -131,12 +143,26 @@ def assert_embargo_respected(
     test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
     if len(train_idx) == 0 or len(test_idx) == 0:
         return
-    if emb == pd.Timedelta(0):
+    if fraction is not None:
+        observations = int(n_samples * fraction)
+    if observations is not None:
+        in_embargo = _positional_embargo_mask(train_idx, test_idx, observations)
+        if in_embargo.any():
+            first_global = int(train_idx[int(in_embargo.argmax())])
+            raise EmbargoViolationError(
+                f"Embargo violation at row {first_global}: row position falls "
+                "inside a post-test positional embargo window."
+            )
         return
+
+    if duration == pd.Timedelta(0):
+        return
+    if duration is None:  # pragma: no cover - exhaustive mode validation above
+        raise RuntimeError("embargo mode was not resolved")
 
     train_pred = prediction_times[train_idx]
     embargo_starts = evaluation_times[test_idx]
-    embargo_ends = evaluation_times[test_idx] + emb
+    embargo_ends = evaluation_times[test_idx] + duration
     in_embargo = points_in_any_closed_interval(train_pred, embargo_starts, embargo_ends)
     if in_embargo.any():
         first_local = int(in_embargo.argmax())

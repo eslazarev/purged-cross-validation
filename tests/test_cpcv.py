@@ -26,6 +26,28 @@ def _times(n: int = 24, horizon_days: int = 1) -> tuple[pd.Series, pd.Series]:
 
 
 class TestCombinatorialPurgedCV:
+    def test_observation_embargo_applies_after_each_non_adjacent_test_block(self) -> None:
+        pred, evalu = _times(n=16, horizon_days=1)
+        cv = CombinatorialPurgedCV(
+            n_splits=4,
+            n_test_groups=2,
+            prediction_times=pred,
+            evaluation_times=evalu,
+            embargo_observations=1,
+        )
+
+        fold_by_test = {
+            tuple(test_idx.tolist()): train_idx
+            for train_idx, test_idx in cv.split(np.zeros((16, 1)))
+        }
+        test_idx = tuple([*range(0, 4), *range(8, 12)])
+        train_idx = fold_by_test[test_idx]
+
+        assert 4 not in train_idx
+        assert 12 not in train_idx
+        assert 5 in train_idx
+        assert 13 in train_idx
+
     def test_yields_n_choose_k_folds(self) -> None:
         """For N=6 groups and K=2 test groups per fold, expect C(6,2)=15."""
         pred, evalu = _times(n=24)

@@ -64,6 +64,8 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
+        embargo_observations: int | None = None,
+        embargo_fraction: float | None = None,
     ) -> None:
         """Configure a Combinatorial Purged CV splitter.
 
@@ -83,6 +85,12 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
                 ``[test_evaluation_time, test_evaluation_time + embargo]``
                 are dropped.
                 ``None`` means no embargo.
+            embargo_observations: Number of row positions to embargo after
+                each contiguous test block. Mutually exclusive with
+                ``embargo`` and ``embargo_fraction``.
+            embargo_fraction: Fraction of the full dataset to embargo after
+                each contiguous test block, rounded down. Mutually exclusive
+                with the other modes.
 
         Raises:
             ValueError: if ``n_splits < 2``, if ``n_splits`` exceeds the
@@ -101,6 +109,8 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
             evaluation_times=evaluation_times,
             purge_horizon=purge_horizon,
             embargo=embargo,
+            embargo_observations=embargo_observations,
+            embargo_fraction=embargo_fraction,
         )
         if n_splits > len(self._prediction_times):
             raise ValueError(
@@ -319,6 +329,8 @@ class CombinatoriallySymmetricCV(CombinatorialPurgedCV):
         evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
+        embargo_observations: int | None = None,
+        embargo_fraction: float | None = None,
     ) -> None:
         """Configure a CSCV splitter.
 
@@ -330,6 +342,10 @@ class CombinatoriallySymmetricCV(CombinatorialPurgedCV):
             evaluation_times: Per-sample evaluation times.
             purge_horizon: Optional purge horizon applied per fold.
             embargo: Optional embargo horizon applied per fold.
+            embargo_observations: Optional number of post-test row positions
+                embargoed per contiguous block.
+            embargo_fraction: Optional fraction of the dataset embargoed as
+                row positions per contiguous block.
 
         Raises:
             ValueError: if ``n_splits`` is odd or below 2.
@@ -344,4 +360,6 @@ class CombinatoriallySymmetricCV(CombinatorialPurgedCV):
             evaluation_times=evaluation_times,
             purge_horizon=purge_horizon,
             embargo=embargo,
+            embargo_observations=embargo_observations,
+            embargo_fraction=embargo_fraction,
         )

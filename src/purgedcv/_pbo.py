@@ -125,6 +125,8 @@ def _iter_is_oos(
     evaluation_times: TimesLike | None,
     purge_horizon: HorizonLike | None,
     embargo: HorizonLike | None,
+    embargo_observations: int | None,
+    embargo_fraction: float | None,
 ) -> Iterator[tuple[NDArrayAny, NDArrayAny]]:
     """Yield ``(is_idx, oos_idx)`` for every CSCV combination.
 
@@ -134,7 +136,15 @@ def _iter_is_oos(
     the IS/OOS boundaries.
     """
     n_test_groups = n_splits // 2
-    wants_purge = purge_horizon is not None or embargo is not None
+    wants_purge = any(
+        value is not None
+        for value in (
+            purge_horizon,
+            embargo,
+            embargo_observations,
+            embargo_fraction,
+        )
+    )
     if prediction_times is None and evaluation_times is None and not wants_purge:
         blocks = _contiguous_blocks(n_obs, n_splits)
         for oos_combo in combinations(range(n_splits), n_test_groups):
@@ -149,7 +159,7 @@ def _iter_is_oos(
     if prediction_times is None or evaluation_times is None:
         raise ValueError(
             "prediction_times and evaluation_times must be supplied together "
-            "(or both omitted); purge_horizon and embargo require both."
+            "(or both omitted); purge_horizon and every embargo mode require both."
         )
     cv = CombinatorialPurgedCV(
         n_splits=n_splits,
@@ -158,6 +168,8 @@ def _iter_is_oos(
         evaluation_times=evaluation_times,
         purge_horizon=purge_horizon,
         embargo=embargo,
+        embargo_observations=embargo_observations,
+        embargo_fraction=embargo_fraction,
     )
     placeholder = np.empty((n_obs, 1), dtype=float)
     yield from cv.split(placeholder)
@@ -266,6 +278,8 @@ def probability_of_backtest_overfitting(
     evaluation_times: TimesLike | None = None,
     purge_horizon: HorizonLike | None = None,
     embargo: HorizonLike | None = None,
+    embargo_observations: int | None = None,
+    embargo_fraction: float | None = None,
 ) -> PBOResult:
     """Estimate the Probability of Backtest Overfitting (PBO) via CSCV.
 
@@ -292,6 +306,10 @@ def probability_of_backtest_overfitting(
             ``prediction_times``.
         purge_horizon: Optional purge horizon (requires the time series).
         embargo: Optional embargo horizon (requires the time series).
+        embargo_observations: Optional number of row positions to embargo
+            after each OOS block (requires the time series).
+        embargo_fraction: Optional fraction of rows to embargo after each
+            OOS block (requires the time series).
 
     Returns:
         A :class:`PBOResult` (frozen dataclass; read fields by attribute,
@@ -334,7 +352,16 @@ def probability_of_backtest_overfitting(
     is_perf_best: list[float] = []
     oos_perf_best: list[float] = []
     n_dropped = 0
-    for is_idx, oos_idx in _iter_is_oos(n_obs, n_splits, pred, evalu, purge_horizon, embargo):
+    for is_idx, oos_idx in _iter_is_oos(
+        n_obs,
+        n_splits,
+        pred,
+        evalu,
+        purge_horizon,
+        embargo,
+        embargo_observations,
+        embargo_fraction,
+    ):
         if len(is_idx) == 0 or len(oos_idx) == 0:
             n_dropped += 1
             continue

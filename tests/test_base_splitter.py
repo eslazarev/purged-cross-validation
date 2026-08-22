@@ -26,7 +26,10 @@ class _TwoFoldStub(BaseTemporalSplitter):
         return [np.arange(mid), np.arange(mid, n_samples)]
 
     def get_n_splits(
-        self, X: object = None, y: object = None, groups: object = None  # noqa: N803
+        self,
+        X: object = None,  # noqa: N803
+        y: object = None,
+        groups: object = None,
     ) -> int:
         return 2
 
@@ -96,6 +99,29 @@ class TestBaseTemporalSplitterSkeleton:
         cv = _TwoFoldStub(prediction_times=pred, evaluation_times=evalu)
         assert cv.purge_horizon == pd.Timedelta(0)
         assert cv.embargo == pd.Timedelta(0)
+        assert cv.embargo_observations is None
+        assert cv.embargo_fraction is None
+
+    def test_constructor_stores_observation_embargo(self) -> None:
+        pred, evalu = _times()
+        cv = _TwoFoldStub(
+            prediction_times=pred,
+            evaluation_times=evalu,
+            embargo_observations=3,
+        )
+        assert cv.embargo == pd.Timedelta(0)
+        assert cv.embargo_observations == 3
+        assert cv.embargo_fraction is None
+
+    def test_constructor_rejects_multiple_embargo_modes(self) -> None:
+        pred, evalu = _times()
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            _TwoFoldStub(
+                prediction_times=pred,
+                evaluation_times=evalu,
+                embargo="1D",
+                embargo_fraction=0.1,
+            )
 
     def test_constructor_validates_times(self) -> None:
         """Mismatched-length times must be rejected at construction."""
@@ -249,6 +275,19 @@ class TestBaseTemporalSplitterSplit:
         assert set(test0.tolist()) == set(range(10))
         assert set(train0.tolist()) == set(range(13, 20))
 
+    def test_split_applies_observation_embargo(self) -> None:
+        pred, evalu = _times(n=20, horizon_days=1)
+        cv = _TwoFoldStub(
+            prediction_times=pred,
+            evaluation_times=evalu,
+            embargo_observations=3,
+        )
+
+        train0, test0 = next(cv.split(np.zeros((20, 1))))
+
+        np.testing.assert_array_equal(test0, np.arange(10))
+        np.testing.assert_array_equal(train0, np.arange(13, 20))
+
 
 class TestBaseTemporalSplitterWithTimes:
     def test_returns_new_instance_with_rebound_times(self) -> None:
@@ -266,6 +305,19 @@ class TestBaseTemporalSplitterWithTimes:
         # Other attributes preserved.
         assert cv2.purge_horizon == cv.purge_horizon
         assert cv2.embargo == cv.embargo
+
+    def test_preserves_positional_embargo_when_rebinding_times(self) -> None:
+        pred, evalu = _times(n=20)
+        cv = _TwoFoldStub(
+            prediction_times=pred,
+            evaluation_times=evalu,
+            embargo_fraction=0.1,
+        )
+        new_pred = pd.Series(pd.date_range("2025-01-01", periods=20, freq="D"))
+        cv2 = cv.with_times(new_pred, new_pred + pd.Timedelta(days=1))
+
+        assert cv2.embargo_observations is None
+        assert cv2.embargo_fraction == 0.1
 
     def test_rejects_length_mismatch(self) -> None:
         pred, evalu = _times(n=20)

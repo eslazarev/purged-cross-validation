@@ -62,6 +62,8 @@ class PurgedKFold(BaseTemporalSplitter):
         evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
+        embargo_observations: int | None = None,
+        embargo_fraction: float | None = None,
     ) -> None:
         """Configure a purged k-fold splitter.
 
@@ -78,6 +80,12 @@ class PurgedKFold(BaseTemporalSplitter):
                 ``[test_evaluation_time, test_evaluation_time + embargo]``
                 are dropped.
                 ``None`` means no embargo.
+            embargo_observations: Number of row positions to embargo after
+                each test block. Mutually exclusive with ``embargo`` and
+                ``embargo_fraction``.
+            embargo_fraction: Fraction of the full dataset to embargo after
+                each test block, rounded down to a row count. Must be in
+                ``[0, 1]`` and is mutually exclusive with the other modes.
 
         Raises:
             ValueError: if ``n_splits < 2``.
@@ -88,6 +96,8 @@ class PurgedKFold(BaseTemporalSplitter):
             evaluation_times=evaluation_times,
             purge_horizon=purge_horizon,
             embargo=embargo,
+            embargo_observations=embargo_observations,
+            embargo_fraction=embargo_fraction,
         )
         self.n_splits = n_splits
 
@@ -127,6 +137,12 @@ class PurgedGroupKFold(BaseTemporalSplitter):
     assets in time-of-IPO order — ensure the ``groups`` Series is sorted
     by first occurrence time.
 
+    Observation-count and fractional embargo operate on row positions, not
+    group identities. They apply after every contiguous run of test positions.
+    If a fold's groups are interleaved through the dataset, that fold contains
+    several short test runs and positional embargo can remove substantially
+    more rows than a single fold-level buffer would.
+
     The base class's :func:`assert_groups_disjoint` enforcement runs on
     every fold automatically because ``groups`` is bound at construction.
 
@@ -159,6 +175,8 @@ class PurgedGroupKFold(BaseTemporalSplitter):
         groups: ArrayLike1D,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
+        embargo_observations: int | None = None,
+        embargo_fraction: float | None = None,
     ) -> None:
         """Configure a group-aware purged k-fold splitter.
 
@@ -177,6 +195,14 @@ class PurgedGroupKFold(BaseTemporalSplitter):
                 ``None`` means no purge.
             embargo: Post-test embargo duration. ``None`` means no
                 embargo.
+            embargo_observations: Number of row positions to embargo after
+                each contiguous run of test positions. Interleaved test
+                groups may create many such runs. Mutually exclusive with
+                ``embargo`` and ``embargo_fraction``.
+            embargo_fraction: Fraction of the full dataset to embargo after
+                each contiguous run of test positions, rounded down.
+                Interleaved groups may create many runs. Mutually exclusive
+                with the other modes.
 
         Raises:
             ValueError: if ``n_splits < 2`` or
@@ -188,6 +214,8 @@ class PurgedGroupKFold(BaseTemporalSplitter):
             evaluation_times=evaluation_times,
             purge_horizon=purge_horizon,
             embargo=embargo,
+            embargo_observations=embargo_observations,
+            embargo_fraction=embargo_fraction,
             groups=groups,
         )
         if self._groups is None:  # bound at construction; should be unreachable

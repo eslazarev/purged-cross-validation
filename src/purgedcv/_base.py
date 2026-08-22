@@ -9,7 +9,7 @@ from collections.abc import Iterator, Sequence
 import numpy as np
 import pandas as pd
 
-from purgedcv._embargo import apply_embargo
+from purgedcv._embargo import _validate_embargo_modes, apply_embargo
 from purgedcv._purge import purge
 from purgedcv._time import HorizonLike, _coerce_1d, parse_horizon, validate_times
 from purgedcv._validation import _validate_positional_indices
@@ -32,8 +32,9 @@ class BaseTemporalSplitter(ABC):
 
     .. note::
        The subclassing interface (``_iter_test_indices``,
-       ``_candidate_train_idx``) is not yet covered by the v0.3 stability
-       contract. Subclasses may need adjustments through v1.0.
+       ``_candidate_train_idx``) is an implementation detail, not part of the
+       maintained ``0.1.x`` public contract. Subclasses may need adjustments
+       before v1.0.
     """
 
     def __init__(
@@ -43,6 +44,8 @@ class BaseTemporalSplitter(ABC):
         evaluation_times: TimesLike,
         purge_horizon: HorizonLike | None = None,
         embargo: HorizonLike | None = None,
+        embargo_observations: int | None = None,
+        embargo_fraction: float | None = None,
         groups: ArrayLike1D | None = None,
     ) -> None:
         pred = _coerce_1d(prediction_times, name="prediction_times")
@@ -53,7 +56,12 @@ class BaseTemporalSplitter(ABC):
         self.purge_horizon = (
             parse_horizon(purge_horizon) if purge_horizon is not None else pd.Timedelta(0)
         )
-        self.embargo = parse_horizon(embargo) if embargo is not None else pd.Timedelta(0)
+        duration, observations, fraction = _validate_embargo_modes(
+            embargo, embargo_observations, embargo_fraction
+        )
+        self.embargo = duration if duration is not None else pd.Timedelta(0)
+        self.embargo_observations = observations
+        self.embargo_fraction = fraction
         self._groups: NDArrayAny | None
         if groups is not None:
             groups_arr = _coerce_1d(groups, name="groups")
@@ -75,7 +83,10 @@ class BaseTemporalSplitter(ABC):
 
     @abstractmethod
     def get_n_splits(
-        self, X: object = None, y: object = None, groups: object = None  # noqa: N803
+        self,
+        X: object = None,  # noqa: N803
+        y: object = None,
+        groups: object = None,
     ) -> int:
         """Return the total number of splits the iterator will yield."""
         ...
@@ -115,7 +126,13 @@ class BaseTemporalSplitter(ABC):
                 test_idx,
                 self._prediction_times,
                 self._evaluation_times,
-                embargo=self.embargo,
+                embargo=(
+                    self.embargo
+                    if self.embargo_observations is None and self.embargo_fraction is None
+                    else None
+                ),
+                embargo_observations=self.embargo_observations,
+                embargo_fraction=self.embargo_fraction,
             )
             if self._groups is not None:
                 assert_groups_disjoint(train_idx, test_idx, self._groups)
@@ -143,8 +160,8 @@ class BaseTemporalSplitter(ABC):
         evaluation_times: TimesLike,
     ) -> BaseTemporalSplitter:
         """Return a copy of this splitter with new times bound. All other
-        parameters (``n_splits``, ``purge_horizon``, ``embargo``, ``groups``,
-        and any subclass-specific state such as a cached unique-group list)
+        parameters (``n_splits``, ``purge_horizon``, every embargo mode,
+        ``groups``, and any subclass-specific state such as a cached unique-group list)
         are preserved unchanged.
 
         To change ``groups`` or any other construction parameter, build a

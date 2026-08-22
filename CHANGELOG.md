@@ -11,6 +11,18 @@ Plan is listed under the published version it shipped in.
 
 ### Added
 
+- Embargo can now be expressed in three mutually exclusive ways throughout
+  the splitter, PBO, row-level, and diagnostics APIs: a wall-clock duration
+  (`embargo`), a fixed number of post-test rows (`embargo_observations`), or a
+  fraction of the full dataset (`embargo_fraction`). Fractional embargo uses
+  `floor(n_samples * embargo_fraction)` observations. Positional modes apply
+  independently after every contiguous test block, including non-adjacent
+  CPCV groups, and preserve the established duration-based behavior.
+
+## [0.1.3] - 2026-08-01
+
+### Added
+
 - Time inputs are now framework-agnostic. `prediction_times` and
   `evaluation_times` on every splitter, together with `purge`, `apply_embargo`,
   `validate_times`, and the `diagnostics` functions, accept pandas
@@ -320,7 +332,8 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.3
 [0.1.2]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.2
 [0.1.1]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.1
 [0.1.0]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.0
