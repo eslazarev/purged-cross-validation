@@ -336,6 +336,22 @@ class TestComputeOverlapFraction:
         test_idx = np.array([0, 1, 2, 9, 10, 11])
         assert compute_overlap_fraction(train_idx, test_idx, pred, evalu) == 0.0
 
+    def test_purge_horizon_padding_is_counted(self) -> None:
+        pred, evalu = _make_horizon_dataset(horizon_days=1)
+        train_idx = np.array([9])
+        test_idx = np.arange(10, 15)
+        assert compute_overlap_fraction(train_idx, test_idx, pred, evalu) == 0.0
+        assert (
+            compute_overlap_fraction(
+                train_idx,
+                test_idx,
+                pred,
+                evalu,
+                purge_horizon="1D",
+            )
+            == 1.0
+        )
+
 
 def test_compute_overlap_fraction_numpy_matches_pandas() -> None:
     from purgedcv.diagnostics import compute_overlap_fraction

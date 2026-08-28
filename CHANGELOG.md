@@ -11,6 +11,12 @@ Plan is listed under the published version it shipped in.
 
 ### Added
 
+- New public `audit_splitter(cv, X)` diagnostic returns one DataFrame row per
+  fold with candidate and final train sizes, purge/embargo/window removal
+  counts, `candidate_overlap_fraction` and `final_overlap_fraction`, train/test
+  time bounds, and group-disjointness status. It consumes the splitters' real
+  candidate → purged → embargoed stages instead of inferring removal counts
+  from final indices; leakage is reported rather than raised.
 - Embargo can now be expressed in three mutually exclusive ways throughout
   the splitter, PBO, row-level, and diagnostics APIs: a wall-clock duration
   (`embargo`), a fixed number of post-test rows (`embargo_observations`), or a

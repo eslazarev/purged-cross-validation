@@ -43,6 +43,7 @@
 | `minimum_backtest_length` | D7 | MinBTL: backtest years below which a Sharpe is selection luck |
 | `effective_n_trials` | D7 | Independent-trial count for a correlated search, for DSR |
 | `optuna_integration.TrialSharpeRecorder` | D7 | Collect per-trial Sharpe variance + effective count for DSR |
+| `audit_splitter` | D8 | Per-fold purge, embargo, overlap, bounds, and group audit report |
 | `diagnostics.*` | D8 | Leakage and embargo audit functions |
 
 ---

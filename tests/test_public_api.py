@@ -23,6 +23,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
     {
         "__version__",
         "apply_embargo",
+        "audit_splitter",
         "ArrayLike1D",
         "BaseTemporalSplitter",
         "CombinatorialPurgedCV",
@@ -58,6 +59,7 @@ EXPECTED_DIAGNOSTICS: frozenset[str] = frozenset(
         "assert_embargo_respected",
         "assert_groups_disjoint",
         "assert_no_temporal_leakage",
+        "audit_splitter",
         "compute_overlap_fraction",
     }
 )

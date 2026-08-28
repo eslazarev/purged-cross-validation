@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -13,9 +14,19 @@ from purgedcv._embargo import _validate_embargo_modes, apply_embargo
 from purgedcv._purge import purge
 from purgedcv._time import HorizonLike, _coerce_1d, parse_horizon, validate_times
 from purgedcv._validation import _validate_positional_indices
-from purgedcv.diagnostics import assert_groups_disjoint
 
 from ._typing import ArrayLike1D, NDArrayAny, TimesLike
+
+
+@dataclass(frozen=True)
+class _SplitStages:
+    """Internal snapshots of the train-index filtering pipeline."""
+
+    candidate_train_idx: NDArrayAny
+    purged_train_idx: NDArrayAny
+    embargoed_train_idx: NDArrayAny
+    final_train_idx: NDArrayAny
+    test_idx: NDArrayAny
 
 
 class BaseTemporalSplitter(ABC):
@@ -105,24 +116,46 @@ class BaseTemporalSplitter(ABC):
 
         When groups were bound at construction,
         :func:`~purgedcv.diagnostics.assert_groups_disjoint` is called on
-        every fold after purge and embargo; a
+        every fold after purge, embargo, and splitter-specific finalization; a
         :class:`~purgedcv.exceptions.GroupLeakageError` is raised if any
         group identifier appears in both train and test of the same fold.
+        """
+        for stages in self._iter_split_stages(X):
+            train_idx = stages.final_train_idx
+            test_idx = stages.test_idx
+            if self._groups is not None:
+                # Local import keeps diagnostics free to depend on the base
+                # splitter for the public audit_splitter type and pipeline.
+                from purgedcv.diagnostics import assert_groups_disjoint
+
+                assert_groups_disjoint(train_idx, test_idx, self._groups)
+            yield train_idx, test_idx
+
+    def _iter_split_stages(
+        self,
+        X: NDArrayAny | pd.DataFrame,  # noqa: N803
+    ) -> Iterator[_SplitStages]:
+        """Yield each real candidate → purge → embargo → final pipeline.
+
+        This is the single orchestration path used by :meth:`split` and the
+        public :func:`purgedcv.audit_splitter` report. Keeping the intermediate
+        arrays here prevents diagnostics from guessing purge and embargo
+        effects by comparing only the final split indices.
         """
         n_samples = self._n_samples_or_check(X)
 
         for test_idx in self._iter_test_indices(n_samples):
             test_idx = _validate_positional_indices("test_idx", test_idx, n_samples=n_samples)
-            train_idx = self._candidate_train_idx(n_samples, test_idx)
-            train_idx = purge(
-                train_idx,
+            candidate_train_idx = self._candidate_train_idx(n_samples, test_idx)
+            purged_train_idx = purge(
+                candidate_train_idx,
                 test_idx,
                 self._prediction_times,
                 self._evaluation_times,
                 purge_horizon=self.purge_horizon,
             )
-            train_idx = apply_embargo(
-                train_idx,
+            embargoed_train_idx = apply_embargo(
+                purged_train_idx,
                 test_idx,
                 self._prediction_times,
                 self._evaluation_times,
@@ -134,9 +167,14 @@ class BaseTemporalSplitter(ABC):
                 embargo_observations=self.embargo_observations,
                 embargo_fraction=self.embargo_fraction,
             )
-            if self._groups is not None:
-                assert_groups_disjoint(train_idx, test_idx, self._groups)
-            yield train_idx, test_idx
+            final_train_idx = self._finalize_train_idx(embargoed_train_idx, test_idx)
+            yield _SplitStages(
+                candidate_train_idx=candidate_train_idx,
+                purged_train_idx=purged_train_idx,
+                embargoed_train_idx=embargoed_train_idx,
+                final_train_idx=final_train_idx,
+                test_idx=test_idx,
+            )
 
     def _candidate_train_idx(self, n_samples: int, test_idx: NDArrayAny) -> NDArrayAny:
         """Return the candidate training indices BEFORE purge and embargo
@@ -153,6 +191,14 @@ class BaseTemporalSplitter(ABC):
         mask = np.ones(n_samples, dtype=bool)
         mask[test_idx] = False
         return np.where(mask)[0].astype(np.int64)
+
+    def _finalize_train_idx(
+        self,
+        train_idx: NDArrayAny,
+        test_idx: NDArrayAny,
+    ) -> NDArrayAny:
+        """Apply splitter-specific filtering after purge and embargo."""
+        return train_idx
 
     def with_times(
         self,

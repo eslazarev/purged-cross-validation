@@ -101,6 +101,39 @@ print("honest R^2 per fold:", scores)
 (chronological train-on-the-past, expanding or rolling) follow the same
 constructor pattern.
 
+### Audit what each fold removed
+
+Before running a large model search, inspect the splitter itself with
+`audit_splitter`. It uses the same internal fold pipeline as `split()` and
+reports each filtering stage rather than trying to reconstruct it from the
+final indices.
+
+```python
+from purgedcv import audit_splitter
+
+report = audit_splitter(cv, features)
+print(report[[
+    "fold",
+    "candidate_train_size",
+    "final_train_size",
+    "rows_removed_by_purge",
+    "rows_removed_by_embargo",
+    "candidate_overlap_fraction",
+    "final_overlap_fraction",
+]])
+```
+
+`candidate_overlap_fraction` describes the unfiltered candidate train set
+using the splitter's configured `purge_horizon`; reproduce the same number with
+`compute_overlap_fraction(..., purge_horizon=cv.purge_horizon)`.
+`final_overlap_fraction` should be zero. For built-in splitters,
+`temporal_leakage_free` is therefore expected to be true; it mainly guards
+custom splitter finalization hooks from accidentally reintroducing indices.
+For sliding walk-forward splits, `rows_removed_by_window` keeps window
+truncation distinct from purge and embargo. The report records leakage and
+group overlap as values instead of raising, while malformed inputs still fail
+validation normally.
+
 ### Sample weights
 
 The splitters carry no scorer of their own; they stay drop-in to

@@ -73,6 +73,8 @@ contract.
 
 ## Diagnostics
 
+::: purgedcv.audit_splitter
+
 ::: purgedcv.diagnostics.compute_overlap_fraction
 
 ::: purgedcv.diagnostics.assert_no_temporal_leakage
