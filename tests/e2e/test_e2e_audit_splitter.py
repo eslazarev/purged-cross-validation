@@ -47,8 +47,8 @@ def test_user_story_preflight_fold_removal_report() -> None:
 
 
 @pytest.mark.e2e
-def test_user_story_sliding_window_is_not_mislabeled_as_leakage_control() -> None:
-    """Window truncation has its own count in a rolling deployment setup."""
+def test_user_story_sliding_window_is_a_finalization_removal() -> None:
+    """Window truncation appears at the finalization stage, not as purge."""
     pred = pd.date_range("2024-01-01", periods=20, freq="D")
     evalu = pred + pd.Timedelta(days=1)
     cv = WalkForwardSplit(
@@ -66,7 +66,7 @@ def test_user_story_sliding_window_is_not_mislabeled_as_leakage_control() -> Non
     assert report["final_train_size"].tolist() == [5, 5, 5]
     assert report["rows_removed_by_purge"].tolist() == [1, 1, 1]
     assert report["rows_removed_by_embargo"].tolist() == [0, 0, 0]
-    assert report["rows_removed_by_window"].tolist() == [8, 10, 12]
+    assert report["rows_removed_by_finalization"].tolist() == [8, 10, 12]
     assert report["rows_added_by_finalization"].tolist() == [0, 0, 0]
 
 
@@ -90,6 +90,9 @@ def test_subprocess_fresh_interpreter_can_audit_splitter() -> None:
         assert report.shape[0] == 3
         assert "candidate_overlap_fraction" in report.columns
         assert "final_overlap_fraction" in report.columns
+        assert "train_nonempty" in report.columns
+        assert "test_block_count" in report.columns
+        assert "rows_removed_by_finalization" in report.columns
         assert "rows_added_by_finalization" in report.columns
         assert report["final_overlap_fraction"].eq(0.0).all()
         print("OK")

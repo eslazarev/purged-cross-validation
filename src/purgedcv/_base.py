@@ -43,9 +43,9 @@ class BaseTemporalSplitter(ABC):
 
     .. note::
        The subclassing interface (``_iter_test_indices``,
-       ``_candidate_train_idx``) is an implementation detail, not part of the
-       maintained ``0.1.x`` public contract. Subclasses may need adjustments
-       before v1.0.
+       ``_candidate_train_idx``, ``_finalize_train_idx``) is an implementation
+       detail, not part of the maintained ``0.1.x`` public contract.
+       Subclasses may need adjustments before v1.0.
     """
 
     def __init__(
@@ -120,14 +120,14 @@ class BaseTemporalSplitter(ABC):
         :class:`~purgedcv.exceptions.GroupLeakageError` is raised if any
         group identifier appears in both train and test of the same fold.
         """
+        # Local import avoids the module-level BaseTemporalSplitter ↔
+        # diagnostics cycle while doing the cached import only once per split.
+        from purgedcv.diagnostics import assert_groups_disjoint
+
         for stages in self._iter_split_stages(X):
             train_idx = stages.final_train_idx
             test_idx = stages.test_idx
             if self._groups is not None:
-                # Local import keeps diagnostics free to depend on the base
-                # splitter for the public audit_splitter type and pipeline.
-                from purgedcv.diagnostics import assert_groups_disjoint
-
                 assert_groups_disjoint(train_idx, test_idx, self._groups)
             yield train_idx, test_idx
 
@@ -167,7 +167,11 @@ class BaseTemporalSplitter(ABC):
                 embargo_observations=self.embargo_observations,
                 embargo_fraction=self.embargo_fraction,
             )
-            final_train_idx = self._finalize_train_idx(embargoed_train_idx, test_idx)
+            final_train_idx = _validate_positional_indices(
+                "final_train_idx",
+                self._finalize_train_idx(embargoed_train_idx, test_idx),
+                n_samples=n_samples,
+            )
             yield _SplitStages(
                 candidate_train_idx=candidate_train_idx,
                 purged_train_idx=purged_train_idx,

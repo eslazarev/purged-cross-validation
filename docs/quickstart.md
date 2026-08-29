@@ -116,27 +116,42 @@ print(report[[
     "fold",
     "candidate_train_size",
     "final_train_size",
+    "train_nonempty",
     "rows_removed_by_purge",
     "rows_removed_by_embargo",
-    "rows_removed_by_window",
+    "rows_removed_by_finalization",
     "rows_added_by_finalization",
     "candidate_overlap_fraction",
     "final_overlap_fraction",
+    "train_block_count",
+    "test_block_count",
 ]])
 ```
 
 `candidate_overlap_fraction` describes the unfiltered candidate train set
-using the splitter's configured `purge_horizon`; reproduce the same number with
-`compute_overlap_fraction(..., purge_horizon=cv.purge_horizon)`.
-`final_overlap_fraction` should be zero. For built-in splitters,
-`temporal_leakage_free` is therefore expected to be true; it mainly guards
-custom splitter finalization hooks from accidentally reintroducing indices.
-For sliding walk-forward splits, `rows_removed_by_window` keeps window
-truncation distinct from purge and embargo. Built-in splitters never add rows
-during finalization, so `rows_added_by_finalization` is zero; a positive value
-flags a custom finalizer that introduced or swapped indices. The report records
-leakage and group overlap as values instead of raising, while malformed inputs
-still fail validation normally.
+using the splitter's configured `purge_horizon`. For a non-empty candidate set
+it equals `rows_removed_by_purge / candidate_train_size`; it is defined as zero
+when the candidate set is empty. Indices returned by `cv.split()` are already
+final, so passing them to `compute_overlap_fraction` reproduces
+`final_overlap_fraction`, not the candidate value. The standalone function can
+reproduce the candidate value only when you already own the pre-purge indices
+of a custom split and pass the same purge horizon.
+
+For built-in splitters, `final_overlap_fraction` should be zero and
+`temporal_leakage_free` true. On an empty train set that truth is vacuous, so
+check `train_nonempty` before treating a fold as usable. A sliding
+`WalkForwardSplit` performs its window truncation during finalization, hence
+the count appears under `rows_removed_by_finalization`. Built-in splitters
+never add rows there; a positive `rows_added_by_finalization` flags a custom
+finalizer that introduced or swapped indices.
+
+The four time-envelope columns are outer bounds, not claims that the rows form
+one continuous window. CPCV folds can have several disjoint blocks whose train
+and test envelopes overlap while the actual horizons remain clean; use
+`train_block_count`, `test_block_count`, and `final_overlap_fraction` together.
+Subclasses that override `split()` cannot be audited and raise a clear error;
+customize the documented internal hooks instead. Malformed inputs and final
+indices also fail validation normally.
 
 ### Sample weights
 

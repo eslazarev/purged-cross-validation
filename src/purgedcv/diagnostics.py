@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from purgedcv._base import BaseTemporalSplitter
@@ -44,17 +45,20 @@ _AUDIT_COLUMNS = (
     "candidate_train_size",
     "final_train_size",
     "test_size",
+    "train_nonempty",
     "rows_removed_by_purge",
     "rows_removed_by_embargo",
-    "rows_removed_by_window",
+    "rows_removed_by_finalization",
     "rows_added_by_finalization",
     "candidate_overlap_fraction",
     "final_overlap_fraction",
     "temporal_leakage_free",
-    "train_start_time",
-    "train_end_time",
-    "test_start_time",
-    "test_end_time",
+    "train_block_count",
+    "test_block_count",
+    "train_time_envelope_start",
+    "train_time_envelope_end",
+    "test_time_envelope_start",
+    "test_time_envelope_end",
     "groups_disjoint",
 )
 
@@ -77,25 +81,42 @@ def _overlap_fraction_from_arrays(
     return float(overlaps.mean())
 
 
-def _time_bounds(
+def _nat_like(values: NDArrayAny) -> object:
+    """Return a NaT scalar preserving a temporal array's dtype family/unit."""
+    if not (
+        np.issubdtype(values.dtype, np.datetime64) or np.issubdtype(values.dtype, np.timedelta64)
+    ):
+        raise TypeError(f"expected a temporal dtype, got {values.dtype}.")
+    nat: object = np.asarray("NaT", dtype=values.dtype)[()]
+    return nat
+
+
+def _time_envelope(
     indices: NDArrayAny,
     prediction_times: NDArrayAny,
     evaluation_times: NDArrayAny,
 ) -> tuple[object, object]:
-    """Return the label-horizon envelope for a positional index array."""
+    """Return the outer label-horizon envelope for positional indices."""
     if len(indices) == 0:
-        return pd.NaT, pd.NaT
+        return _nat_like(prediction_times), _nat_like(evaluation_times)
     return prediction_times[indices].min(), evaluation_times[indices].max()
 
 
-def _group_overlap_from_arrays(
-    train_idx: NDArrayAny,
-    test_idx: NDArrayAny,
-    groups: NDArrayAny,
+def _contiguous_block_count(indices: NDArrayAny) -> int:
+    """Count contiguous positional-index runs, independent of input order."""
+    if len(indices) == 0:
+        return 0
+    ordered = np.sort(indices)
+    return int(1 + np.count_nonzero(np.diff(ordered) > 1))
+
+
+def _group_overlap_from_values(
+    train_group_values: NDArrayAny,
+    test_group_values: NDArrayAny,
 ) -> set[Any]:
     """Return group identifiers shared by train and test arrays."""
-    train_groups = set(groups[train_idx].tolist())
-    test_groups = set(groups[test_idx].tolist())
+    train_groups = set(train_group_values.tolist())
+    test_groups = set(test_group_values.tolist())
     return train_groups & test_groups
 
 
@@ -118,25 +139,43 @@ def audit_splitter(
     The report consumes the same candidate → purge → embargo → final pipeline
     as :meth:`BaseTemporalSplitter.split`; purge and embargo counts therefore
     come from the actual intermediate index arrays rather than being inferred
-    from the final split. Sliding walk-forward truncation is reported
-    separately as ``rows_removed_by_window``. If a custom finalization hook
-    introduces indices, ``rows_added_by_finalization`` reports them rather
-    than allowing the removal count to become negative or conceal a swap.
+    from the final split. Sliding walk-forward truncation is implemented by
+    the finalization stage and therefore appears in
+    ``rows_removed_by_finalization``. If a custom finalization hook introduces
+    indices, ``rows_added_by_finalization`` reports them separately.
 
     ``candidate_overlap_fraction`` is the fraction of candidate training rows
     whose label horizons overlap the test horizons after applying the
-    splitter's ``purge_horizon`` padding. To reproduce it with
-    :func:`compute_overlap_fraction`, pass the same ``purge_horizon``
-    explicitly. ``final_overlap_fraction`` repeats the measure on the final
-    training rows and should be zero for a clean splitter.
+    splitter's ``purge_horizon`` padding. For non-empty candidates it equals
+    ``rows_removed_by_purge / candidate_train_size``; empty candidates report
+    zero. :func:`compute_overlap_fraction` reproduces it only when given the
+    same pre-purge candidate indices and purge horizon — indices returned by
+    ``cv.split()`` are already final. ``final_overlap_fraction`` repeats the
+    measure on final training rows and should be zero for a clean splitter.
 
     For the built-in splitters, ``temporal_leakage_free`` is structurally
     expected to be ``True``: purge removes overlaps and later stages only
     remove rows. The column is primarily a regression guard for custom
     :class:`BaseTemporalSplitter` subclasses whose finalization hook could
     accidentally reintroduce indices; it is not an independent validation
-    algorithm. Leakage and group overlap are reported as values instead of
-    raising; malformed inputs and splitter configuration errors still raise.
+    algorithm. For an empty final train set it is vacuously ``True``; inspect
+    ``train_nonempty`` before treating a fold as usable. Leakage and group
+    overlap are reported as values instead of raising; malformed inputs and
+    splitter configuration errors still raise.
+
+    Time columns are outer envelopes, not continuous windows. CPCV and
+    interleaved group folds can contain several disjoint positional blocks, so
+    train and test envelopes may overlap even when
+    ``final_overlap_fraction == 0``. ``train_block_count`` and
+    ``test_block_count`` expose that layout; the counts refer to contiguous
+    runs of positional indices.
+
+    The audit requires the inherited :meth:`BaseTemporalSplitter.split`
+    implementation. A subclass overriding ``split()`` is rejected because its
+    returned folds may diverge from the auditable candidate → purge → embargo
+    → finalization pipeline. Custom subclasses should use
+    ``_iter_test_indices``, ``_candidate_train_idx``, and
+    ``_finalize_train_idx`` instead.
 
     Args:
         cv: A :class:`BaseTemporalSplitter` instance with times already bound.
@@ -145,14 +184,15 @@ def audit_splitter(
 
     Returns:
         A DataFrame with one row per fold. Columns contain the zero-based fold
-        number; candidate, final, and test sizes; rows removed at the purge,
-        embargo, and splitter-specific window stages; indices added by custom
-        finalization; candidate and final temporal-overlap fractions; final
-        train and test label-horizon bounds; and ``groups_disjoint`` (``None``
-        when no groups are bound).
+        number; candidate, final, and test sizes; train non-emptiness; rows
+        removed at purge, embargo, and finalization; indices added by custom
+        finalization; candidate and final temporal-overlap fractions;
+        contiguous block counts; outer train/test time envelopes; and
+        ``groups_disjoint`` (``None`` when no groups are bound).
 
     Raises:
-        TypeError: if ``cv`` is not a :class:`BaseTemporalSplitter`.
+        TypeError: if ``cv`` is not a :class:`BaseTemporalSplitter` or its
+            class overrides :meth:`BaseTemporalSplitter.split`.
         ValueError: if ``X`` has the wrong length or the splitter cannot form
             its configured folds.
 
@@ -176,6 +216,12 @@ def audit_splitter(
         raise TypeError(
             f"cv must be a purgedcv BaseTemporalSplitter instance, got {type(cv).__name__}."
         )
+    if type(cv).split is not BaseTemporalSplitter.split:
+        raise TypeError(
+            "audit_splitter cannot audit a subclass that overrides split(); "
+            "customize _iter_test_indices, _candidate_train_idx, or "
+            "_finalize_train_idx while inheriting BaseTemporalSplitter.split."
+        )
 
     rows: list[dict[str, object]] = []
     prediction_times = cv._prediction_times
@@ -196,16 +242,18 @@ def audit_splitter(
             evaluation_times,
             cv.purge_horizon,
         )
-        train_start, train_end = _time_bounds(
+        train_envelope_start, train_envelope_end = _time_envelope(
             stages.final_train_idx, prediction_times, evaluation_times
         )
-        test_start, test_end = _time_bounds(stages.test_idx, prediction_times, evaluation_times)
+        test_envelope_start, test_envelope_end = _time_envelope(
+            stages.test_idx, prediction_times, evaluation_times
+        )
         groups_disjoint: bool | None = None
         if groups is not None:
-            groups_disjoint = not _group_overlap_from_arrays(
-                stages.final_train_idx, stages.test_idx, groups
-            )
-        removed_by_window, added_by_finalization = _index_membership_changes(
+            train_group_values = groups[stages.final_train_idx]
+            test_group_values = groups[stages.test_idx]
+            groups_disjoint = not _group_overlap_from_values(train_group_values, test_group_values)
+        removed_by_finalization, added_by_finalization = _index_membership_changes(
             stages.embargoed_train_idx, stages.final_train_idx
         )
 
@@ -215,19 +263,22 @@ def audit_splitter(
                 "candidate_train_size": len(stages.candidate_train_idx),
                 "final_train_size": len(stages.final_train_idx),
                 "test_size": len(stages.test_idx),
+                "train_nonempty": len(stages.final_train_idx) > 0,
                 "rows_removed_by_purge": len(stages.candidate_train_idx)
                 - len(stages.purged_train_idx),
                 "rows_removed_by_embargo": len(stages.purged_train_idx)
                 - len(stages.embargoed_train_idx),
-                "rows_removed_by_window": removed_by_window,
+                "rows_removed_by_finalization": removed_by_finalization,
                 "rows_added_by_finalization": added_by_finalization,
                 "candidate_overlap_fraction": candidate_overlap,
                 "final_overlap_fraction": final_overlap,
                 "temporal_leakage_free": final_overlap == 0.0,
-                "train_start_time": train_start,
-                "train_end_time": train_end,
-                "test_start_time": test_start,
-                "test_end_time": test_end,
+                "train_block_count": _contiguous_block_count(stages.final_train_idx),
+                "test_block_count": _contiguous_block_count(stages.test_idx),
+                "train_time_envelope_start": train_envelope_start,
+                "train_time_envelope_end": train_envelope_end,
+                "test_time_envelope_start": test_envelope_start,
+                "test_time_envelope_end": test_envelope_end,
                 "groups_disjoint": groups_disjoint,
             }
         )
@@ -401,7 +452,7 @@ def assert_groups_disjoint(
     test_group_values = groups[test_idx]
     if pd.isna(train_group_values).any() or pd.isna(test_group_values).any():
         raise ValueError("groups contains missing values in train or test indices.")
-    overlap = _group_overlap_from_arrays(train_idx, test_idx, groups)
+    overlap = _group_overlap_from_values(train_group_values, test_group_values)
     if overlap:
         offender = next(iter(sorted(overlap, key=str)))
         raise GroupLeakageError(
@@ -427,9 +478,10 @@ def compute_overlap_fraction(
     validation errors. Useful for logging splitter health metrics or for
     debugging a splitter that produces unexpected behavior.
 
-    ``purge_horizon`` defaults to no padding. To compare this value with an
-    ``audit_splitter`` report's ``candidate_overlap_fraction``, pass the
-    audited splitter's configured ``purge_horizon`` explicitly.
+    ``purge_horizon`` defaults to no padding. Reproducing an
+    ``audit_splitter`` report's ``candidate_overlap_fraction`` also requires
+    its pre-purge candidate indices; the indices yielded by ``cv.split()`` are
+    final and instead reproduce ``final_overlap_fraction``.
 
     Examples:
         >>> import numpy as np

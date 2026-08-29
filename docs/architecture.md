@@ -74,7 +74,10 @@ Three small invariants keep the surface honest.
    `purgedcv`, so they can audit sklearn, tscv, or hand-rolled splits equally.
    `audit_splitter` deliberately targets `BaseTemporalSplitter`: it consumes
    the same candidate → purge → embargo → final stages as `split()` so its
-   per-stage counts are observed rather than inferred.
+   per-stage counts are observed rather than inferred. Subclasses must express
+   fold customization through the stage hooks; overriding `split()` is
+   rejected because the report could no longer guarantee it audits the folds
+   users actually receive.
 
 ## Module layout
 
