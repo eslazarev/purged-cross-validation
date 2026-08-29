@@ -118,6 +118,8 @@ print(report[[
     "final_train_size",
     "rows_removed_by_purge",
     "rows_removed_by_embargo",
+    "rows_removed_by_window",
+    "rows_added_by_finalization",
     "candidate_overlap_fraction",
     "final_overlap_fraction",
 ]])
@@ -130,9 +132,11 @@ using the splitter's configured `purge_horizon`; reproduce the same number with
 `temporal_leakage_free` is therefore expected to be true; it mainly guards
 custom splitter finalization hooks from accidentally reintroducing indices.
 For sliding walk-forward splits, `rows_removed_by_window` keeps window
-truncation distinct from purge and embargo. The report records leakage and
-group overlap as values instead of raising, while malformed inputs still fail
-validation normally.
+truncation distinct from purge and embargo. Built-in splitters never add rows
+during finalization, so `rows_added_by_finalization` is zero; a positive value
+flags a custom finalizer that introduced or swapped indices. The report records
+leakage and group overlap as values instead of raising, while malformed inputs
+still fail validation normally.
 
 ### Sample weights
 

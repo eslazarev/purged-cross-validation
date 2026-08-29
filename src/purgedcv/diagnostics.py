@@ -47,6 +47,7 @@ _AUDIT_COLUMNS = (
     "rows_removed_by_purge",
     "rows_removed_by_embargo",
     "rows_removed_by_window",
+    "rows_added_by_finalization",
     "candidate_overlap_fraction",
     "final_overlap_fraction",
     "temporal_leakage_free",
@@ -98,6 +99,16 @@ def _group_overlap_from_arrays(
     return train_groups & test_groups
 
 
+def _index_membership_changes(
+    before: NDArrayAny,
+    after: NDArrayAny,
+) -> tuple[int, int]:
+    """Count indices removed from and added to a finalization stage."""
+    before_set = set(before.tolist())
+    after_set = set(after.tolist())
+    return len(before_set - after_set), len(after_set - before_set)
+
+
 def audit_splitter(
     cv: BaseTemporalSplitter,
     X: NDArrayAny | pd.DataFrame,  # noqa: N803
@@ -108,7 +119,9 @@ def audit_splitter(
     as :meth:`BaseTemporalSplitter.split`; purge and embargo counts therefore
     come from the actual intermediate index arrays rather than being inferred
     from the final split. Sliding walk-forward truncation is reported
-    separately as ``rows_removed_by_window``.
+    separately as ``rows_removed_by_window``. If a custom finalization hook
+    introduces indices, ``rows_added_by_finalization`` reports them rather
+    than allowing the removal count to become negative or conceal a swap.
 
     ``candidate_overlap_fraction`` is the fraction of candidate training rows
     whose label horizons overlap the test horizons after applying the
@@ -133,9 +146,10 @@ def audit_splitter(
     Returns:
         A DataFrame with one row per fold. Columns contain the zero-based fold
         number; candidate, final, and test sizes; rows removed at the purge,
-        embargo, and splitter-specific window stages; candidate and final
-        temporal-overlap fractions; final train and test label-horizon bounds;
-        and ``groups_disjoint`` (``None`` when no groups are bound).
+        embargo, and splitter-specific window stages; indices added by custom
+        finalization; candidate and final temporal-overlap fractions; final
+        train and test label-horizon bounds; and ``groups_disjoint`` (``None``
+        when no groups are bound).
 
     Raises:
         TypeError: if ``cv`` is not a :class:`BaseTemporalSplitter`.
@@ -191,6 +205,9 @@ def audit_splitter(
             groups_disjoint = not _group_overlap_from_arrays(
                 stages.final_train_idx, stages.test_idx, groups
             )
+        removed_by_window, added_by_finalization = _index_membership_changes(
+            stages.embargoed_train_idx, stages.final_train_idx
+        )
 
         rows.append(
             {
@@ -202,8 +219,8 @@ def audit_splitter(
                 - len(stages.purged_train_idx),
                 "rows_removed_by_embargo": len(stages.purged_train_idx)
                 - len(stages.embargoed_train_idx),
-                "rows_removed_by_window": len(stages.embargoed_train_idx)
-                - len(stages.final_train_idx),
+                "rows_removed_by_window": removed_by_window,
+                "rows_added_by_finalization": added_by_finalization,
                 "candidate_overlap_fraction": candidate_overlap,
                 "final_overlap_fraction": final_overlap,
                 "temporal_leakage_free": final_overlap == 0.0,

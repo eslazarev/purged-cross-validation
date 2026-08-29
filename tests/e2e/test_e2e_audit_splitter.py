@@ -67,6 +67,7 @@ def test_user_story_sliding_window_is_not_mislabeled_as_leakage_control() -> Non
     assert report["rows_removed_by_purge"].tolist() == [1, 1, 1]
     assert report["rows_removed_by_embargo"].tolist() == [0, 0, 0]
     assert report["rows_removed_by_window"].tolist() == [8, 10, 12]
+    assert report["rows_added_by_finalization"].tolist() == [0, 0, 0]
 
 
 @pytest.mark.e2e
@@ -89,6 +90,7 @@ def test_subprocess_fresh_interpreter_can_audit_splitter() -> None:
         assert report.shape[0] == 3
         assert "candidate_overlap_fraction" in report.columns
         assert "final_overlap_fraction" in report.columns
+        assert "rows_added_by_finalization" in report.columns
         assert report["final_overlap_fraction"].eq(0.0).all()
         print("OK")
         """)

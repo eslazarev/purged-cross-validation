@@ -25,6 +25,7 @@ EXPECTED_COLUMNS = [
     "rows_removed_by_purge",
     "rows_removed_by_embargo",
     "rows_removed_by_window",
+    "rows_added_by_finalization",
     "candidate_overlap_fraction",
     "final_overlap_fraction",
     "temporal_leakage_free",
@@ -60,6 +61,7 @@ def test_audit_reports_real_purge_and_embargo_stages() -> None:
     assert first["rows_removed_by_purge"] == 1
     assert first["rows_removed_by_embargo"] == 1
     assert first["rows_removed_by_window"] == 0
+    assert first["rows_added_by_finalization"] == 0
     assert first["final_train_size"] == 13
     assert first["candidate_overlap_fraction"] == pytest.approx(1 / 15)
     assert first["final_overlap_fraction"] == 0.0
@@ -75,6 +77,7 @@ def test_audit_reports_real_purge_and_embargo_stages() -> None:
         + report["rows_removed_by_purge"]
         + report["rows_removed_by_embargo"]
         + report["rows_removed_by_window"]
+        - report["rows_added_by_finalization"]
     )
     pd.testing.assert_series_equal(
         accounted,
@@ -122,6 +125,7 @@ def test_sliding_window_removals_are_reported_separately() -> None:
     assert report["rows_removed_by_purge"].tolist() == [1, 1, 1]
     assert report["rows_removed_by_embargo"].tolist() == [0, 0, 0]
     assert report["rows_removed_by_window"].tolist() == [8, 10, 12]
+    assert report["rows_added_by_finalization"].tolist() == [0, 0, 0]
 
 
 def test_group_disjointness_is_reported_when_groups_are_bound() -> None:
@@ -161,6 +165,15 @@ class _ReintroducingSplitter(_GroupLeakingSplitter):
         return np.append(train_idx, test_idx[0])
 
 
+class _ReplacingSplitter(_GroupLeakingSplitter):
+    def _finalize_train_idx(
+        self,
+        train_idx: NDArrayAny,
+        test_idx: NDArrayAny,
+    ) -> NDArrayAny:
+        return np.append(train_idx[1:], test_idx[0])
+
+
 def test_group_leakage_is_reported_without_raising() -> None:
     pred, evalu = _times(n=6)
     cv = _GroupLeakingSplitter(
@@ -187,6 +200,23 @@ def test_temporal_status_catches_custom_finalizer_reintroducing_test_row() -> No
     report = audit_splitter(cv, np.zeros((6, 1)))
 
     assert report.loc[0, "final_overlap_fraction"] != 0.0
+    assert not bool(report.loc[0, "temporal_leakage_free"])
+    assert report.loc[0, "rows_removed_by_window"] == 0
+    assert report.loc[0, "rows_added_by_finalization"] == 1
+
+
+def test_finalizer_replacement_reports_one_removal_and_one_addition() -> None:
+    pred, evalu = _times(n=6)
+    cv = _ReplacingSplitter(
+        prediction_times=pred,
+        evaluation_times=evalu,
+    )
+
+    report = audit_splitter(cv, np.zeros((6, 1)))
+
+    assert report.loc[0, "final_train_size"] == 5
+    assert report.loc[0, "rows_removed_by_window"] == 1
+    assert report.loc[0, "rows_added_by_finalization"] == 1
     assert not bool(report.loc[0, "temporal_leakage_free"])
 
 
