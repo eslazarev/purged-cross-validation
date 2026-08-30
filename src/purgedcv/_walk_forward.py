@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from typing import Literal
 
 import numpy as np
-import pandas as pd
 
 from purgedcv._base import BaseTemporalSplitter
 from purgedcv._time import HorizonLike
@@ -160,25 +158,16 @@ class WalkForwardSplit(BaseTemporalSplitter):
         test_start = int(test_idx.min())
         return np.arange(test_start, dtype=np.int64)
 
-    def split(
+    def _finalize_train_idx(
         self,
-        X: NDArrayAny | pd.DataFrame,  # noqa: N803
-        y: object = None,
-        groups: object = None,
-    ) -> Iterator[tuple[NDArrayAny, NDArrayAny]]:
-        """Yield ``(train_idx, test_idx)`` pairs for each walk-forward fold.
+        train_idx: NDArrayAny,
+        test_idx: NDArrayAny,
+    ) -> NDArrayAny:
+        """Trim the post-purge train set for sliding-window semantics.
 
-        The base class handles X length validation, purge, and embargo;
-        this override additionally trims each training set to the most
-        recent ``train_size`` rows when ``window="sliding"``. Training
-        indices are always strictly less than the minimum index of the
-        test fold (the defining walk-forward property).
-
-        The number of pairs yielded equals ``self.n_splits``. The ``y``
-        and ``groups`` arguments are accepted for sklearn protocol
-        compatibility but ignored.
+        ``test_idx`` is accepted as part of the shared finalization hook; the
+        walk-forward window depends only on the already ordered train rows.
         """
-        for train_idx, test_idx in super().split(X, y=y, groups=groups):
-            if self.window == "sliding" and self.train_size is not None:
-                train_idx = train_idx[-self.train_size :]
-            yield train_idx, test_idx
+        if self.window == "sliding" and self.train_size is not None:
+            return train_idx[-self.train_size :]
+        return train_idx

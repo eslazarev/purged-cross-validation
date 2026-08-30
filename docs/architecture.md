@@ -21,7 +21,7 @@ flowchart TB
         splitters["Splitters · sklearn protocol<br/>WalkForwardSplit (D5.1)<br/>PurgedKFold (D5.2)<br/>PurgedGroupKFold (D5.3)<br/>CombinatorialPurgedCV (D5.4)"]
         paths["reconstruct_paths /<br/>backtest_paths (D6)"]
         metrics["Statistical metrics (D7)<br/>probabilistic_sharpe_ratio<br/>deflated_sharpe_ratio<br/>min_track_record_length"]
-        diagnostics["Diagnostics (D8)<br/>compute_overlap_fraction<br/>assert_no_temporal_leakage<br/>assert_groups_disjoint<br/>assert_embargo_respected"]
+        diagnostics["Diagnostics (D8)<br/>audit_splitter<br/>compute_overlap_fraction<br/>assert_no_temporal_leakage<br/>assert_groups_disjoint<br/>assert_embargo_respected"]
     end
 
     subgraph internal["Internal kernel"]
@@ -43,6 +43,7 @@ flowchart TB
     paths --> metrics
 
     user -.audit any custom split.-> diagnostics
+    diagnostics -.audit purgedcv fold stages.-> base
     diagnostics --> intervals
     diagnostics --> time
 ```
@@ -67,12 +68,16 @@ Three small invariants keep the surface honest.
    single hand-tuned `gap` and still be correct — the user passes the
    actual horizon and the splitter does the right thing per row.
 
-3. **Diagnostics are independent.** `compute_overlap_fraction` and the
-   three `assert_*` functions accept positional indices, the same
-   timestamp series, and an optional purge horizon. They never assume
-   their input came from `purgedcv` — they audit any split (sklearn,
-   tscv, hand-rolled) the same way. The competitor benchmark on the
-   docs site uses them to score every library on equal terms.
+3. **Row-level diagnostics are independent; splitter audits share the real
+   pipeline.** `compute_overlap_fraction` and the three `assert_*` functions
+   accept positional indices and never assume their input came from
+   `purgedcv`, so they can audit sklearn, tscv, or hand-rolled splits equally.
+   `audit_splitter` deliberately targets `BaseTemporalSplitter`: it consumes
+   the same candidate → purge → embargo → final stages as `split()` so its
+   per-stage counts are observed rather than inferred. Subclasses must express
+   fold customization through the stage hooks; overriding `split()` is
+   rejected because the report could no longer guarantee it audits the folds
+   users actually receive.
 
 ## Module layout
 
@@ -91,7 +96,7 @@ src/purgedcv/
 ├── _metrics.py          probabilistic_sharpe_ratio, deflated_sharpe_ratio,
 │                        min_track_record_length
 ├── _typing.py           NDArrayAny, HorizonLike
-├── diagnostics.py       public audit functions
+├── diagnostics.py       public assertions and per-fold audit report
 ├── exceptions.py        TemporalCVError tree
 └── py.typed             PEP 561 marker — the package is fully typed
 ```

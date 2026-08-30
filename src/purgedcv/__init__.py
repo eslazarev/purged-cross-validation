@@ -20,6 +20,7 @@ from purgedcv._purged_kfold import PurgedGroupKFold, PurgedKFold
 from purgedcv._time import horizons_overlap, parse_horizon, validate_times
 from purgedcv._typing import ArrayLike1D, TimesLike
 from purgedcv._walk_forward import WalkForwardSplit
+from purgedcv.diagnostics import audit_splitter
 from purgedcv.exceptions import (
     EmbargoViolationError,
     GroupLeakageError,
@@ -44,6 +45,7 @@ __all__ = [
     "WalkForwardSplit",
     "__version__",
     "apply_embargo",
+    "audit_splitter",
     "default_backtest_metrics",
     "deflated_sharpe_ratio",
     "deflated_sharpe_ratio_full",
