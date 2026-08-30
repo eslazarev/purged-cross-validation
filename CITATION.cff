@@ -7,8 +7,8 @@ authors:
     family-names: Lazarev
     email: elazarev@gmail.com
     orcid: "https://orcid.org/0009-0000-1398-7842"
-version: 0.1.4
-date-released: "2026-08-22"
+version: 0.1.5
+date-released: "2026-08-30"
 repository-code: "https://github.com/eslazarev/purged-cross-validation"
 url: "https://github.com/eslazarev/purged-cross-validation"
 license: MIT
