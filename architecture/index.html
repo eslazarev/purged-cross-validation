@@ -627,7 +627,7 @@ project's CHANGELOG.</p>
         splitters["Splitters · sklearn protocol&lt;br/&gt;WalkForwardSplit (D5.1)&lt;br/&gt;PurgedKFold (D5.2)&lt;br/&gt;PurgedGroupKFold (D5.3)&lt;br/&gt;CombinatorialPurgedCV (D5.4)"]
         paths["reconstruct_paths /&lt;br/&gt;backtest_paths (D6)"]
         metrics["Statistical metrics (D7)&lt;br/&gt;probabilistic_sharpe_ratio&lt;br/&gt;deflated_sharpe_ratio&lt;br/&gt;min_track_record_length"]
-        diagnostics["Diagnostics (D8)&lt;br/&gt;compute_overlap_fraction&lt;br/&gt;assert_no_temporal_leakage&lt;br/&gt;assert_groups_disjoint&lt;br/&gt;assert_embargo_respected"]
+        diagnostics["Diagnostics (D8)&lt;br/&gt;audit_splitter&lt;br/&gt;compute_overlap_fraction&lt;br/&gt;assert_no_temporal_leakage&lt;br/&gt;assert_groups_disjoint&lt;br/&gt;assert_embargo_respected"]
     end
 
     subgraph internal["Internal kernel"]
@@ -649,6 +649,7 @@ project's CHANGELOG.</p>
     paths --&gt; metrics
 
     user -.audit any custom split.-&gt; diagnostics
+    diagnostics -.audit purgedcv fold stages.-&gt; base
     diagnostics --&gt; intervals
     diagnostics --&gt; time</code></pre>
 <h2 id="design-rules">Design rules<a class="headerlink" href="#design-rules" title="Permanent link">&para;</a></h2>
@@ -673,12 +674,16 @@ project's CHANGELOG.</p>
    actual horizon and the splitter does the right thing per row.</p>
 </li>
 <li>
-<p><strong>Diagnostics are independent.</strong> <code>compute_overlap_fraction</code> and the
-   three <code>assert_*</code> functions accept positional indices, the same
-   timestamp series, and an optional purge horizon. They never assume
-   their input came from <code>purgedcv</code> — they audit any split (sklearn,
-   tscv, hand-rolled) the same way. The competitor benchmark on the
-   docs site uses them to score every library on equal terms.</p>
+<p><strong>Row-level diagnostics are independent; splitter audits share the real
+   pipeline.</strong> <code>compute_overlap_fraction</code> and the three <code>assert_*</code> functions
+   accept positional indices and never assume their input came from
+   <code>purgedcv</code>, so they can audit sklearn, tscv, or hand-rolled splits equally.
+   <code>audit_splitter</code> deliberately targets <code>BaseTemporalSplitter</code>: it consumes
+   the same candidate → purge → embargo → final stages as <code>split()</code> so its
+   per-stage counts are observed rather than inferred. Subclasses must express
+   fold customization through the stage hooks; overriding <code>split()</code> is
+   rejected because the report could no longer guarantee it audits the folds
+   users actually receive.</p>
 </li>
 </ol>
 <h2 id="module-layout">Module layout<a class="headerlink" href="#module-layout" title="Permanent link">&para;</a></h2>
@@ -696,7 +701,7 @@ project's CHANGELOG.</p>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>├── _metrics.py          probabilistic_sharpe_ratio, deflated_sharpe_ratio,
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│                        min_track_record_length
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>├── _typing.py           NDArrayAny, HorizonLike
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>├── diagnostics.py       public audit functions
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>├── diagnostics.py       public assertions and per-fold audit report
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>├── exceptions.py        TemporalCVError tree
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>└── py.typed             PEP 561 marker — the package is fully typed
 </code></pre></div>

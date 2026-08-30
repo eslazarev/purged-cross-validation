@@ -505,23 +505,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="WalkForwardSplit">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#purgedcv.WalkForwardSplit.split" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        split
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -904,6 +887,17 @@
     <span class="md-ellipsis">
       
         Diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#purgedcv.audit_splitter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        audit_splitter
       
     </span>
   </a>
@@ -1254,23 +1248,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="WalkForwardSplit">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#purgedcv.WalkForwardSplit.split" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        split
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -1660,6 +1637,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#purgedcv.audit_splitter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        audit_splitter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#purgedcv.diagnostics.compute_overlap_fraction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1861,9 +1849,9 @@ splitter to a specific dataset's timestamps, which is intentional:
 a splitter for one dataset is rarely meaningful for another.</p>
 <p>.. note::
    The subclassing interface (<code>_iter_test_indices</code>,
-   <code>_candidate_train_idx</code>) is an implementation detail, not part of the
-   maintained <code>0.1.x</code> public contract. Subclasses may need adjustments
-   before v1.0.</p>
+   <code>_candidate_train_idx</code>, <code>_finalize_train_idx</code>) is an implementation
+   detail, not part of the maintained <code>0.1.x</code> public contract.
+   Subclasses may need adjustments before v1.0.</p>
 
 
 
@@ -1929,7 +1917,7 @@ sklearn protocol compatibility but ignored — group information must
 be bound at construction via the <code>groups</code> argument of <code>__init__</code>.</p>
 <p>When groups were bound at construction,
 :func:<code>~purgedcv.diagnostics.assert_groups_disjoint</code> is called on
-every fold after purge and embargo; a
+every fold after purge, embargo, and splitter-specific finalization; a
 :class:<code>~purgedcv.exceptions.GroupLeakageError</code> is raised if any
 group identifier appears in both train and test of the same fold.</p>
 
@@ -2271,34 +2259,6 @@ if <code>train_size</code> is <code>None</code> with <code>window='sliding'</cod
 
 
 
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="purgedcv.WalkForwardSplit.split" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">split</span>
-
-
-<a href="#purgedcv.WalkForwardSplit.split" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">split</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">NDArrayAny</span> <span class="o">|</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">NDArrayAny</span><span class="p">]]</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Yield <code>(train_idx, test_idx)</code> pairs for each walk-forward fold.</p>
-<p>The base class handles X length validation, purge, and embargo;
-this override additionally trims each training set to the most
-recent <code>train_size</code> rows when <code>window="sliding"</code>. Training
-indices are always strictly less than the minimum index of the
-test fold (the defining walk-forward property).</p>
-<p>The number of pairs yielded equals <code>self.n_splits</code>. The <code>y</code>
-and <code>groups</code> arguments are accepted for sklearn protocol
-compatibility but ignored.</p>
-
-
-    </div>
-
-</div>
 
 
 
@@ -6513,22 +6473,257 @@ per-period Sharpe in each trial (the same convention as the
 <div class="doc doc-object doc-function">
 
 
+<h2 id="purgedcv.audit_splitter" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">purgedcv.audit_splitter</span>
+
+
+<a href="#purgedcv.audit_splitter" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">audit_splitter</span><span class="p">(</span><span class="n">cv</span><span class="p">:</span> <span class="n">BaseTemporalSplitter</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">NDArrayAny</span> <span class="o">|</span> <span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Return a non-raising, per-fold report for a temporal splitter.</p>
+<p>The report consumes the same candidate → purge → embargo → final pipeline
+as :meth:<code>BaseTemporalSplitter.split</code>; purge and embargo counts therefore
+come from the actual intermediate index arrays rather than being inferred
+from the final split. Sliding walk-forward truncation is implemented by
+the finalization stage and therefore appears in
+<code>rows_removed_by_finalization</code>. If a custom finalization hook introduces
+indices, <code>rows_added_by_finalization</code> reports them separately.</p>
+<p><code>candidate_overlap_fraction</code> is the fraction of candidate training rows
+whose label horizons overlap the test horizons after applying the
+splitter's <code>purge_horizon</code> padding. For non-empty candidates it equals
+<code>rows_removed_by_purge / candidate_train_size</code>; empty candidates report
+zero. :func:<code>compute_overlap_fraction</code> reproduces it only when given the
+same pre-purge candidate indices and purge horizon — indices returned by
+<code>cv.split()</code> are already final. <code>final_overlap_fraction</code> repeats the
+measure on final training rows and should be zero for a clean splitter.</p>
+<p>For the built-in splitters, <code>temporal_leakage_free</code> is structurally
+expected to be <code>True</code>: purge removes overlaps and later stages only
+remove rows. The column is primarily a regression guard for custom
+:class:<code>BaseTemporalSplitter</code> subclasses whose finalization hook could
+accidentally reintroduce indices; it is not an independent validation
+algorithm. For an empty final train set it is vacuously <code>True</code>; inspect
+<code>train_nonempty</code> before treating a fold as usable. Leakage and group
+overlap are reported as values instead of raising; malformed inputs and
+splitter configuration errors still raise.</p>
+<p>Time columns are outer envelopes, not continuous windows. CPCV and
+interleaved group folds can contain several disjoint positional blocks, so
+train and test envelopes may overlap even when
+<code>final_overlap_fraction == 0</code>. <code>train_block_count</code> and
+<code>test_block_count</code> expose that layout; the counts refer to contiguous
+runs of positional indices.</p>
+<p>The audit requires the inherited :meth:<code>BaseTemporalSplitter.split</code>
+implementation. A subclass overriding <code>split()</code> is rejected because its
+returned folds may diverge from the auditable candidate → purge → embargo
+→ finalization pipeline. Custom subclasses should use
+<code>_iter_test_indices</code>, <code>_candidate_train_idx</code>, and
+<code>_finalize_train_idx</code> instead.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>cv</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.BaseTemporalSplitter (purgedcv._base.BaseTemporalSplitter)" href="#purgedcv.BaseTemporalSplitter">BaseTemporalSplitter</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A :class:<code>BaseTemporalSplitter</code> instance with times already bound.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>X</code>
+            </td>
+            <td>
+                  <code><span title="purgedcv._typing.NDArrayAny">NDArrayAny</span> | <span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Feature matrix or other sized sample container. Its length must
+match the times bound to <code>cv</code>; feature values are not inspected.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A DataFrame with one row per fold. Columns contain the zero-based fold</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>number; candidate, final, and test sizes; train non-emptiness; rows</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>removed at purge, embargo, and finalization; indices added by custom</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>finalization; candidate and final temporal-overlap fractions;</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>contiguous block counts; outer train/test time envelopes; and</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="pandas.DataFrame">DataFrame</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>groups_disjoint</code> (<code>None</code> when no groups are bound).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>cv</code> is not a :class:<code>BaseTemporalSplitter</code> or its
+class overrides :meth:<code>BaseTemporalSplitter.split</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>X</code> has the wrong length or the splitter cannot form
+its configured folds.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">purgedcv</span><span class="w"> </span><span class="kn">import</span> <span class="n">PurgedKFold</span><span class="p">,</span> <span class="n">audit_splitter</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"D"</span><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">evalu</span> <span class="o">=</span> <span class="n">pred</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cv</span> <span class="o">=</span> <span class="n">PurgedKFold</span><span class="p">(</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">... </span>    <span class="mi">4</span><span class="p">,</span> <span class="n">prediction_times</span><span class="o">=</span><span class="n">pred</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="o">=</span><span class="n">evalu</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gp">... </span>    <span class="n">purge_horizon</span><span class="o">=</span><span class="s2">"1D"</span><span class="p">,</span> <span class="n">embargo_observations</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">... </span><span class="p">)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">audit_splitter</span><span class="p">(</span><span class="n">cv</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="go">4</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">report</span><span class="p">[</span><span class="s2">"final_overlap_fraction"</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="go">True</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h2 id="purgedcv.diagnostics.compute_overlap_fraction" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">purgedcv.diagnostics.compute_overlap_fraction</span>
 
 
 <a href="#purgedcv.diagnostics.compute_overlap_fraction" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_overlap_fraction</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">compute_overlap_fraction</span><span class="p">(</span><span class="n">train_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">:</span> <span class="n">NDArrayAny</span><span class="p">,</span> <span class="n">prediction_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="p">:</span> <span class="n">TimesLike</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">purge_horizon</span><span class="p">:</span> <span class="n">HorizonLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
 </code></pre></div>
 
     <div class="doc doc-contents first">
 
         <p>Return the fraction of training rows whose half-open label horizon
-overlaps any test horizon.</p>
-<p>Unlike :func:<code>assert_no_temporal_leakage</code>, this never raises — it
-returns <code>0.0</code> for clean splits and <code>1.0</code> when every training row
-leaks. Useful for logging splitter health metrics or for debugging
-a splitter that produces unexpected behavior.</p>
+overlaps any test horizon, optionally padded by <code>purge_horizon</code>.</p>
+<p>Unlike :func:<code>assert_no_temporal_leakage</code>, this does not raise when it
+finds leakage: it returns <code>0.0</code> for clean splits and <code>1.0</code> when every
+training row leaks. Malformed indices, times, and horizons still raise
+validation errors. Useful for logging splitter health metrics or for
+debugging a splitter that produces unexpected behavior.</p>
+<p><code>purge_horizon</code> defaults to no padding. Reproducing an
+<code>audit_splitter</code> report's <code>candidate_overlap_fraction</code> also requires
+its pre-purge candidate indices; the indices yielded by <code>cv.split()</code> are
+final and instead reproduce <code>final_overlap_fraction</code>.</p>
 
 
 <p><span class="doc-section-title">Examples:</span></p>
