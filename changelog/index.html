@@ -1309,6 +1309,10 @@ Plan is listed under the published version it shipped in.</p>
 <h2 id="unreleased"><a href="https://github.com/eslazarev/purged-cross-validation/compare/v0.1.3...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
+<li>Public <code>PBOResult</code> and <code>DSRDiagnostics</code> result dataclasses, plus the
+  <code>HorizonLike</code>, <code>PathMetricFn</code>, and <code>PerformanceMetric</code> callback/input type
+  aliases, are now importable directly from <code>purgedcv</code> for typed downstream
+  code without reaching into private modules.</li>
 <li>New public <code>audit_splitter(cv, X)</code> diagnostic returns one DataFrame row per
   fold with candidate and final train sizes, purge/embargo/finalization
   removal counts, indices added during custom finalization,

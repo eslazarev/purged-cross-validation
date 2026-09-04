@@ -807,7 +807,7 @@ code.</p>
 (chronological train-on-the-past, expanding or rolling) follow the same
 constructor pattern.</p>
 <h3 id="audit-what-each-fold-removed">Audit what each fold removed<a class="headerlink" href="#audit-what-each-fold-removed" title="Permanent link">&para;</a></h3>
-<p>Before running a large model search, inspect the splitter itself with
+<p>Inspect the splitter first. Before a large model search, call
 <code>audit_splitter</code>. It uses the same internal fold pipeline as <code>split()</code> and
 reports each filtering stage rather than trying to reconstruct it from the
 final indices.</p>
