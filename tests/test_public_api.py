@@ -28,6 +28,7 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "BaseTemporalSplitter",
         "CombinatorialPurgedCV",
         "CombinatoriallySymmetricCV",
+        "DSRDiagnostics",
         "default_backtest_metrics",
         "deflated_sharpe_ratio",
         "deflated_sharpe_ratio_full",
@@ -35,10 +36,14 @@ EXPECTED_TOP_LEVEL: frozenset[str] = frozenset(
         "effective_n_trials",
         "EmbargoViolationError",
         "GroupLeakageError",
+        "HorizonLike",
         "horizons_overlap",
         "min_track_record_length",
         "minimum_backtest_length",
         "parse_horizon",
+        "PathMetricFn",
+        "PBOResult",
+        "PerformanceMetric",
         "path_metrics",
         "probabilistic_sharpe_ratio",
         "probability_of_backtest_overfitting",
@@ -78,6 +83,19 @@ class TestTopLevelAPI:
         """Every name in __all__ must resolve as an actual attribute."""
         for name in EXPECTED_TOP_LEVEL:
             assert hasattr(purgedcv, name), f"missing public attribute: {name}"
+
+    def test_result_types_and_callback_aliases_are_canonical(self) -> None:
+        """A7 exports point at the types used by the implementation."""
+        from purgedcv._metrics import DSRDiagnostics
+        from purgedcv._path_metrics import PathMetricFn
+        from purgedcv._pbo import PBOResult, PerformanceMetric
+        from purgedcv._time import HorizonLike
+
+        assert purgedcv.DSRDiagnostics is DSRDiagnostics
+        assert purgedcv.PBOResult is PBOResult
+        assert purgedcv.HorizonLike is HorizonLike
+        assert purgedcv.PathMetricFn is PathMetricFn
+        assert purgedcv.PerformanceMetric is PerformanceMetric
 
     def test_no_unexpected_public_names(self) -> None:
         """Catch accidental leakage of internal names at the package level."""

@@ -13,6 +13,8 @@ contract.
 
 ::: purgedcv.ArrayLike1D
 
+::: purgedcv.HorizonLike
+
 ## Splitters
 
 ::: purgedcv.BaseTemporalSplitter
@@ -28,6 +30,8 @@ contract.
 ::: purgedcv.CombinatoriallySymmetricCV
 
 ## Backtest paths
+
+::: purgedcv.PathMetricFn
 
 ::: purgedcv.reconstruct_paths
 
@@ -51,6 +55,8 @@ contract.
 
 ## Statistical metrics
 
+::: purgedcv.DSRDiagnostics
+
 ::: purgedcv.probabilistic_sharpe_ratio
 
 ::: purgedcv.deflated_sharpe_ratio
@@ -64,6 +70,10 @@ contract.
 ::: purgedcv.effective_n_trials
 
 ## Backtest overfitting
+
+::: purgedcv.PBOResult
+
+::: purgedcv.PerformanceMetric
 
 ::: purgedcv.probability_of_backtest_overfitting
 

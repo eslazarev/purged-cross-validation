@@ -103,7 +103,7 @@ constructor pattern.
 
 ### Audit what each fold removed
 
-Before running a large model search, inspect the splitter itself with
+Inspect the splitter first. Before a large model search, call
 `audit_splitter`. It uses the same internal fold pipeline as `split()` and
 reports each filtering stage rather than trying to reconstruct it from the
 final indices.

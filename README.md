@@ -35,10 +35,14 @@
 | `CombinatoriallySymmetricCV` | D5.4 | CSCV: symmetric IS/OOS folds, the PBO substrate |
 | `reconstruct_paths` | D6 | Assemble CPCV folds into backtest paths |
 | `path_metrics` | D6 | Per-path Sharpe / Calmar / drawdown / return table |
+| `PathMetricFn` | D6 | Callback type for custom per-path metrics |
 | `probabilistic_sharpe_ratio` | D7 | PSR: P(true SR > benchmark) |
 | `deflated_sharpe_ratio` | D7 | DSR: PSR corrected for multiple testing |
 | `deflated_sharpe_ratio_full` | D7 | DSR plus the intermediate deflation quantities |
+| `DSRDiagnostics` | D7 | Frozen result type returned by `deflated_sharpe_ratio_full` |
 | `probability_of_backtest_overfitting` | D7 | PBO via CSCV: how often in-sample selection overfits |
+| `PBOResult` | D7 | Frozen result type returned by PBO |
+| `PerformanceMetric` | D7 | Callback type for a custom PBO selection metric |
 | `min_track_record_length` | D7 | Minimum observations to establish SR |
 | `minimum_backtest_length` | D7 | MinBTL: backtest years below which a Sharpe is selection luck |
 | `effective_n_trials` | D7 | Independent-trial count for a correlated search, for DSR |

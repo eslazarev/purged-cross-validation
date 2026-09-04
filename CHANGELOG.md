@@ -11,6 +11,10 @@ Plan is listed under the published version it shipped in.
 
 ### Added
 
+- Public `PBOResult` and `DSRDiagnostics` result dataclasses, plus the
+  `HorizonLike`, `PathMetricFn`, and `PerformanceMetric` callback/input type
+  aliases, are now importable directly from `purgedcv` for typed downstream
+  code without reaching into private modules.
 - New public `audit_splitter(cv, X)` diagnostic returns one DataFrame row per
   fold with candidate and final train sizes, purge/embargo/finalization
   removal counts, indices added during custom finalization,

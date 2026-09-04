@@ -92,10 +92,10 @@ src/purgedcv/
 ├── _purge.py            purge
 ├── _embargo.py          apply_embargo
 ├── _intervals.py        half-open / closed interval merges
-├── _time.py             parse_horizon, validate_times, horizons_overlap
+├── _time.py             HorizonLike, parse_horizon, validate_times, horizons_overlap
 ├── _metrics.py          probabilistic_sharpe_ratio, deflated_sharpe_ratio,
 │                        min_track_record_length
-├── _typing.py           NDArrayAny, HorizonLike
+├── _typing.py           ArrayLike1D, NDArrayAny, TimesLike
 ├── diagnostics.py       public assertions and per-fold audit report
 ├── exceptions.py        TemporalCVError tree
 └── py.typed             PEP 561 marker — the package is fully typed

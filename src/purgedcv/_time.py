@@ -10,6 +10,7 @@ import pandas as pd
 
 from ._typing import NDArrayAny, SupportsToNumpy, TimesLike
 
+#: A purge or embargo duration accepted as text or a timedelta scalar.
 HorizonLike = str | pd.Timedelta | timedelta | np.timedelta64
 
 _AMBIGUOUS_OFFSETS = frozenset(
