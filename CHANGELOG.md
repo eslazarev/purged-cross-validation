@@ -11,6 +11,9 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
+- The API reference now displays descriptions for all five public input and
+  callback type aliases, and documents the shared splitter parameters under
+  `BaseTemporalSplitter`.
 - API docstrings now use MkDocs-compatible cross-references and a supported
   note block, so readers see working links instead of literal Sphinx tags.
 

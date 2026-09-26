@@ -60,6 +60,48 @@ class BaseTemporalSplitter(ABC):
         embargo_fraction: float | None = None,
         groups: ArrayLike1D | None = None,
     ) -> None:
+        """Bind times and shared purge, embargo, and group settings.
+
+        Supply at most one embargo mode, even when its value is zero. With
+        all three modes left as ``None``, no embargo is applied. Purging
+        still removes training labels that overlap test labels.
+
+        Args:
+            prediction_times: Prediction times for all samples in positional row order.
+                Must be 1-D, non-missing, and monotonically non-decreasing;
+                duplicate times are allowed. Its length must match the data
+                passed to ``split()``. See [`TimesLike`][purgedcv.TimesLike]
+                for accepted containers.
+            evaluation_times: End of each sample's label horizon. Must have
+                the same length and temporal dtype family (datetime or
+                timedelta) as ``prediction_times``, with no missing values.
+                Each value must be at or after its prediction time. Labels
+                occupy half-open intervals ``[prediction_time, evaluation_time)``.
+            purge_horizon: Non-negative duration padding both ends of each
+                test label horizon before checking training labels for overlap.
+                ``None`` means zero padding. Zero padding does not disable
+                label-overlap purging. Durations are parsed by
+                [`parse_horizon`][purgedcv.parse_horizon].
+            embargo: Post-test wall-clock duration. When positive, removes
+                training rows whose prediction times fall in any closed interval
+                ``[test_evaluation_time, test_evaluation_time + embargo]``.
+                Must be non-negative; zero removes no rows.
+            embargo_observations: Number of row positions immediately after each
+                contiguous test block to exclude from training. Must be a
+                non-negative integer; zero removes no rows. Counts positions
+                in the full dataset, not the rows remaining after purge.
+            embargo_fraction: Fraction of the full dataset length used to compute
+                ``floor(n_samples * embargo_fraction)`` embargoed row positions
+                after each contiguous test block. Must be finite and in
+                ``[0, 1]``. A count that rounds to zero removes no rows.
+            groups: Optional group labels in positional row order, with the same
+                length as the times and no missing values. When provided, each
+                final train/test pair must have disjoint group labels or
+                [`GroupLeakageError`][purgedcv.GroupLeakageError] is raised.
+                This argument enables validation; the concrete splitter decides
+                how test folds are formed. The ``groups`` argument passed later
+                to ``split()`` is ignored.
+        """
         pred = _coerce_1d(prediction_times, name="prediction_times")
         evalu = _coerce_1d(evaluation_times, name="evaluation_times")
         validate_times(pred, evalu, require_monotonic=True)

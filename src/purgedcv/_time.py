@@ -10,8 +10,16 @@ import pandas as pd
 
 from ._typing import NDArrayAny, SupportsToNumpy, TimesLike
 
-#: A purge or embargo duration accepted as text or a timedelta scalar.
 HorizonLike = str | pd.Timedelta | timedelta | np.timedelta64
+"""A purge or embargo duration accepted as text or a timedelta scalar.
+
+Use a fixed-duration string such as ``"2D"``, ``"6h"``, or ``"30min"``,
+a pandas ``Timedelta``, a Python ``datetime.timedelta``, or a NumPy
+``timedelta64``. [`parse_horizon`][purgedcv.parse_horizon] rejects negative
+or missing durations and ambiguous calendar offsets such as months or years.
+``None`` is not part of this alias; individual parameters may accept it
+with their own default semantics.
+"""
 
 _AMBIGUOUS_OFFSETS = frozenset(
     {"M", "Y", "MS", "YS", "BM", "BMS", "BY", "BYS", "ME", "YE", "Q", "QS", "QE"}

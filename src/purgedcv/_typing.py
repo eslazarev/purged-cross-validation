@@ -36,18 +36,30 @@ class SupportsToNumpy(Protocol):
     def to_numpy(self) -> NDArrayAny: ...
 
 
-#: A 1-D array-like of arbitrary elements: a numpy array, a Python sequence, or
-#: any object exposing ``.to_numpy()`` (pandas/polars). This is the container
-#: contract shared by time inputs and group labels; only the element semantics
-#: differ. Coerced to a 1-D numpy array by ``purgedcv._time._coerce_1d``.
-#:
-#: Unlike a bare ``Any``, this alias still rejects unrelated types (an ``int``,
-#: a mapping) statically, and it is a concrete ``Union`` object rather than a
-#: string, so ``typing.get_type_hints`` on the annotated public functions
-#: resolves without a ``NameError``.
 ArrayLike1D: TypeAlias = NDArrayAny | Sequence[Any] | SupportsToNumpy
+"""A 1-D array-like of arbitrary elements: a NumPy array, a Python sequence, or
+a sized object exposing ``.to_numpy()`` (including pandas and polars containers).
 
-#: Time inputs (``prediction_times`` / ``evaluation_times``). The same
-#: containers as [`ArrayLike1D`][purgedcv.ArrayLike1D]; ``validate_times`` additionally requires
-#: the coerced array to hold a ``datetime64`` or ``timedelta64`` dtype.
+This is the container contract shared by time inputs and group labels; only
+the element semantics differ. Public functions coerce inputs to 1-D NumPy
+arrays and validate the shape at runtime.
+
+Unlike a bare ``Any``, this alias rejects unrelated types (an ``int``, a
+mapping) statically. It is a concrete union rather than a string, so
+``typing.get_type_hints`` can resolve annotations on public functions.
+"""
+
 TimesLike: TypeAlias = ArrayLike1D
+"""Time inputs for ``prediction_times`` and ``evaluation_times``.
+
+Accepts the same containers as [`ArrayLike1D`][purgedcv.ArrayLike1D].
+After coercion, inputs must have a ``datetime64`` or ``timedelta64`` dtype,
+not strings or numeric timestamps. Examples include pandas ``DatetimeIndex``
+or ``Series``, NumPy temporal arrays, Python lists of datetime/timedelta
+objects, and polars temporal ``Series``. Timezone-aware pandas inputs are
+normalized to UTC.
+
+[`validate_times`][purgedcv.validate_times] checks lengths, temporal dtype
+families, missing values, and label ordering. Splitters also require
+non-decreasing prediction times.
+"""

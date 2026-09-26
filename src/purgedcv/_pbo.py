@@ -33,9 +33,16 @@ from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny, TimesLike
 
-#: A configuration-performance metric: maps a 1-D return slice to a scalar
-#: where larger is better. The default is `sharpe`.
 PerformanceMetric = Callable[[NDArrayAny], float]
+"""A configuration-performance metric: maps a 1-D return slice to a scalar
+where larger is better.
+
+Pass this callback as ``metric`` to
+[`probability_of_backtest_overfitting`][purgedcv.probability_of_backtest_overfitting]
+to score and rank candidate configurations. The default is a Sharpe ratio
+computed as mean return divided by sample standard deviation. Negate a loss
+if smaller values would otherwise mean better performance.
+"""
 
 
 def sharpe(returns: NDArrayAny) -> float:
