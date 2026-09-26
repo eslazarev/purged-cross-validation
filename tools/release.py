@@ -1,7 +1,9 @@
 """Plan publication and update version metadata without pushing or publishing.
 
 The workflow calls ``plan`` on a tested main commit. A version change means
-publish that commit. An unchanged version never creates another PR.
+publish that commit. A later CI-only fix can recover an untagged version
+if its package files have not changed since the version was prepared.
+An unchanged version never creates another PR.
 ``prepare`` updates the three version files in a working PR, and both
 commands emit GitHub step outputs.
 """
@@ -72,6 +74,19 @@ def tagged_commit(root: Path, version: str) -> str | None:
     return git(root, "rev-parse", "--verify", f"{tag}^{{commit}}")
 
 
+def prepared_commit(root: Path, after: str, version: str) -> str:
+    """Find the version increase on main's first-parent history, not a PR branch."""
+    prepared = after
+    for commit in git(root, "rev-list", "--first-parent", after).splitlines()[1:]:
+        previous = commit_version(root, commit)
+        if previous != version:
+            if version_key(previous) >= version_key(version):
+                raise ValueError("Recovery requires a previously increased version")
+            return prepared
+        prepared = commit
+    raise ValueError("Recovery requires a previous version increase in main history")
+
+
 def plan(root: Path, before: str, after: str) -> tuple[str, str]:
     before = resolve_commit(root, before)
     after = resolve_commit(root, after)
@@ -88,6 +103,30 @@ def plan(root: Path, before: str, after: str) -> tuple[str, str]:
             )
         # Rerunning the original merge event after a partial publish uses the
         # same before/after SHAs and takes this path again, without another bump.
+        return "publish", current
+    if tagged == after:
+        # Retry a recovery merge after tagging succeeded but upload failed.
+        return "publish", current
+    if tagged is None:
+        prepared = prepared_commit(root, after, current)
+        changed = git(
+            root,
+            "diff",
+            "--name-only",
+            prepared,
+            after,
+            "--",
+            "src",
+            "pyproject.toml",
+            "CITATION.cff",
+        )
+        if changed:
+            raise ValueError(
+                "Package files changed after the version was prepared; "
+                "recover publication from the original version-changing merge"
+            )
+        # No tag was created. Publish this tested CI/docs fix with the same
+        # package version and code, without inventing another version bump.
         return "publish", current
     return "none", current
 

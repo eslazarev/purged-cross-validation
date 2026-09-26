@@ -11,8 +11,12 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
+- Publication no longer gets skipped after the PR-only version job is
+  skipped on `main`. Tests and citation checks must still pass. A CI-only
+  fix can recover an untagged prepared version without a second bump,
+  provided its package files and citation metadata have not changed.
 - Release metadata is now added to the working PR instead of a separate
-  release PR. Only the tested version-changing merge is published, without
+  release PR. Publication uses a tested `main` commit, without
   pushing directly to protected `main`. Repeated PR updates keep the prepared
   version, and pending package changes from the old failed release are included.
 - The API reference now displays descriptions for all five public input and

@@ -183,12 +183,89 @@ def test_existing_tag_on_another_commit_blocks_publication(repo: Path) -> None:
     assert "another commit" in result.stderr
 
 
-def test_pending_publish_does_not_produce_another_version_bump(repo: Path) -> None:
+def test_ci_fix_recovers_untagged_version_and_retry_keeps_same_commit(repo: Path) -> None:
+    released = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "switch", "--no-track", "-c", "fix/feature")
     _versions(repo, "0.1.8")
+    _commit(repo)
+    _git(repo, "switch", "main")
+    _git(repo, "merge", "--no-ff", "fix/feature", "-m", "Prepare 0.1.8")
+    prepared = _git(repo, "rev-parse", "HEAD")
+    assert _plan(repo, released, prepared) == {"mode": "publish", "version": "0.1.8"}
+    # The original workflow skipped release, so there is no v0.1.8 tag.
+    _git(repo, "switch", "--no-track", "-c", "fix/ci")
+    (repo / "workflow.yml").write_text("# Correct the release job condition\n")
+    head = _commit(repo)
+    original = {name: (repo / name).read_bytes() for name in VERSION_FILES}
+    check = _prepare_pr(repo, prepared, head, "--check")
+    assert check.returncode == 0, check.stderr
+    assert check.stdout == "updated=false\nversion=0.1.8\n"
+    _git(repo, "switch", "main")
+    _git(repo, "merge", "--no-ff", "fix/ci", "-m", "Recover 0.1.8")
+    recovered = _git(repo, "rev-parse", "HEAD")
+    assert _plan(repo, prepared, recovered) == {"mode": "publish", "version": "0.1.8"}
+    assert original == {name: (repo / name).read_bytes() for name in VERSION_FILES}
+    assert _git(repo, "status", "--porcelain") == ""
+
+    _git(repo, "tag", "-a", "v0.1.8", "-m", "release", recovered)
+    assert _plan(repo, prepared, recovered) == {"mode": "publish", "version": "0.1.8"}
+    # The old merge cannot take over a tag created by the recovery merge.
+    stale = _run(repo, "plan", "--before", released, "--after", prepared)
+    assert stale.returncode != 0
+    assert "another commit" in stale.stderr
+    (repo / "README.md").write_text("Documentation after recovery.\n")
+    later = _commit(repo)
+    assert _plan(repo, recovered, later) == {"mode": "none", "version": "0.1.8"}
+
+
+@pytest.mark.parametrize(
+    "changed_file", ["src/purgedcv/feature.py", "pyproject.toml", "CITATION.cff"]
+)
+def test_recovery_rejects_package_changes_since_version_was_prepared(
+    repo: Path, changed_file: str
+) -> None:
+    _versions(repo, "0.1.8")
+    _commit(repo)
+    with (repo / changed_file).open("a") as stream:
+        stream.write("# A later change\n")
     before = _commit(repo)
-    (repo / "src/purgedcv/feature.py").write_text("value = 1\n")
+    # Checking just before..after would miss this earlier package change.
+    (repo / "workflow.yml").write_text("# CI-only fix\n")
     after = _commit(repo)
-    assert _plan(repo, before, after) == {"mode": "none", "version": "0.1.8"}
+    result = _run(repo, "plan", "--before", before, "--after", after)
+    assert result.returncode != 0
+    assert "Package files changed after the version was prepared" in result.stderr
+    assert "mode=publish" not in result.stdout
+
+
+def test_recovery_requires_a_version_increase_in_history(repo: Path) -> None:
+    _git(repo, "tag", "-d", "v0.1.7")
+    before = _git(repo, "rev-parse", "HEAD")
+    (repo / "workflow.yml").write_text("# CI-only change\n")
+    after = _commit(repo)
+    result = _run(repo, "plan", "--before", before, "--after", after)
+    assert result.returncode != 0
+    assert "previous version increase" in result.stderr
+
+
+def test_recovery_rejects_a_previously_downgraded_version(repo: Path) -> None:
+    _versions(repo, "0.1.6")
+    before = _commit(repo)
+    (repo / "workflow.yml").write_text("# CI-only change\n")
+    after = _commit(repo)
+    result = _run(repo, "plan", "--before", before, "--after", after)
+    assert result.returncode != 0
+    assert "previously increased version" in result.stderr
+
+
+def test_ci_fix_does_not_move_tag_after_partial_publication(repo: Path) -> None:
+    _versions(repo, "0.1.8")
+    prepared = _commit(repo)
+    _git(repo, "tag", "v0.1.8", prepared)
+    (repo / "workflow.yml").write_text("# CI-only fix\n")
+    after = _commit(repo)
+    assert _plan(repo, prepared, after) == {"mode": "none", "version": "0.1.8"}
+    assert _git(repo, "rev-parse", "v0.1.8") == prepared
 
 
 @pytest.mark.parametrize("bad_before", ["0" * 40, "main", "--help", "a" * 40])
@@ -365,3 +442,45 @@ def test_workflow_updates_only_same_repo_prs_with_trusted_tooling() -> None:
         assert steps[name]["if"] == "steps.plan.outputs.mode == 'publish'"
     assert steps["GitHub Release"]["with"]["target_commitish"] == "${{ github.sha }}"
     assert not any("git push" in step.get("run", "") for step in release["steps"])
+
+
+@pytest.mark.parametrize("test_result", ["success", "failure", "skipped", "cancelled"])
+@pytest.mark.parametrize("citation_result", ["success", "failure", "skipped", "cancelled"])
+def test_release_condition_handles_skipped_ancestor_without_bypassing_checks(
+    test_result: str, citation_result: str
+) -> None:
+    """Check the actual YAML condition against the observed main-run scenario.
+
+    This is a condition regression test, not a GitHub Actions runner. Without
+    a status function GitHub adds success(), which skips release when the
+    ancestor pr-version is skipped, even if its direct needs succeeded.
+    """
+    yaml = pytest.importorskip("yaml", reason="workflow checks require the docs extra")
+    workflow = yaml.load(
+        (REPO_ROOT / ".github/workflows/ci.yml").read_text(), Loader=yaml.BaseLoader
+    )
+    condition = workflow["jobs"]["release"]["if"]
+    clauses = [clause.strip() for clause in condition.split("&&")]
+    assert "always()" in clauses, "Explicitly override skipped-ancestor propagation"
+    for event, ref, cancelled in [
+        ("push", "refs/heads/main", False),
+        ("push", "refs/heads/main", True),
+        ("pull_request", "refs/heads/main", False),
+        ("push", "refs/heads/feature", False),
+    ]:
+        values = {
+            "always()": True,
+            "!cancelled()": not cancelled,
+            "needs.test.result == 'success'": test_result == "success",
+            "needs.citation.result == 'success'": citation_result == "success",
+            "github.event_name == 'push'": event == "push",
+            "github.ref == 'refs/heads/main'": ref == "refs/heads/main",
+        }
+        allowed = all(values[clause] for clause in clauses)
+        assert allowed == (
+            event == "push"
+            and ref == "refs/heads/main"
+            and not cancelled
+            and test_result == "success"
+            and citation_result == "success"
+        )
