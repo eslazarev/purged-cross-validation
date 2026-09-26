@@ -1,11 +1,10 @@
 # API reference
 
 All public symbols from `purgedcv.__all__`, auto-rendered from the source
-docstrings. The constructors of the splitters share a single set of
-keyword arguments (`prediction_times`, `evaluation_times`,
-`purge_horizon`, the three embargo modes, and `groups`); see
-[`BaseTemporalSplitter`](#purgedcv.BaseTemporalSplitter) for the shared
-contract.
+docstrings. See [`BaseTemporalSplitter`](#purgedcv.BaseTemporalSplitter) for
+the shared time, purge, embargo, and group-validation parameters. Each
+concrete splitter documents which options it accepts and any differences
+in behavior.
 
 ## Input type aliases
 

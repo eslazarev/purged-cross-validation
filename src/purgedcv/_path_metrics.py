@@ -23,8 +23,14 @@ import pandas as pd
 from ._typing import NDArrayAny
 from ._validation import _validate_bars_per_year
 
-#: A path metric: maps one path's 1-D return series to a name -> value mapping.
 PathMetricFn = Callable[[NDArrayAny], Mapping[str, float]]
+"""A path metric: maps one path's 1-D return series to a name -> value mapping.
+
+Pass this callback as ``metric_fn`` to [`path_metrics`][purgedcv.path_metrics].
+Each mapping key becomes a column in the result. The default callback is
+[`default_backtest_metrics`][purgedcv.default_backtest_metrics]; supply your
+own to choose different statistics or a different return convention.
+"""
 
 
 def default_backtest_metrics(
