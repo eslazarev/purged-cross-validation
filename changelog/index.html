@@ -1331,6 +1331,9 @@ Plan is listed under the published version it shipped in.</p>
 <h2 id="unreleased"><a href="https://github.com/eslazarev/purged-cross-validation/compare/v0.1.3...HEAD">Unreleased</a><a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
+<li>Releases now propose version changes in a draft PR and publish the tested
+  version-changing merge, without pushing directly to protected <code>main</code>.
+  Release planning also picks up package changes left by a failed older run.</li>
 <li>The API reference now displays descriptions for all five public input and
   callback type aliases, and documents the shared splitter parameters under
   <code>BaseTemporalSplitter</code>.</li>
