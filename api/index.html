@@ -1972,19 +1972,28 @@ contract.</p>
 
 
         <p>Duck-typed sklearn CV splitter with purge + embargo orchestration.</p>
-<p>Concrete subclasses implement :meth:<code>_iter_test_indices</code> to yield the
+<p>Concrete subclasses implement <code>_iter_test_indices</code> to yield the
 raw test-index arrays for each fold. The base class handles purge,
 embargo, optional group-disjointness, and the sklearn-compatible
-:meth:<code>split</code> / :meth:<code>get_n_splits</code> protocol.</p>
+<a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>split</code></a> /
+<a class="autorefs autorefs-internal" title="get_n_splits
+
+
+  
+      abstractmethod
+  " href="#purgedcv.BaseTemporalSplitter.get_n_splits"><code>get_n_splits</code></a> protocol.</p>
 <p>Times are bound to the splitter at construction. This couples the
 splitter to a specific dataset's timestamps, which is intentional:
 a splitter for one dataset is rarely meaningful for another.</p>
-<p>.. note::
-   The subclassing interface (<code>_iter_test_indices</code>,
-   <code>_candidate_train_idx</code>, <code>_finalize_train_idx</code>) is an implementation
-   detail, not part of the maintained <code>0.1.x</code> public contract.
-   Subclasses may need adjustments before v1.0.</p>
 
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>The subclassing interface (<code>_iter_test_indices</code>,
+<code>_candidate_train_idx</code>, <code>_finalize_train_idx</code>) is an implementation
+detail, not part of the maintained <code>0.1.x</code> public contract.
+Subclasses may need adjustments before v1.0.</p>
+</details>
 
 
 
@@ -2048,9 +2057,9 @@ a splitter for one dataset is rarely meaningful for another.</p>
 sklearn protocol compatibility but ignored — group information must
 be bound at construction via the <code>groups</code> argument of <code>__init__</code>.</p>
 <p>When groups were bound at construction,
-:func:<code>~purgedcv.diagnostics.assert_groups_disjoint</code> is called on
-every fold after purge, embargo, and splitter-specific finalization; a
-:class:<code>~purgedcv.exceptions.GroupLeakageError</code> is raised if any
+<a class="autorefs autorefs-internal" title="purgedcv.diagnostics.assert_groups_disjoint" href="#purgedcv.diagnostics.assert_groups_disjoint"><code>assert_groups_disjoint</code></a>
+is called on every fold after purge, embargo, and splitter-specific finalization; a
+<a class="autorefs autorefs-internal" title="purgedcv.GroupLeakageError" href="#purgedcv.GroupLeakageError"><code>GroupLeakageError</code></a> is raised if any
 group identifier appears in both train and test of the same fold.</p>
 
 
@@ -2112,7 +2121,7 @@ interactions between cached state and rebound inputs.</p>
 
         <p>Walk-forward CV with sliding or expanding training window.</p>
 <p>For <code>window="expanding"</code> and zero purge/embargo, this matches
-:class:<code>sklearn.model_selection.TimeSeriesSplit</code>. For
+<a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html"><code>sklearn.model_selection.TimeSeriesSplit</code></a>. For
 <code>window="sliding"</code>, the training window has a fixed maximum length
 (the most recent <code>train_size</code> samples before the test fold).</p>
 <p>Post-test embargo parameters are accepted for API consistency with the
@@ -2217,7 +2226,7 @@ integer when <code>window='sliding'</code>.</p>
             <td>
               <div class="doc-md-description">
                 <p><code>"expanding"</code> (default) uses all pre-test data as
-training; matches :class:<code>sklearn.model_selection.TimeSeriesSplit</code>
+training; matches <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html"><code>sklearn.model_selection.TimeSeriesSplit</code></a>
 when purge is zero. <code>"sliding"</code> caps each training set at
 the most recent <code>train_size</code> rows after purge.</p>
               </div>
@@ -2241,7 +2250,7 @@ the most recent <code>train_size</code> rows after purge.</p>
             <td>
               <div class="doc-md-description">
                 <p>Per-sample prediction times for the dataset.
-Bound at construction so :meth:<code>split</code> matches the sklearn
+Bound at construction so <a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>split</code></a> matches the sklearn
 signature.</p>
               </div>
             </td>
@@ -2434,7 +2443,7 @@ if <code>train_size</code> is <code>None</code> with <code>window='sliding'</cod
 by at most one due to integer division. Train = complement of the
 test fold, with D2 purge and D3 embargo applied by the base class.</p>
 <p>For zero <code>purge_horizon</code> and <code>embargo</code> the test folds are
-identical to :class:<code>sklearn.model_selection.KFold(shuffle=False)</code>.
+identical to <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html"><code>sklearn.model_selection.KFold(shuffle=False)</code></a>.
 Purge still drops any training row whose own label horizon
 <code>[prediction_time, evaluation_time)</code> overlaps the test labels, so
 the training set equals the full complement only when no two label
@@ -2507,7 +2516,7 @@ empty arrays gracefully.</p>
             <td>
               <div class="doc-md-description">
                 <p>Per-sample prediction times. Bound at
-construction so :meth:<code>split</code> matches the sklearn signature.</p>
+construction so <a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>split</code></a> matches the sklearn signature.</p>
               </div>
             </td>
             <td>
@@ -2692,7 +2701,7 @@ each test block, rounded down to a row count. Must be in
 
 
 
-        <p>Group-aware k-fold variant of :class:<code>PurgedKFold</code>.</p>
+        <p>Group-aware k-fold variant of <a class="autorefs autorefs-internal" title="purgedcv.PurgedKFold" href="#purgedcv.PurgedKFold"><code>PurgedKFold</code></a>.</p>
 <p>Each test fold consists of all rows from a contiguous block of unique
 group identifiers, so no <code>group_id</code> ever appears in both train and
 test of the same fold. Purge and embargo still apply ACROSS group
@@ -2708,7 +2717,7 @@ group identities. They apply after every contiguous run of test positions.
 If a fold's groups are interleaved through the dataset, that fold contains
 several short test runs and positional embargo can remove substantially
 more rows than a single fold-level buffer would.</p>
-<p>The base class's :func:<code>assert_groups_disjoint</code> enforcement runs on
+<p>The base class's <a class="autorefs autorefs-internal" title="purgedcv.diagnostics.assert_groups_disjoint" href="#purgedcv.diagnostics.assert_groups_disjoint"><code>assert_groups_disjoint</code></a> enforcement runs on
 every fold automatically because <code>groups</code> is bound at construction.</p>
 <p>Useful in clinical ML (no patient appears in both sides of a fold),
 asset CV (no symbol appears in both sides), and any setting where
@@ -2994,7 +3003,7 @@ chosen blocks. Total folds: <code>C(n_splits, n_test_groups)</code>.</p>
 <p>Each group block appears as test in exactly <code>C(n_splits - 1,
 n_test_groups - 1)</code> folds.</p>
 <p>The base class applies D2 purge and D3 embargo to each fold's train
-set. :meth:<code>backtest_paths</code> then assembles the C(N,K) folds into
+set. <a class="autorefs autorefs-internal" title="backtest_paths" href="#purgedcv.CombinatorialPurgedCV.backtest_paths"><code>backtest_paths</code></a> then assembles the C(N,K) folds into
 n_paths time-ordered out-of-sample sequences.</p>
 <p>See <em>Advances in Financial Machine Learning</em> (Lopez de Prado, Wiley
 2018), chapter 12 section 12.4, for the original method.</p>
@@ -3262,7 +3271,7 @@ out-of-sample backtest paths.</p>
 <li>If the fold has no training rows under an unusually aggressive
    purge/embargo configuration, the predictions for that fold are NaN.</li>
 </ol>
-<p>The per-fold predictions are then handed to :func:<code>reconstruct_paths</code>,
+<p>The per-fold predictions are then handed to <a class="autorefs autorefs-internal" title="purgedcv.reconstruct_paths" href="#purgedcv.reconstruct_paths"><code>reconstruct_paths</code></a>,
 which assembles them into an <code>(n_paths, n_samples)</code> matrix where
 each row is a complete time-ordered out-of-sample prediction
 sequence.</p>
@@ -3450,13 +3459,13 @@ sequence.</p>
     <div class="doc doc-contents ">
 
         <p>Assemble per-fold predictions into the C(N-1, K-1) backtest paths.</p>
-<p>Ergonomic wrapper around :func:<code>~purgedcv.reconstruct_paths</code>. The
+<p>Ergonomic wrapper around <a class="autorefs autorefs-internal" title="purgedcv.reconstruct_paths" href="#purgedcv.reconstruct_paths"><code>reconstruct_paths</code></a>. The
 splitter already knows <code>n_splits</code>, <code>n_test_groups</code>, the fold
 test-index layout, and <code>n_samples</code> (from the bound times), so the
 caller supplies only one prediction array per fold, in
-:meth:<code>split</code> order. Use this when you ran the fits yourself (for
+<a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>split</code></a> order. Use this when you ran the fits yourself (for
 example a per-fold backtest loop) rather than via
-:meth:<code>backtest_paths</code>.</p>
+<a class="autorefs autorefs-internal" title="backtest_paths" href="#purgedcv.CombinatorialPurgedCV.backtest_paths"><code>backtest_paths</code></a>.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3480,7 +3489,7 @@ example a per-fold backtest loop) rather than via
             <td>
               <div class="doc-md-description">
                 <p>One array per fold, in the same order as
-:meth:<code>split</code> yields folds; <code>fold_predictions[f]</code> holds
+<a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>split</code></a> yields folds; <code>fold_predictions[f]</code> holds
 the predictions for that fold's test rows, in test-index
 order. There must be <code>C(n_splits, n_test_groups)</code> arrays.</p>
               </div>
@@ -3542,7 +3551,7 @@ order. There must be <code>C(n_splits, n_test_groups)</code> arrays.</p>
             <td>
               <div class="doc-md-description">
                 <p>on a fold-count or fold-prediction length mismatch
-(propagated from :func:<code>~purgedcv.reconstruct_paths</code>).</p>
+(propagated from <a class="autorefs autorefs-internal" title="purgedcv.reconstruct_paths" href="#purgedcv.reconstruct_paths"><code>reconstruct_paths</code></a>).</p>
               </div>
             </td>
           </tr>
@@ -3601,10 +3610,10 @@ order. There must be <code>C(n_splits, n_test_groups)</code> arrays.</p>
 
 
         <p>Combinatorially Symmetric Cross-Validation (CSCV).</p>
-<p>The special case of :class:<code>CombinatorialPurgedCV</code> with
+<p>The special case of <a class="autorefs autorefs-internal" title="purgedcv.CombinatorialPurgedCV" href="#purgedcv.CombinatorialPurgedCV"><code>CombinatorialPurgedCV</code></a> with
 <code>n_test_groups = n_splits // 2</code>: every fold cuts the timeline into two
 equal halves, one in-sample and one out-of-sample. CSCV is the substrate
-of :func:<code>~purgedcv.probability_of_backtest_overfitting</code>; expose it
+of <a class="autorefs autorefs-internal" title="purgedcv.probability_of_backtest_overfitting" href="#purgedcv.probability_of_backtest_overfitting"><code>probability_of_backtest_overfitting</code></a>; expose it
 directly when you want the symmetric IS/OOS folds without going through
 the PBO estimator.</p>
 <p>See <em>Advances in Financial Machine Learning</em> (Lopez de Prado, Wiley
@@ -3866,7 +3875,7 @@ row positions per contiguous block.</p>
 
         <p>Assemble Combinatorial Purged CV fold predictions into backtest paths.</p>
 <p>Given the predictions and test indices for all C(N, K) folds produced by
-:class:<code>CombinatorialPurgedCV</code>, returns a <code>(n_paths, n_samples)</code> array
+<a class="autorefs autorefs-internal" title="purgedcv.CombinatorialPurgedCV" href="#purgedcv.CombinatorialPurgedCV"><code>CombinatorialPurgedCV</code></a>, returns a <code>(n_paths, n_samples)</code> array
 where each row is a complete time-ordered out-of-sample prediction
 sequence built from a different combination of the folds.</p>
 <p><code>n_paths = C(n_splits - 1, n_test_groups - 1)</code>. Each sample is
@@ -3917,7 +3926,7 @@ in the same order.</p>
             <td>
               <div class="doc-md-description">
                 <p>One array per fold; the per-fold test_idx as
-yielded by :meth:<code>CombinatorialPurgedCV._iter_test_indices</code>.
+yielded by <code>CombinatorialPurgedCV._iter_test_indices</code>.
 Used here to recover the group block layout.</p>
               </div>
             </td>
@@ -4088,8 +4097,8 @@ DataFrame with one row per path and one column per metric.</p>
             <td>
               <div class="doc-md-description">
                 <p><code>(n_paths, n_samples)</code> array, as returned by
-:func:<code>~purgedcv.reconstruct_paths</code> or
-:meth:<code>CombinatorialPurgedCV.backtest_paths</code>. Each row is one
+<a class="autorefs autorefs-internal" title="purgedcv.reconstruct_paths" href="#purgedcv.reconstruct_paths"><code>reconstruct_paths</code></a> or
+<a class="autorefs autorefs-internal" title="backtest_paths" href="#purgedcv.CombinatorialPurgedCV.backtest_paths"><code>CombinatorialPurgedCV.backtest_paths</code></a>. Each row is one
 path's per-period return series.</p>
               </div>
             </td>
@@ -4112,7 +4121,7 @@ path's per-period return series.</p>
             <td>
               <div class="doc-md-description">
                 <p>Maps a 1-D path to a name -&gt; value mapping. Defaults to
-:func:<code>default_backtest_metrics</code>. A custom function lets you
+<a class="autorefs autorefs-internal" title="purgedcv.default_backtest_metrics" href="#purgedcv.default_backtest_metrics"><code>default_backtest_metrics</code></a>. A custom function lets you
 choose your own statistics and return convention.</p>
               </div>
             </td>
@@ -4129,7 +4138,7 @@ choose your own statistics and return convention.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Forwarded to :func:<code>default_backtest_metrics</code> for
+                <p>Forwarded to <a class="autorefs autorefs-internal" title="purgedcv.default_backtest_metrics" href="#purgedcv.default_backtest_metrics"><code>default_backtest_metrics</code></a> for
 annualisation. Ignored when a custom <code>metric_fn</code> is given
 (bind any such option into the function yourself).</p>
               </div>
@@ -4197,7 +4206,7 @@ annualisation. Ignored when a custom <code>metric_fn</code> is given
             </td>
             <td>
               <div class="doc-md-description">
-                <p><code>idxmin()</code>; see :func:<code>default_backtest_metrics</code>.</p>
+                <p><code>idxmin()</code>; see <a class="autorefs autorefs-internal" title="purgedcv.default_backtest_metrics" href="#purgedcv.default_backtest_metrics"><code>default_backtest_metrics</code></a>.</p>
               </div>
             </td>
           </tr>
@@ -5039,9 +5048,9 @@ error message names the offending row index when applicable.</p>
 
 
 
-        <p>Return type of :func:<code>deflated_sharpe_ratio_full</code>.</p>
+        <p>Return type of <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio_full" href="#purgedcv.deflated_sharpe_ratio_full"><code>deflated_sharpe_ratio_full</code></a>.</p>
 <p>A frozen dataclass: read fields by attribute (<code>diag.dsr</code>), and call
-:func:<code>dataclasses.asdict</code> if you need a plain dict to serialise.</p>
+<a href="https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict"><code>dataclasses.asdict</code></a> if you need a plain dict to serialise.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -5062,7 +5071,7 @@ error message names the offending row index when applicable.</p>
             <td>
               <div class="doc-md-description">
                 <p>The deflated Sharpe probability (identical to
-:func:<code>deflated_sharpe_ratio</code> for the same inputs).</p>
+<a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> for the same inputs).</p>
               </div>
             </td>
           </tr>
@@ -5075,7 +5084,7 @@ error message names the offending row index when applicable.</p>
               <div class="doc-md-description">
                 <p>Sample Sharpe ratio of <code>returns</code> (population
 standard deviation, <code>ddof=0</code>). In the same per-period units
-as <code>var_sharpe</code> must be; see :func:<code>deflated_sharpe_ratio_full</code>.</p>
+as <code>var_sharpe</code> must be; see <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio_full" href="#purgedcv.deflated_sharpe_ratio_full"><code>deflated_sharpe_ratio_full</code></a>.</p>
               </div>
             </td>
           </tr>
@@ -5353,7 +5362,7 @@ searches under the null.</p>
 \right]
 \]</div>
 <p>where <span class="arithmatex">\(\gamma \approx 0.5772\)</span> is the Euler-Mascheroni constant.
-DSR is then :func:<code>probabilistic_sharpe_ratio</code> evaluated at the
+DSR is then <a class="autorefs autorefs-internal" title="purgedcv.probabilistic_sharpe_ratio" href="#purgedcv.probabilistic_sharpe_ratio"><code>probabilistic_sharpe_ratio</code></a> evaluated at the
 deflated benchmark <span class="arithmatex">\(\text{SR}^\ast_n\)</span>.</p>
 
 
@@ -5416,14 +5425,14 @@ DSR reduces to <code>probabilistic_sharpe_ratio(returns, 0.0)</code>.</p>
 <code>n_trials</code> candidates. Caller supplies; we do not estimate
 it because that would require knowing the distribution of
 submitted strategies, which is private to the caller.
-:class:<code>purgedcv.optuna_integration.TrialSharpeRecorder</code>
+<a class="autorefs autorefs-internal" title="purgedcv.optuna_integration.TrialSharpeRecorder" href="#purgedcv.optuna_integration.TrialSharpeRecorder"><code>purgedcv.optuna_integration.TrialSharpeRecorder</code></a>
 produces it directly from an Optuna study.</p>
 <p>UNITS: <code>var_sharpe</code> must be in the same Sharpe units as the
 per-observation Sharpe of <code>returns</code> (DSR is intrinsically
 per-observation). If your trial Sharpes were annualised, pass
 <code>bars_per_year</code> and the conversion is done for you; otherwise
 <code>var_sharpe</code> is taken as already per-observation. Note that
-:func:<code>path_metrics</code> annualises its Sharpe when given
+<a class="autorefs autorefs-internal" title="purgedcv.path_metrics" href="#purgedcv.path_metrics"><code>path_metrics</code></a> annualises its Sharpe when given
 <code>bars_per_year</code>, so a <code>var</code> taken from its output is
 annualised: pass the same <code>bars_per_year</code> here.</p>
               </div>
@@ -5546,7 +5555,7 @@ leaves prior behaviour unchanged.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Like :func:<code>deflated_sharpe_ratio</code> but return the intermediate
+        <p>Like <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> but return the intermediate
 quantities alongside the probability.</p>
 <p>When DSR is near 0 the scalar form does not tell you <em>why</em>: was the
 deflated benchmark high because <code>var_sharpe</code> was large, because
@@ -5608,7 +5617,7 @@ function returns all of those so the deflation can be inspected.</p>
               <div class="doc-md-description">
                 <p>Variance of Sharpe ratios across the candidates. Per
 observation by default; pass <code>bars_per_year</code> if it is
-annualised (see :func:<code>deflated_sharpe_ratio</code> for the unit
+annualised (see <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> for the unit
 contract).</p>
               </div>
             </td>
@@ -5642,13 +5651,13 @@ it as already per-observation.</p>
     <table>
       <thead>
         <tr>
-<th>Name</th>          <th>Type</th>
+          <th>Type</th>
           <th>Description</th>
         </tr>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-<td><code>A</code></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
 
 
@@ -5658,12 +5667,17 @@ it as already per-observation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>class:<code>DSRDiagnostics</code> (frozen dataclass; read fields by</p>
+                <p>A <a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
+
+
+  
+      dataclass
+  " href="#purgedcv.DSRDiagnostics"><code>DSRDiagnostics</code></a> (frozen dataclass; read fields by</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
-<td></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
 
 
@@ -5678,7 +5692,7 @@ it as already per-observation.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-<td></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
 
 
@@ -5688,12 +5702,12 @@ it as already per-observation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>func:<code>deflated_sharpe_ratio</code> for the same arguments. The</p>
+                <p><a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> for the same arguments. The</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
-<td></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
 
 
@@ -5708,7 +5722,7 @@ it as already per-observation.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-<td></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
 
 
@@ -5723,7 +5737,7 @@ it as already per-observation.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-<td></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.DSRDiagnostics
 
 
@@ -5809,7 +5823,7 @@ it as already per-observation.</p>
     <div class="doc doc-contents first">
 
         <p>Minimum sample size such that PSR(target_sharpe) &gt;= 1 - alpha.</p>
-<p>Inverts the :func:<code>probabilistic_sharpe_ratio</code> formula for <code>n</code>:</p>
+<p>Inverts the <a class="autorefs autorefs-internal" title="purgedcv.probabilistic_sharpe_ratio" href="#purgedcv.probabilistic_sharpe_ratio"><code>probabilistic_sharpe_ratio</code></a> formula for <code>n</code>:</p>
 <div class="arithmatex">\[
 n^\ast = 1 + \left\lceil
 \left(\frac{\Phi^{-1}(1 - \alpha) \cdot
@@ -6057,7 +6071,7 @@ length <code>y</code> in years:</p>
 \]</div>
 <p>where <span class="arithmatex">\(\gamma\)</span> is the Euler-Mascheroni constant and <span class="arithmatex">\(\text{SR}^\ast\)</span> is
 <code>target_sharpe</code>. The numerator is the same bracket term that deflates the
-Sharpe in :func:<code>deflated_sharpe_ratio</code>; MinBTL is its inverse, solving for
+Sharpe in <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a>; MinBTL is its inverse, solving for
 length instead of for a probability.</p>
 <p>Bailey, Borwein, Lopez de Prado &amp; Zhu (2014), "Pseudo-mathematics and
 financial charlatanism", Notices of the AMS 61(5). AFML Chapter 11.</p>
@@ -6230,13 +6244,13 @@ finite number.</p>
     <div class="doc doc-contents first">
 
         <p>Estimate the number of <em>independent</em> trials behind a correlated search.</p>
-<p>:func:<code>deflated_sharpe_ratio</code> assumes the <code>n_trials</code> candidates were
+<p><a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> assumes the <code>n_trials</code> candidates were
 drawn independently. Sequential samplers (Optuna's TPE, CMA-ES) draw each
 trial conditioned on the previous ones, so the trials are autocorrelated
 and the raw count overstates how many independent bets were really placed.
 Feeding the raw count inflates the deflated benchmark and makes DSR
 needlessly conservative (often numerically zero). This returns a smaller
-effective count to pass to :func:<code>deflated_sharpe_ratio</code> instead.</p>
+effective count to pass to <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> instead.</p>
 <p>The estimate is the run length divided by the integrated autocorrelation
 time of the trial-performance series:
 <code>n_eff = n / (1 + 2 * sum_k rho_k)</code>, summing the autocorrelations
@@ -6410,9 +6424,9 @@ non-finite values.</p>
 
 
 
-        <p>Return type of :func:<code>probability_of_backtest_overfitting</code>.</p>
+        <p>Return type of <a class="autorefs autorefs-internal" title="purgedcv.probability_of_backtest_overfitting" href="#purgedcv.probability_of_backtest_overfitting"><code>probability_of_backtest_overfitting</code></a>.</p>
 <p>A frozen dataclass: read fields by attribute (<code>result.pbo</code>), and call
-:func:<code>dataclasses.asdict</code> if you need a plain dict to serialise.</p>
+<a href="https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict"><code>dataclasses.asdict</code></a> if you need a plain dict to serialise.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -6634,7 +6648,7 @@ choice is 16.</p>
             <td>
               <div class="doc-md-description">
                 <p>Performance metric mapping a 1-D return slice to a scalar
-(larger is better). Defaults to :func:<code>sharpe</code>.</p>
+(larger is better). Defaults to <code>sharpe</code>.</p>
               </div>
             </td>
             <td>
@@ -6770,13 +6784,13 @@ OOS block (requires the time series).</p>
     <table>
       <thead>
         <tr>
-<th>Name</th>          <th>Type</th>
+          <th>Type</th>
           <th>Description</th>
         </tr>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-<td><code>A</code></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.PBOResult
 
 
@@ -6786,12 +6800,17 @@ OOS block (requires the time series).</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>class:<code>PBOResult</code> (frozen dataclass; read fields by attribute,</p>
+                <p>A <a class="autorefs autorefs-internal" title="purgedcv.PBOResult
+
+
+  
+      dataclass
+  " href="#purgedcv.PBOResult"><code>PBOResult</code></a> (frozen dataclass; read fields by attribute,</p>
               </div>
             </td>
           </tr>
           <tr class="doc-section-item">
-<td></td>            <td>
+            <td>
                   <code><a class="autorefs autorefs-internal" title="purgedcv.PBOResult
 
 
@@ -6872,7 +6891,7 @@ OOS block (requires the time series).</p>
 <p>Pass an instance as a callback to <code>study.optimize</code> and store each
 trial's Sharpe in a user attribute (default key <code>"sharpe"</code>); the
 recorder accumulates them and reports the variance for
-:func:<code>~purgedcv.deflated_sharpe_ratio</code>. If a trial has no such user
+<a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a>. If a trial has no such user
 attribute, the recorder falls back to that trial's objective <code>value</code>.
 Non-finite and missing values are ignored.</p>
 
@@ -7030,11 +7049,11 @@ rather than raised: a callback that throws would abort the whole
         <p>Effective number of <em>independent</em> trials, for correlated samplers.</p>
 <p>TPE and CMA-ES draw each trial conditioned on the previous ones, so
 the raw trial count overstates the independent search effort and makes
-:func:<code>~purgedcv.deflated_sharpe_ratio</code> overly conservative. This
-applies :func:<code>~purgedcv.effective_n_trials</code> to the recorded Sharpe
+<a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> overly conservative. This
+applies <a class="autorefs autorefs-internal" title="purgedcv.effective_n_trials" href="#purgedcv.effective_n_trials"><code>effective_n_trials</code></a> to the recorded Sharpe
 series; pass the result as <code>n_trials</code> to deflate more realistically.
 Returns 0 when nothing has been recorded yet. See
-:func:<code>~purgedcv.effective_n_trials</code> for the heuristic's caveats.</p>
+<a class="autorefs autorefs-internal" title="purgedcv.effective_n_trials" href="#purgedcv.effective_n_trials"><code>effective_n_trials</code></a> for the heuristic's caveats.</p>
 
 
     </div>
@@ -7057,7 +7076,7 @@ Returns 0 when nothing has been recorded yet. See
         <p>Variance of the recorded Sharpe ratios, for <code>deflated_sharpe_ratio</code>.</p>
 <p>Returns <code>nan</code> until more than <code>ddof</code> trials have been recorded.</p>
 <p>UNITS: the variance is in the units of whatever Sharpe you stored
-per trial. :func:<code>~purgedcv.deflated_sharpe_ratio</code> compares against
+per trial. <a class="autorefs autorefs-internal" title="purgedcv.deflated_sharpe_ratio" href="#purgedcv.deflated_sharpe_ratio"><code>deflated_sharpe_ratio</code></a> compares against
 the per-period Sharpe of its <code>returns</code> argument, so record a
 per-period Sharpe in each trial (the same convention as the
 <code>returns</code> you will later deflate). Do that and the recorder feeds
@@ -7092,7 +7111,7 @@ per-period Sharpe in each trial (the same convention as the
 
         <p>Return a non-raising, per-fold report for a temporal splitter.</p>
 <p>The report consumes the same candidate → purge → embargo → final pipeline
-as :meth:<code>BaseTemporalSplitter.split</code>; purge and embargo counts therefore
+as <a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>BaseTemporalSplitter.split</code></a>; purge and embargo counts therefore
 come from the actual intermediate index arrays rather than being inferred
 from the final split. Sliding walk-forward truncation is implemented by
 the finalization stage and therefore appears in
@@ -7102,14 +7121,14 @@ indices, <code>rows_added_by_finalization</code> reports them separately.</p>
 whose label horizons overlap the test horizons after applying the
 splitter's <code>purge_horizon</code> padding. For non-empty candidates it equals
 <code>rows_removed_by_purge / candidate_train_size</code>; empty candidates report
-zero. :func:<code>compute_overlap_fraction</code> reproduces it only when given the
+zero. <a class="autorefs autorefs-internal" title="purgedcv.diagnostics.compute_overlap_fraction" href="#purgedcv.diagnostics.compute_overlap_fraction"><code>compute_overlap_fraction</code></a> reproduces it only when given the
 same pre-purge candidate indices and purge horizon — indices returned by
 <code>cv.split()</code> are already final. <code>final_overlap_fraction</code> repeats the
 measure on final training rows and should be zero for a clean splitter.</p>
 <p>For the built-in splitters, <code>temporal_leakage_free</code> is structurally
 expected to be <code>True</code>: purge removes overlaps and later stages only
 remove rows. The column is primarily a regression guard for custom
-:class:<code>BaseTemporalSplitter</code> subclasses whose finalization hook could
+<a class="autorefs autorefs-internal" title="purgedcv.BaseTemporalSplitter" href="#purgedcv.BaseTemporalSplitter"><code>BaseTemporalSplitter</code></a> subclasses whose finalization hook could
 accidentally reintroduce indices; it is not an independent validation
 algorithm. For an empty final train set it is vacuously <code>True</code>; inspect
 <code>train_nonempty</code> before treating a fold as usable. Leakage and group
@@ -7121,7 +7140,7 @@ train and test envelopes may overlap even when
 <code>final_overlap_fraction == 0</code>. <code>train_block_count</code> and
 <code>test_block_count</code> expose that layout; the counts refer to contiguous
 runs of positional indices.</p>
-<p>The audit requires the inherited :meth:<code>BaseTemporalSplitter.split</code>
+<p>The audit requires the inherited <a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>BaseTemporalSplitter.split</code></a>
 implementation. A subclass overriding <code>split()</code> is rejected because its
 returned folds may diverge from the auditable candidate → purge → embargo
 → finalization pipeline. Custom subclasses should use
@@ -7149,7 +7168,7 @@ returned folds may diverge from the auditable candidate → purge → embargo
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A :class:<code>BaseTemporalSplitter</code> instance with times already bound.</p>
+                <p>A <a class="autorefs autorefs-internal" title="purgedcv.BaseTemporalSplitter" href="#purgedcv.BaseTemporalSplitter"><code>BaseTemporalSplitter</code></a> instance with times already bound.</p>
               </div>
             </td>
             <td>
@@ -7265,8 +7284,8 @@ match the times bound to <code>cv</code>; feature values are not inspected.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>if <code>cv</code> is not a :class:<code>BaseTemporalSplitter</code> or its
-class overrides :meth:<code>BaseTemporalSplitter.split</code>.</p>
+                <p>if <code>cv</code> is not a <a class="autorefs autorefs-internal" title="purgedcv.BaseTemporalSplitter" href="#purgedcv.BaseTemporalSplitter"><code>BaseTemporalSplitter</code></a> or its
+class overrides <a class="autorefs autorefs-internal" title="split" href="#purgedcv.BaseTemporalSplitter.split"><code>BaseTemporalSplitter.split</code></a>.</p>
               </div>
             </td>
           </tr>
@@ -7322,7 +7341,7 @@ its configured folds.</p>
 
         <p>Return the fraction of training rows whose half-open label horizon
 overlaps any test horizon, optionally padded by <code>purge_horizon</code>.</p>
-<p>Unlike :func:<code>assert_no_temporal_leakage</code>, this does not raise when it
+<p>Unlike <a class="autorefs autorefs-internal" title="purgedcv.diagnostics.assert_no_temporal_leakage" href="#purgedcv.diagnostics.assert_no_temporal_leakage"><code>assert_no_temporal_leakage</code></a>, this does not raise when it
 finds leakage: it returns <code>0.0</code> for clean splits and <code>1.0</code> when every
 training row leaks. Malformed indices, times, and horizons still raise
 validation errors. Useful for logging splitter health metrics or for
@@ -7365,7 +7384,7 @@ final and instead reproduce <code>final_overlap_fraction</code>.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Raise :class:<code>TemporalLeakageError</code> if any training row's label horizon
+        <p>Raise <a class="autorefs autorefs-internal" title="purgedcv.TemporalLeakageError" href="#purgedcv.TemporalLeakageError"><code>TemporalLeakageError</code></a> if any training row's label horizon
 overlaps any test label horizon, optionally padded on both sides by
 <code>purge_horizon</code>.</p>
 <p>Test horizons are checked as a union of half-open intervals, not as one
@@ -7534,7 +7553,7 @@ two overlapping intervals in the message.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Raise :class:<code>GroupLeakageError</code> if any group identifier appears in
+        <p>Raise <a class="autorefs autorefs-internal" title="purgedcv.GroupLeakageError" href="#purgedcv.GroupLeakageError"><code>GroupLeakageError</code></a> if any group identifier appears in
 both <code>train_idx</code> and <code>test_idx</code>.</p>
 <p>Used by group-aware splitters to verify that no entity (patient, asset,
 user, etc.) is represented in both training and test of the same fold.
@@ -7568,9 +7587,9 @@ total count of overlapping groups, so the caller can scope follow-up.</p>
 
     <div class="doc doc-contents first">
 
-        <p>Raise :class:<code>EmbargoViolationError</code> when an embargo is violated.</p>
+        <p>Raise <a class="autorefs autorefs-internal" title="purgedcv.EmbargoViolationError" href="#purgedcv.EmbargoViolationError"><code>EmbargoViolationError</code></a> when an embargo is violated.</p>
 <p>The duration, observation-count, and fractional modes have the same
-mutually-exclusive semantics as :func:<code>purgedcv.apply_embargo</code>. Exactly
+mutually-exclusive semantics as <a class="autorefs autorefs-internal" title="purgedcv.apply_embargo" href="#purgedcv.apply_embargo"><code>purgedcv.apply_embargo</code></a>. Exactly
 one mode must be supplied; omitting all three is treated as a configuration
 error rather than a successful audit.</p>
 <p>Embargo is asymmetric: rows before test boundaries are never flagged.
