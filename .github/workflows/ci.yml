@@ -171,11 +171,15 @@ jobs:
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: python tools/prepare_pr_release.py --root . --base "$PR_BASE" --head "$PR_HEAD" --check
 
-  # Code and version metadata merge together. Only a tested version-changing
-  # push to main publishes; PR events never receive publication credentials.
+  # Publish only after successful tests and citation checks. pr-version is
+  # skipped on main, so explicitly override skip propagation through needs.
+  # PR events never receive publication credentials.
   release:
     needs: [test, citation]
     if: >-
+      always() && !cancelled() &&
+      needs.test.result == 'success' &&
+      needs.citation.result == 'success' &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

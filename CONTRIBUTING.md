@@ -111,13 +111,22 @@ or approve PRs, a personal access token, or a branch-protection bypass.
 
 After merge, `main` runs tests and citation checks again. A version increase
 then builds, tags that exact tested commit, creates the GitHub release, and
-uploads to PyPI. An unchanged version does not publish. During publication,
+uploads to PyPI. The PR-only version job is skipped on `main`; publication
+still requires successful tests and citation checks. During publication,
 the version on `main` is pending, not yet released.
 
 If publication fails, rerun the failed jobs on the **original version-changing
 merge workflow**. Do not bump again. An existing tag must point to that same
 commit; a conflicting tag stops publication. Already-uploaded files are
 skipped on retry. Finish a pending release before preparing the next one.
+
+If a workflow bug prevented tagging, merge a CI fix without another bump.
+The next successful run can publish the prepared version from that fix's
+tested merge commit. Recovery requires a prior version increase and no
+changes to `src/**`, `pyproject.toml`, or `CITATION.cff` since that increase.
+If a tag already exists on an earlier commit, this path does not republish
+or move it. Retry the run that created the tag instead. Once tagged, later
+docs-only merges do not publish again.
 
 The citation date is set when the version is prepared. Adjust it before
 merging if the PR has been waiting for another day. When introducing this
