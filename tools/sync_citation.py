@@ -1,7 +1,7 @@
 """Keep ``CITATION.cff`` in step with the package version.
 
 The single source of truth for the version is ``pyproject.toml``. The release
-workflow proposes a bump (with ``src/purgedcv/__init__.py``) in a release PR;
+workflow adds a bump (with ``src/purgedcv/__init__.py``) to the working PR;
 this script propagates that version into ``CITATION.cff``. Publication follows
 the tested merge of that PR, so the citation metadata matches the release.
 

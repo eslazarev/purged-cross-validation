@@ -1,9 +1,9 @@
-"""Plan releases and prepare version-only PRs without pushing or publishing.
+"""Plan publication and update version metadata without pushing or publishing.
 
 The workflow calls ``plan`` on a tested main commit. A version change means
-publish that commit; otherwise compare with the current version's tag to
-find package changes waiting for a release PR. ``prepare`` updates only the
-three version files in the checkout. Both commands emit GitHub step outputs.
+publish that commit. An unchanged version never creates another PR.
+``prepare`` updates the three version files in a working PR, and both
+commands emit GitHub step outputs.
 """
 
 from __future__ import annotations
@@ -89,27 +89,27 @@ def plan(root: Path, before: str, after: str) -> tuple[str, str]:
         # Rerunning the original merge event after a partial publish uses the
         # same before/after SHAs and takes this path again, without another bump.
         return "publish", current
-    if tagged is None:
-        print(
-            f"No v{current} tag yet. Finish or rerun the version-bump merge workflow first.",
-            file=sys.stderr,
-        )
-        return "none", current
-    git(root, "merge-base", "--is-ancestor", tagged, after)
-    changed = git(root, "diff", "--name-only", tagged, after, "--", "src", "pyproject.toml")
-    # Use the release tag, not just the previous push: this also catches code
-    # left unreleased by the old direct-push workflow after a CI-only fix.
-    return ("prepare", next_version(current)) if changed else ("none", current)
+    return "none", current
 
 
-def prepare(root: Path, expected: str, release_date: str) -> str:
-    date.fromisoformat(release_date)
+def version_files(root: Path) -> tuple[list[Path], list[str]]:
+    """Read ordinary version files without following paths outside the checkout."""
+    root = root.resolve()
     paths = [root / name for name in VERSION_FILES]
+    for path in paths:
+        if path.is_symlink() or path.resolve() != path or not path.is_file():
+            raise ValueError(f"Version metadata must be a regular file inside the checkout: {path}")
     texts = [path.read_text(encoding="utf-8") for path in paths]
+    return paths, texts
+
+
+def write_version(root: Path, version: str, release_date: str) -> str:
+    """Change only version metadata; validate all inputs before writing."""
+    date.fromisoformat(release_date)
+    paths, texts = version_files(root)
     current = checked_version(*texts)
-    version = next_version(current)
-    if version != expected:
-        raise ValueError(f"Expected next version {expected}, but checkout requires {version}")
+    if version_key(version) <= version_key(current):
+        raise ValueError("A prepared version must increase")
     # Validate and construct every replacement before writing any file.
     updated = [
         re.sub(r'(?m)^version = "[^"]+"$', f'version = "{version}"', texts[0], count=1),
@@ -119,6 +119,15 @@ def prepare(root: Path, expected: str, release_date: str) -> str:
     for path, text in zip(paths, updated, strict=True):
         path.write_text(text, encoding="utf-8")
     return version
+
+
+def prepare(root: Path, expected: str, release_date: str) -> str:
+    _, texts = version_files(root)
+    current = checked_version(*texts)
+    version = next_version(current)
+    if version != expected:
+        raise ValueError(f"Expected next version {expected}, but checkout requires {version}")
+    return write_version(root, version, release_date)
 
 
 def main() -> int:
