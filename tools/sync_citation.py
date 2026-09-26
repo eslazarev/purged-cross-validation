@@ -1,9 +1,9 @@
 """Keep ``CITATION.cff`` in step with the package version.
 
 The single source of truth for the version is ``pyproject.toml``. The release
-workflow bumps it (and ``src/purgedcv/__init__.py``) on every package-changing
-merge; this script propagates that version into ``CITATION.cff`` so the
-citation metadata never drifts behind PyPI.
+workflow proposes a bump (with ``src/purgedcv/__init__.py``) in a release PR;
+this script propagates that version into ``CITATION.cff``. Publication follows
+the tested merge of that PR, so the citation metadata matches the release.
 
 It edits only the ``version:`` and (optionally) ``date-released:`` lines, by
 regex, so comments, field order, and the rest of the YAML are preserved. No

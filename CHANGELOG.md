@@ -11,6 +11,9 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
+- Releases now propose version changes in a draft PR and publish the tested
+  version-changing merge, without pushing directly to protected `main`.
+  Release planning also picks up package changes left by a failed older run.
 - The API reference now displays descriptions for all five public input and
   callback type aliases, and documents the shared splitter parameters under
   `BaseTemporalSplitter`.
