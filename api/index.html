@@ -1878,11 +1878,10 @@
 
 <h1 id="api-reference">API reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
 <p>All public symbols from <code>purgedcv.__all__</code>, auto-rendered from the source
-docstrings. The constructors of the splitters share a single set of
-keyword arguments (<code>prediction_times</code>, <code>evaluation_times</code>,
-<code>purge_horizon</code>, the three embargo modes, and <code>groups</code>); see
-<a href="#purgedcv.BaseTemporalSplitter"><code>BaseTemporalSplitter</code></a> for the shared
-contract.</p>
+docstrings. See <a href="#purgedcv.BaseTemporalSplitter"><code>BaseTemporalSplitter</code></a> for
+the shared time, purge, embargo, and group-validation parameters. Each
+concrete splitter documents which options it accepts and any differences
+in behavior.</p>
 <h2 id="input-type-aliases">Input type aliases<a class="headerlink" href="#input-type-aliases" title="Permanent link">&para;</a></h2>
 
 
@@ -1903,6 +1902,22 @@ contract.</p>
 </code></pre></div>
 
     <div class="doc doc-contents first">
+
+        <p>Time inputs for <code>prediction_times</code> and <code>evaluation_times</code>.</p>
+<p>Accepts the same containers as <a class="autorefs autorefs-internal" title="purgedcv.ArrayLike1D
+
+
+  
+      module-attribute
+  " href="#purgedcv.ArrayLike1D"><code>ArrayLike1D</code></a>.
+After coercion, inputs must have a <code>datetime64</code> or <code>timedelta64</code> dtype,
+not strings or numeric timestamps. Examples include pandas <code>DatetimeIndex</code>
+or <code>Series</code>, NumPy temporal arrays, Python lists of datetime/timedelta
+objects, and polars temporal <code>Series</code>. Timezone-aware pandas inputs are
+normalized to UTC.</p>
+<p><a class="autorefs autorefs-internal" title="purgedcv.validate_times" href="#purgedcv.validate_times"><code>validate_times</code></a> checks lengths, temporal dtype
+families, missing values, and label ordering. Splitters also require
+non-decreasing prediction times.</p>
 
     </div>
 
@@ -1926,6 +1941,15 @@ contract.</p>
 
     <div class="doc doc-contents first">
 
+        <p>A 1-D array-like of arbitrary elements: a NumPy array, a Python sequence, or
+a sized object exposing <code>.to_numpy()</code> (including pandas and polars containers).</p>
+<p>This is the container contract shared by time inputs and group labels; only
+the element semantics differ. Public functions coerce inputs to 1-D NumPy
+arrays and validate the shape at runtime.</p>
+<p>Unlike a bare <code>Any</code>, this alias rejects unrelated types (an <code>int</code>, a
+mapping) statically. It is a concrete union rather than a string, so
+<code>typing.get_type_hints</code> can resolve annotations on public functions.</p>
+
     </div>
 
 </div>
@@ -1947,6 +1971,14 @@ contract.</p>
 </code></pre></div>
 
     <div class="doc doc-contents first">
+
+        <p>A purge or embargo duration accepted as text or a timedelta scalar.</p>
+<p>Use a fixed-duration string such as <code>"2D"</code>, <code>"6h"</code>, or <code>"30min"</code>,
+a pandas <code>Timedelta</code>, a Python <code>datetime.timedelta</code>, or a NumPy
+<code>timedelta64</code>. <a class="autorefs autorefs-internal" title="purgedcv.parse_horizon" href="#purgedcv.parse_horizon"><code>parse_horizon</code></a> rejects negative
+or missing durations and ambiguous calendar offsets such as months or years.
+<code>None</code> is not part of this alias; individual parameters may accept it
+with their own default semantics.</p>
 
     </div>
 
@@ -1994,6 +2026,195 @@ a splitter for one dataset is rarely meaningful for another.</p>
 detail, not part of the maintained <code>0.1.x</code> public contract.
 Subclasses may need adjustments before v1.0.</p>
 </details>
+        <p>Bind times and shared purge, embargo, and group settings.</p>
+<p>Supply at most one embargo mode, even when its value is zero. With
+all three modes left as <code>None</code>, no embargo is applied. Purging
+still removes training labels that overlap test labels.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>prediction_times</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Prediction times for all samples in positional row order.
+Must be 1-D, non-missing, and monotonically non-decreasing;
+duplicate times are allowed. Its length must match the data
+passed to <code>split()</code>. See <a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+  " href="#purgedcv.TimesLike"><code>TimesLike</code></a>
+for accepted containers.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>evaluation_times</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.TimesLike
+
+
+  
+      module-attribute
+   (purgedcv._typing.TimesLike)" href="#purgedcv.TimesLike">TimesLike</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>End of each sample's label horizon. Must have
+the same length and temporal dtype family (datetime or
+timedelta) as <code>prediction_times</code>, with no missing values.
+Each value must be at or after its prediction time. Labels
+occupy half-open intervals <code>[prediction_time, evaluation_time)</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>purge_horizon</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.HorizonLike
+
+
+  
+      module-attribute
+   (purgedcv._time.HorizonLike)" href="#purgedcv.HorizonLike">HorizonLike</a> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non-negative duration padding both ends of each
+test label horizon before checking training labels for overlap.
+<code>None</code> means zero padding. Zero padding does not disable
+label-overlap purging. Durations are parsed by
+<a class="autorefs autorefs-internal" title="purgedcv.parse_horizon" href="#purgedcv.parse_horizon"><code>parse_horizon</code></a>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>embargo</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.HorizonLike
+
+
+  
+      module-attribute
+   (purgedcv._time.HorizonLike)" href="#purgedcv.HorizonLike">HorizonLike</a> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Post-test wall-clock duration. When positive, removes
+training rows whose prediction times fall in any closed interval
+<code>[test_evaluation_time, test_evaluation_time + embargo]</code>.
+Must be non-negative; zero removes no rows.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>embargo_observations</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of row positions immediately after each
+contiguous test block to exclude from training. Must be a
+non-negative integer; zero removes no rows. Counts positions
+in the full dataset, not the rows remaining after purge.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>embargo_fraction</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Fraction of the full dataset length used to compute
+<code>floor(n_samples * embargo_fraction)</code> embargoed row positions
+after each contiguous test block. Must be finite and in
+<code>[0, 1]</code>. A count that rounds to zero removes no rows.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>groups</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="purgedcv.ArrayLike1D
+
+
+  
+      module-attribute
+   (purgedcv._typing.ArrayLike1D)" href="#purgedcv.ArrayLike1D">ArrayLike1D</a> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional group labels in positional row order, with the same
+length as the times and no missing values. When provided, each
+final train/test pair must have disjoint group labels or
+<a class="autorefs autorefs-internal" title="purgedcv.GroupLeakageError" href="#purgedcv.GroupLeakageError"><code>GroupLeakageError</code></a> is raised.
+This argument enables validation; the concrete splitter decides
+how test folds are formed. The <code>groups</code> argument passed later
+to <code>split()</code> is ignored.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
 
 
 
@@ -3855,6 +4076,12 @@ row positions per contiguous block.</p>
 </code></pre></div>
 
     <div class="doc doc-contents first">
+
+        <p>A path metric: maps one path's 1-D return series to a name -&gt; value mapping.</p>
+<p>Pass this callback as <code>metric_fn</code> to <a class="autorefs autorefs-internal" title="purgedcv.path_metrics" href="#purgedcv.path_metrics"><code>path_metrics</code></a>.
+Each mapping key becomes a column in the result. The default callback is
+<a class="autorefs autorefs-internal" title="purgedcv.default_backtest_metrics" href="#purgedcv.default_backtest_metrics"><code>default_backtest_metrics</code></a>; supply your
+own to choose different statistics or a different return convention.</p>
 
     </div>
 
@@ -6559,6 +6786,14 @@ n_splits // 2)</code> minus any folds dropped for an empty IS set.</p>
 </code></pre></div>
 
     <div class="doc doc-contents first">
+
+        <p>A configuration-performance metric: maps a 1-D return slice to a scalar
+where larger is better.</p>
+<p>Pass this callback as <code>metric</code> to
+<a class="autorefs autorefs-internal" title="purgedcv.probability_of_backtest_overfitting" href="#purgedcv.probability_of_backtest_overfitting"><code>probability_of_backtest_overfitting</code></a>
+to score and rank candidate configurations. The default is a Sharpe ratio
+computed as mean return divided by sample standard deviation. Negate a loss
+if smaller values would otherwise mean better performance.</p>
 
     </div>
 
