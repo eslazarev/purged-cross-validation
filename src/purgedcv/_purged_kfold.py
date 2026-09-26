@@ -26,7 +26,7 @@ class PurgedKFold(BaseTemporalSplitter):
     test fold, with D2 purge and D3 embargo applied by the base class.
 
     For zero ``purge_horizon`` and ``embargo`` the test folds are
-    identical to :class:`sklearn.model_selection.KFold(shuffle=False)`.
+    identical to [`sklearn.model_selection.KFold(shuffle=False)`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html).
     Purge still drops any training row whose own label horizon
     ``[prediction_time, evaluation_time)`` overlaps the test labels, so
     the training set equals the full complement only when no two label
@@ -70,7 +70,7 @@ class PurgedKFold(BaseTemporalSplitter):
         Args:
             n_splits: Number of folds. Must be at least 2.
             prediction_times: Per-sample prediction times. Bound at
-                construction so :meth:`split` matches the sklearn signature.
+                construction so [`split`][purgedcv.BaseTemporalSplitter.split] matches the sklearn signature.
             evaluation_times: Per-sample evaluation times.
             purge_horizon: Symmetric padding around the test fold's label
                 window; training rows whose label horizon overlaps the
@@ -123,7 +123,7 @@ class PurgedKFold(BaseTemporalSplitter):
 
 
 class PurgedGroupKFold(BaseTemporalSplitter):
-    """Group-aware k-fold variant of :class:`PurgedKFold`.
+    """Group-aware k-fold variant of [`PurgedKFold`][purgedcv.PurgedKFold].
 
     Each test fold consists of all rows from a contiguous block of unique
     group identifiers, so no ``group_id`` ever appears in both train and
@@ -143,7 +143,7 @@ class PurgedGroupKFold(BaseTemporalSplitter):
     several short test runs and positional embargo can remove substantially
     more rows than a single fold-level buffer would.
 
-    The base class's :func:`assert_groups_disjoint` enforcement runs on
+    The base class's [`assert_groups_disjoint`][purgedcv.diagnostics.assert_groups_disjoint] enforcement runs on
     every fold automatically because ``groups`` is bound at construction.
 
     Useful in clinical ML (no patient appears in both sides of a fold),

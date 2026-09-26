@@ -2,7 +2,7 @@
 
 See *Advances in Financial Machine Learning* (Lopez de Prado, Wiley 2018),
 chapter 12 section 12.4. The N-choose-K fold enumeration is paired with
-backtest path reconstruction (domain D6) via :meth:`backtest_paths`.
+backtest path reconstruction (domain D6) via [`backtest_paths`][purgedcv.CombinatorialPurgedCV.backtest_paths].
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
     n_test_groups - 1)`` folds.
 
     The base class applies D2 purge and D3 embargo to each fold's train
-    set. :meth:`backtest_paths` then assembles the C(N,K) folds into
+    set. [`backtest_paths`][purgedcv.CombinatorialPurgedCV.backtest_paths] then assembles the C(N,K) folds into
     n_paths time-ordered out-of-sample sequences.
 
     See *Advances in Financial Machine Learning* (Lopez de Prado, Wiley
@@ -159,7 +159,7 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         4. If the fold has no training rows under an unusually aggressive
            purge/embargo configuration, the predictions for that fold are NaN.
 
-        The per-fold predictions are then handed to :func:`reconstruct_paths`,
+        The per-fold predictions are then handed to [`reconstruct_paths`][purgedcv.reconstruct_paths],
         which assembles them into an ``(n_paths, n_samples)`` matrix where
         each row is a complete time-ordered out-of-sample prediction
         sequence.
@@ -245,17 +245,17 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
     ) -> NDArrayAny:
         """Assemble per-fold predictions into the C(N-1, K-1) backtest paths.
 
-        Ergonomic wrapper around :func:`~purgedcv.reconstruct_paths`. The
+        Ergonomic wrapper around [`reconstruct_paths`][purgedcv.reconstruct_paths]. The
         splitter already knows ``n_splits``, ``n_test_groups``, the fold
         test-index layout, and ``n_samples`` (from the bound times), so the
         caller supplies only one prediction array per fold, in
-        :meth:`split` order. Use this when you ran the fits yourself (for
+        [`split`][purgedcv.BaseTemporalSplitter.split] order. Use this when you ran the fits yourself (for
         example a per-fold backtest loop) rather than via
-        :meth:`backtest_paths`.
+        [`backtest_paths`][purgedcv.CombinatorialPurgedCV.backtest_paths].
 
         Args:
             fold_predictions: One array per fold, in the same order as
-                :meth:`split` yields folds; ``fold_predictions[f]`` holds
+                [`split`][purgedcv.BaseTemporalSplitter.split] yields folds; ``fold_predictions[f]`` holds
                 the predictions for that fold's test rows, in test-index
                 order. There must be ``C(n_splits, n_test_groups)`` arrays.
 
@@ -265,7 +265,7 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
 
         Raises:
             ValueError: on a fold-count or fold-prediction length mismatch
-                (propagated from :func:`~purgedcv.reconstruct_paths`).
+                (propagated from [`reconstruct_paths`][purgedcv.reconstruct_paths]).
 
         Examples:
             >>> import numpy as np
@@ -299,10 +299,10 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
 class CombinatoriallySymmetricCV(CombinatorialPurgedCV):
     """Combinatorially Symmetric Cross-Validation (CSCV).
 
-    The special case of :class:`CombinatorialPurgedCV` with
+    The special case of [`CombinatorialPurgedCV`][purgedcv.CombinatorialPurgedCV] with
     ``n_test_groups = n_splits // 2``: every fold cuts the timeline into two
     equal halves, one in-sample and one out-of-sample. CSCV is the substrate
-    of :func:`~purgedcv.probability_of_backtest_overfitting`; expose it
+    of [`probability_of_backtest_overfitting`][purgedcv.probability_of_backtest_overfitting]; expose it
     directly when you want the symmetric IS/OOS folds without going through
     the PBO estimator.
 

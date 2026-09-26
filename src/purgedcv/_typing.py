@@ -48,6 +48,6 @@ class SupportsToNumpy(Protocol):
 ArrayLike1D: TypeAlias = NDArrayAny | Sequence[Any] | SupportsToNumpy
 
 #: Time inputs (``prediction_times`` / ``evaluation_times``). The same
-#: containers as :data:`ArrayLike1D`; ``validate_times`` additionally requires
+#: containers as [`ArrayLike1D`][purgedcv.ArrayLike1D]; ``validate_times`` additionally requires
 #: the coerced array to hold a ``datetime64`` or ``timedelta64`` dtype.
 TimesLike: TypeAlias = ArrayLike1D

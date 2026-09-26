@@ -8,7 +8,7 @@ The estimator is Combinatorially Symmetric Cross-Validation (CSCV): the
 time axis is cut into ``n_splits`` contiguous blocks, every way of choosing
 half the blocks as the in-sample (IS) set is enumerated, and the
 complementary half is the out-of-sample (OOS) set. CSCV is exactly
-:class:`~purgedcv.CombinatorialPurgedCV` with
+[`CombinatorialPurgedCV`][purgedcv.CombinatorialPurgedCV] with
 ``n_test_groups = n_splits // 2``, so when prediction/evaluation times are
 supplied the same purge and embargo machinery cleans every IS/OOS boundary.
 
@@ -34,14 +34,14 @@ from purgedcv._validation import _validate_integer
 from ._typing import NDArrayAny, TimesLike
 
 #: A configuration-performance metric: maps a 1-D return slice to a scalar
-#: where larger is better. The default is :func:`sharpe`.
+#: where larger is better. The default is `sharpe`.
 PerformanceMetric = Callable[[NDArrayAny], float]
 
 
 def sharpe(returns: NDArrayAny) -> float:
     """Plain Sharpe ratio (mean / sample standard deviation).
 
-    The default selection metric for :func:`probability_of_backtest_overfitting`.
+    The default selection metric for [`probability_of_backtest_overfitting`][purgedcv.probability_of_backtest_overfitting].
     A degenerate slice (zero or non-finite standard deviation) scores 0.0 so
     it never wins the in-sample selection.
 
@@ -66,10 +66,10 @@ def sharpe(returns: NDArrayAny) -> float:
 
 @dataclass(frozen=True, eq=False)
 class PBOResult:
-    """Return type of :func:`probability_of_backtest_overfitting`.
+    """Return type of [`probability_of_backtest_overfitting`][purgedcv.probability_of_backtest_overfitting].
 
     A frozen dataclass: read fields by attribute (``result.pbo``), and call
-    :func:`dataclasses.asdict` if you need a plain dict to serialise.
+    [`dataclasses.asdict`](https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict) if you need a plain dict to serialise.
 
     Attributes:
         pbo: Probability of backtest overfitting in [0, 1]. The fraction of
@@ -105,7 +105,7 @@ class PBOResult:
 def _contiguous_blocks(n_obs: int, n_splits: int) -> list[NDArrayAny]:
     """Partition ``range(n_obs)`` into ``n_splits`` contiguous blocks.
 
-    Matches :meth:`CombinatorialPurgedCV._iter_test_indices` exactly so the
+    Matches `CombinatorialPurgedCV._iter_test_indices` exactly so the
     no-purge fast path and the purged splitter path agree on block layout.
     """
     block_size, remainder = divmod(n_obs, n_splits)
@@ -132,7 +132,7 @@ def _iter_is_oos(
 
     Without times (and without purge/embargo) the in-sample set is the plain
     complement of the chosen OOS blocks. With times, the work is delegated to
-    :class:`CombinatorialPurgedCV` so purge and embargo trim each IS set at
+    [`CombinatorialPurgedCV`][purgedcv.CombinatorialPurgedCV] so purge and embargo trim each IS set at
     the IS/OOS boundaries.
     """
     n_test_groups = n_splits // 2
@@ -251,7 +251,7 @@ def _aggregate_pbo(
     is_perf_best: list[float],
     oos_perf_best: list[float],
 ) -> PBOResult:
-    """Assemble the per-combination scores into a :class:`PBOResult`."""
+    """Assemble the per-combination scores into a [`PBOResult`][purgedcv.PBOResult]."""
     logit_arr = np.asarray(logits, dtype=float)
     is_arr = np.asarray(is_perf_best, dtype=float)
     oos_arr = np.asarray(oos_perf_best, dtype=float)
@@ -298,7 +298,7 @@ def probability_of_backtest_overfitting(
             combinations is ``C(n_splits, n_splits // 2)``. The standard
             choice is 16.
         metric: Performance metric mapping a 1-D return slice to a scalar
-            (larger is better). Defaults to :func:`sharpe`.
+            (larger is better). Defaults to `sharpe`.
         prediction_times: Optional per-period prediction times. Supply with
             ``evaluation_times`` to enable purge/embargo at IS/OOS
             boundaries. Length must equal ``n_obs``.
@@ -312,7 +312,7 @@ def probability_of_backtest_overfitting(
             OOS block (requires the time series).
 
     Returns:
-        A :class:`PBOResult` (frozen dataclass; read fields by attribute,
+        A [`PBOResult`][purgedcv.PBOResult] (frozen dataclass; read fields by attribute,
         e.g. ``result.pbo``, ``result.slope``).
 
     Raises:

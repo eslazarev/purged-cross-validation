@@ -2,12 +2,12 @@
 
 Four closed-form tools that correct reported Sharpe ratios:
 
-- :func:`probabilistic_sharpe_ratio` (PSR) — Bailey & Lopez de Prado (2012).
-- :func:`deflated_sharpe_ratio` (DSR) — Bailey & Lopez de Prado (2014).
-- :func:`deflated_sharpe_ratio_full` — DSR plus the intermediate quantities
+- [`probabilistic_sharpe_ratio`][purgedcv.probabilistic_sharpe_ratio] (PSR) — Bailey & Lopez de Prado (2012).
+- [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] (DSR) — Bailey & Lopez de Prado (2014).
+- [`deflated_sharpe_ratio_full`][purgedcv.deflated_sharpe_ratio_full] — DSR plus the intermediate quantities
   that explain *why* the deflation landed where it did.
-- :func:`min_track_record_length` (MinTRL) — derived from PSR by inversion.
-- :func:`minimum_backtest_length` (MinBTL) — the backtest length below which a
+- [`min_track_record_length`][purgedcv.min_track_record_length] (MinTRL) — derived from PSR by inversion.
+- [`minimum_backtest_length`][purgedcv.minimum_backtest_length] (MinBTL) — the backtest length below which a
   reported Sharpe is within what selection over N trials produces by chance.
 
 References:
@@ -166,7 +166,7 @@ def _expected_max_z(n_trials: int) -> float:
     ``gamma`` is the Euler-Mascheroni constant. A single trial has no maximum
     to correct for, so the expected maximum under the null is 0 (the formula
     diverges at n = 1, where ``Phi_inv(0) = -inf``). Shared by the DSR
-    deflation and :func:`minimum_backtest_length`.
+    deflation and [`minimum_backtest_length`][purgedcv.minimum_backtest_length].
     """
     if n_trials == 1:
         return 0.0
@@ -180,7 +180,7 @@ def _deflated_benchmark(n_trials: int, var_sharpe: float) -> tuple[float, float]
     """Return ``(expected_max_z, sr_star)`` for the DSR deflation.
 
     ``expected_max_z`` is the standardized expected maximum of ``n_trials``
-    independent Sharpe estimators under the null (see :func:`_expected_max_z`).
+    independent Sharpe estimators under the null (see `_expected_max_z`).
     ``sr_star`` is that multiplier scaled by the spread of trial Sharpes, i.e.
     the deflated benchmark in Sharpe units:
     ``sr_star = sqrt(var_sharpe) * expected_max_z``.
@@ -215,7 +215,7 @@ def deflated_sharpe_ratio(
     $$
 
     where $\\gamma \\approx 0.5772$ is the Euler-Mascheroni constant.
-    DSR is then :func:`probabilistic_sharpe_ratio` evaluated at the
+    DSR is then [`probabilistic_sharpe_ratio`][purgedcv.probabilistic_sharpe_ratio] evaluated at the
     deflated benchmark $\\text{SR}^\\ast_n$.
 
     Args:
@@ -228,7 +228,7 @@ def deflated_sharpe_ratio(
             ``n_trials`` candidates. Caller supplies; we do not estimate
             it because that would require knowing the distribution of
             submitted strategies, which is private to the caller.
-            :class:`purgedcv.optuna_integration.TrialSharpeRecorder`
+            [`purgedcv.optuna_integration.TrialSharpeRecorder`][purgedcv.optuna_integration.TrialSharpeRecorder]
             produces it directly from an Optuna study.
 
             UNITS: ``var_sharpe`` must be in the same Sharpe units as the
@@ -236,7 +236,7 @@ def deflated_sharpe_ratio(
             per-observation). If your trial Sharpes were annualised, pass
             ``bars_per_year`` and the conversion is done for you; otherwise
             ``var_sharpe`` is taken as already per-observation. Note that
-            :func:`path_metrics` annualises its Sharpe when given
+            [`path_metrics`][purgedcv.path_metrics] annualises its Sharpe when given
             ``bars_per_year``, so a ``var`` taken from its output is
             annualised: pass the same ``bars_per_year`` here.
         bars_per_year: If given, ``var_sharpe`` is interpreted as an
@@ -275,17 +275,17 @@ def deflated_sharpe_ratio(
 
 @dataclass(frozen=True)
 class DSRDiagnostics:
-    """Return type of :func:`deflated_sharpe_ratio_full`.
+    """Return type of [`deflated_sharpe_ratio_full`][purgedcv.deflated_sharpe_ratio_full].
 
     A frozen dataclass: read fields by attribute (``diag.dsr``), and call
-    :func:`dataclasses.asdict` if you need a plain dict to serialise.
+    [`dataclasses.asdict`](https://docs.python.org/3/library/dataclasses.html#dataclasses.asdict) if you need a plain dict to serialise.
 
     Attributes:
         dsr: The deflated Sharpe probability (identical to
-            :func:`deflated_sharpe_ratio` for the same inputs).
+            [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] for the same inputs).
         observed_sr: Sample Sharpe ratio of ``returns`` (population
             standard deviation, ``ddof=0``). In the same per-period units
-            as ``var_sharpe`` must be; see :func:`deflated_sharpe_ratio_full`.
+            as ``var_sharpe`` must be; see [`deflated_sharpe_ratio_full`][purgedcv.deflated_sharpe_ratio_full].
         sr_star: Deflated benchmark in Sharpe units, i.e. the expected
             maximum Sharpe of ``n_trials`` candidates under the null.
         expected_max_z: Standardized expected maximum (the bracket term);
@@ -317,7 +317,7 @@ def deflated_sharpe_ratio_full(
     *,
     bars_per_year: int | None = None,
 ) -> DSRDiagnostics:
-    """Like :func:`deflated_sharpe_ratio` but return the intermediate
+    """Like [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] but return the intermediate
     quantities alongside the probability.
 
     When DSR is near 0 the scalar form does not tell you *why*: was the
@@ -330,16 +330,16 @@ def deflated_sharpe_ratio_full(
         n_trials: Number of independent searches (>= 1).
         var_sharpe: Variance of Sharpe ratios across the candidates. Per
             observation by default; pass ``bars_per_year`` if it is
-            annualised (see :func:`deflated_sharpe_ratio` for the unit
+            annualised (see [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] for the unit
             contract).
         bars_per_year: If given, ``var_sharpe`` is annualised and converted
             to per-observation before deflation. ``None`` (default) treats
             it as already per-observation.
 
     Returns:
-        A :class:`DSRDiagnostics` (frozen dataclass; read fields by
+        A [`DSRDiagnostics`][purgedcv.DSRDiagnostics] (frozen dataclass; read fields by
         attribute, e.g. ``diag.dsr``, ``diag.sr_star``). ``dsr`` equals
-        :func:`deflated_sharpe_ratio` for the same arguments. The
+        [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] for the same arguments. The
         ``var_sharpe`` field holds the per-observation value actually used
         (after any ``bars_per_year`` conversion), so
         ``sr_star == sqrt(var_sharpe) * expected_max_z`` always holds.
@@ -391,7 +391,7 @@ def min_track_record_length(
 ) -> float:
     """Minimum sample size such that PSR(target_sharpe) >= 1 - alpha.
 
-    Inverts the :func:`probabilistic_sharpe_ratio` formula for ``n``:
+    Inverts the [`probabilistic_sharpe_ratio`][purgedcv.probabilistic_sharpe_ratio] formula for ``n``:
 
     $$
     n^\\ast = 1 + \\left\\lceil
@@ -508,7 +508,7 @@ def minimum_backtest_length(n_trials: int | np.integer[Any], target_sharpe: floa
 
     where $\gamma$ is the Euler-Mascheroni constant and $\text{SR}^\ast$ is
     ``target_sharpe``. The numerator is the same bracket term that deflates the
-    Sharpe in :func:`deflated_sharpe_ratio`; MinBTL is its inverse, solving for
+    Sharpe in [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio]; MinBTL is its inverse, solving for
     length instead of for a probability.
 
     Bailey, Borwein, Lopez de Prado & Zhu (2014), "Pseudo-mathematics and
@@ -557,13 +557,13 @@ def minimum_backtest_length(n_trials: int | np.integer[Any], target_sharpe: floa
 def effective_n_trials(trial_sharpes: NDArrayAny, method: str = "autocorr") -> int:
     """Estimate the number of *independent* trials behind a correlated search.
 
-    :func:`deflated_sharpe_ratio` assumes the ``n_trials`` candidates were
+    [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] assumes the ``n_trials`` candidates were
     drawn independently. Sequential samplers (Optuna's TPE, CMA-ES) draw each
     trial conditioned on the previous ones, so the trials are autocorrelated
     and the raw count overstates how many independent bets were really placed.
     Feeding the raw count inflates the deflated benchmark and makes DSR
     needlessly conservative (often numerically zero). This returns a smaller
-    effective count to pass to :func:`deflated_sharpe_ratio` instead.
+    effective count to pass to [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] instead.
 
     The estimate is the run length divided by the integrated autocorrelation
     time of the trial-performance series:

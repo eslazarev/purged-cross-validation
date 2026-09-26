@@ -9,6 +9,11 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Fixed
+
+- API docstrings now use MkDocs-compatible cross-references and a supported
+  note block, so readers see working links instead of literal Sphinx tags.
+
 ### Added
 
 - Public `PBOResult` and `DSRDiagnostics` result dataclasses, plus the

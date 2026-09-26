@@ -1,7 +1,7 @@
 """Exception types raised by purged-cross-validation.
 
-The hierarchy is rooted at :class:`TemporalCVError`, which itself subclasses
-:class:`ValueError`. Callers who want to catch any purged-cross-validation error use
+The hierarchy is rooted at [`TemporalCVError`][purgedcv.TemporalCVError], which itself subclasses
+[`ValueError`](https://docs.python.org/3/library/exceptions.html#ValueError). Callers who want to catch any purged-cross-validation error use
 ``except TemporalCVError``; callers who already broadly catch ``ValueError``
 also receive our errors without code changes.
 """

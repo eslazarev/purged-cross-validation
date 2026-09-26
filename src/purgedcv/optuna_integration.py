@@ -1,6 +1,6 @@
 """Optuna integration helpers (optional extra: ``pip install purgedcv[optuna]``).
 
-:func:`~purgedcv.deflated_sharpe_ratio` needs ``var_sharpe``: the variance of
+[`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] needs ``var_sharpe``: the variance of
 the Sharpe ratios across the trials you searched. Optuna only stores each
 trial's objective value, so users hand-roll the bookkeeping every time:
 
@@ -9,7 +9,8 @@ trial's objective value, so users hand-roll the bookkeeping every time:
     shs = [t.user_attrs["sharpe"] for t in study.trials if "sharpe" in t.user_attrs]
     var_sharpe = np.var(shs, ddof=1)
 
-:class:`TrialSharpeRecorder` is a study callback that does exactly that.
+[`TrialSharpeRecorder`][purgedcv.optuna_integration.TrialSharpeRecorder]
+is a study callback that does exactly that.
 
 Importing this module does **not** require Optuna. The recorder is a plain
 callback that reads attributes off whatever ``(study, trial)`` pair Optuna
@@ -43,7 +44,7 @@ class TrialSharpeRecorder:
     Pass an instance as a callback to ``study.optimize`` and store each
     trial's Sharpe in a user attribute (default key ``"sharpe"``); the
     recorder accumulates them and reports the variance for
-    :func:`~purgedcv.deflated_sharpe_ratio`. If a trial has no such user
+    [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio]. If a trial has no such user
     attribute, the recorder falls back to that trial's objective ``value``.
     Non-finite and missing values are ignored.
 
@@ -107,11 +108,11 @@ class TrialSharpeRecorder:
 
         TPE and CMA-ES draw each trial conditioned on the previous ones, so
         the raw trial count overstates the independent search effort and makes
-        :func:`~purgedcv.deflated_sharpe_ratio` overly conservative. This
-        applies :func:`~purgedcv.effective_n_trials` to the recorded Sharpe
+        [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] overly conservative. This
+        applies [`effective_n_trials`][purgedcv.effective_n_trials] to the recorded Sharpe
         series; pass the result as ``n_trials`` to deflate more realistically.
         Returns 0 when nothing has been recorded yet. See
-        :func:`~purgedcv.effective_n_trials` for the heuristic's caveats.
+        [`effective_n_trials`][purgedcv.effective_n_trials] for the heuristic's caveats.
         """
         from purgedcv._metrics import effective_n_trials
 
@@ -126,7 +127,7 @@ class TrialSharpeRecorder:
         Returns ``nan`` until more than ``ddof`` trials have been recorded.
 
         UNITS: the variance is in the units of whatever Sharpe you stored
-        per trial. :func:`~purgedcv.deflated_sharpe_ratio` compares against
+        per trial. [`deflated_sharpe_ratio`][purgedcv.deflated_sharpe_ratio] compares against
         the per-period Sharpe of its ``returns`` argument, so record a
         per-period Sharpe in each trial (the same convention as the
         ``returns`` you will later deflate). Do that and the recorder feeds

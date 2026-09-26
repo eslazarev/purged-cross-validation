@@ -31,7 +31,7 @@ def _validate_bars_per_year(bars_per_year: object) -> None:
     ``None`` passes (the caller treats it as "already per-observation").
     Everything else must be a single real number: ``bool`` is rejected
     (``True``/``False`` are ``int`` subclasses but never a meaningful
-    bars-per-year, matching :func:`_validate_integer`), as are strings, arrays,
+    bars-per-year, matching `_validate_integer`), as are strings, arrays,
     and other non-scalar inputs, all with one consistent message rather than a
     leaked numpy ``TypeError`` or ambiguous-truth ``ValueError``.
 

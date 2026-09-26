@@ -26,7 +26,7 @@ def reconstruct_paths(
     """Assemble Combinatorial Purged CV fold predictions into backtest paths.
 
     Given the predictions and test indices for all C(N, K) folds produced by
-    :class:`CombinatorialPurgedCV`, returns a ``(n_paths, n_samples)`` array
+    [`CombinatorialPurgedCV`][purgedcv.CombinatorialPurgedCV], returns a ``(n_paths, n_samples)`` array
     where each row is a complete time-ordered out-of-sample prediction
     sequence built from a different combination of the folds.
 
@@ -44,7 +44,7 @@ def reconstruct_paths(
             prediction values for the rows in ``fold_test_indices[f]``,
             in the same order.
         fold_test_indices: One array per fold; the per-fold test_idx as
-            yielded by :meth:`CombinatorialPurgedCV._iter_test_indices`.
+            yielded by `CombinatorialPurgedCV._iter_test_indices`.
             Used here to recover the group block layout.
         n_splits: Number of CPCV group blocks.
         n_test_groups: Number of test groups per fold.

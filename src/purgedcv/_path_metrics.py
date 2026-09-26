@@ -1,10 +1,10 @@
 """Internal: per-path summary statistics for CPCV backtest paths (Domain D6).
 
-:func:`~purgedcv.reconstruct_paths` (and
-:meth:`CombinatorialPurgedCV.backtest_paths`) return an
+[`reconstruct_paths`][purgedcv.reconstruct_paths] (and
+[`CombinatorialPurgedCV.backtest_paths`][purgedcv.CombinatorialPurgedCV.backtest_paths]) return an
 ``(n_paths, n_samples)`` matrix. The next step is almost always the same:
 reduce each path to a handful of summary numbers (Sharpe, Calmar, drawdown,
-total return). :func:`path_metrics` does that in one call and hands back a
+total return). [`path_metrics`][purgedcv.path_metrics] does that in one call and hands back a
 tidy DataFrame so the whole path distribution can be described at once.
 
 Each row of the input is treated as a per-period **return** (or PnL) series.
@@ -116,13 +116,13 @@ def path_metrics(
 
     Args:
         paths: ``(n_paths, n_samples)`` array, as returned by
-            :func:`~purgedcv.reconstruct_paths` or
-            :meth:`CombinatorialPurgedCV.backtest_paths`. Each row is one
+            [`reconstruct_paths`][purgedcv.reconstruct_paths] or
+            [`CombinatorialPurgedCV.backtest_paths`][purgedcv.CombinatorialPurgedCV.backtest_paths]. Each row is one
             path's per-period return series.
         metric_fn: Maps a 1-D path to a name -> value mapping. Defaults to
-            :func:`default_backtest_metrics`. A custom function lets you
+            [`default_backtest_metrics`][purgedcv.default_backtest_metrics]. A custom function lets you
             choose your own statistics and return convention.
-        bars_per_year: Forwarded to :func:`default_backtest_metrics` for
+        bars_per_year: Forwarded to [`default_backtest_metrics`][purgedcv.default_backtest_metrics] for
             annualisation. Ignored when a custom ``metric_fn`` is given
             (bind any such option into the function yourself).
 
@@ -131,7 +131,7 @@ def path_metrics(
         one column per metric. With the default ``metric_fn`` the
         ``max_drawdown`` column is a **positive magnitude** (``0.30`` = a 30%
         drawdown), so the worst path is ``df["max_drawdown"].idxmax()``, not
-        ``idxmin()``; see :func:`default_backtest_metrics`.
+        ``idxmin()``; see [`default_backtest_metrics`][purgedcv.default_backtest_metrics].
 
     Raises:
         ValueError: if ``paths`` is not 2-D.

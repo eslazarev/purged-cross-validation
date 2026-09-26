@@ -32,20 +32,21 @@ class _SplitStages:
 class BaseTemporalSplitter(ABC):
     """Duck-typed sklearn CV splitter with purge + embargo orchestration.
 
-    Concrete subclasses implement :meth:`_iter_test_indices` to yield the
+    Concrete subclasses implement `_iter_test_indices` to yield the
     raw test-index arrays for each fold. The base class handles purge,
     embargo, optional group-disjointness, and the sklearn-compatible
-    :meth:`split` / :meth:`get_n_splits` protocol.
+    [`split`][purgedcv.BaseTemporalSplitter.split] /
+    [`get_n_splits`][purgedcv.BaseTemporalSplitter.get_n_splits] protocol.
 
     Times are bound to the splitter at construction. This couples the
     splitter to a specific dataset's timestamps, which is intentional:
     a splitter for one dataset is rarely meaningful for another.
 
-    .. note::
-       The subclassing interface (``_iter_test_indices``,
-       ``_candidate_train_idx``, ``_finalize_train_idx``) is an implementation
-       detail, not part of the maintained ``0.1.x`` public contract.
-       Subclasses may need adjustments before v1.0.
+    Note:
+        The subclassing interface (``_iter_test_indices``,
+        ``_candidate_train_idx``, ``_finalize_train_idx``) is an implementation
+        detail, not part of the maintained ``0.1.x`` public contract.
+        Subclasses may need adjustments before v1.0.
     """
 
     def __init__(
@@ -115,9 +116,9 @@ class BaseTemporalSplitter(ABC):
         be bound at construction via the ``groups`` argument of ``__init__``.
 
         When groups were bound at construction,
-        :func:`~purgedcv.diagnostics.assert_groups_disjoint` is called on
-        every fold after purge, embargo, and splitter-specific finalization; a
-        :class:`~purgedcv.exceptions.GroupLeakageError` is raised if any
+        [`assert_groups_disjoint`][purgedcv.diagnostics.assert_groups_disjoint]
+        is called on every fold after purge, embargo, and splitter-specific finalization; a
+        [`GroupLeakageError`][purgedcv.GroupLeakageError] is raised if any
         group identifier appears in both train and test of the same fold.
         """
         # Local import avoids the module-level BaseTemporalSplitter ↔
@@ -137,8 +138,8 @@ class BaseTemporalSplitter(ABC):
     ) -> Iterator[_SplitStages]:
         """Yield each real candidate → purge → embargo → final pipeline.
 
-        This is the single orchestration path used by :meth:`split` and the
-        public :func:`purgedcv.audit_splitter` report. Keeping the intermediate
+        This is the single orchestration path used by [`split`][purgedcv.BaseTemporalSplitter.split] and the
+        public [`purgedcv.audit_splitter`][purgedcv.audit_splitter] report. Keeping the intermediate
         arrays here prevents diagnostics from guessing purge and embargo
         effects by comparing only the final split indices.
         """
@@ -189,8 +190,8 @@ class BaseTemporalSplitter(ABC):
         strictly before the test fold.
 
         The return must be a 1-D ``NDArrayAny`` of integer indices (dtype int64
-        is the convention), because downstream :func:`purge` and
-        :func:`apply_embargo` use boolean fancy indexing on it.
+        is the convention), because downstream [`purge`][purgedcv.purge] and
+        [`apply_embargo`][purgedcv.apply_embargo] use boolean fancy indexing on it.
         """
         mask = np.ones(n_samples, dtype=bool)
         mask[test_idx] = False

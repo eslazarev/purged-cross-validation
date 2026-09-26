@@ -19,7 +19,7 @@ class WalkForwardSplit(BaseTemporalSplitter):
     """Walk-forward CV with sliding or expanding training window.
 
     For ``window="expanding"`` and zero purge/embargo, this matches
-    :class:`sklearn.model_selection.TimeSeriesSplit`. For
+    [`sklearn.model_selection.TimeSeriesSplit`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html). For
     ``window="sliding"``, the training window has a fixed maximum length
     (the most recent ``train_size`` samples before the test fold).
 
@@ -73,11 +73,11 @@ class WalkForwardSplit(BaseTemporalSplitter):
                 Must be ``None`` when ``window='expanding'`` and a positive
                 integer when ``window='sliding'``.
             window: ``"expanding"`` (default) uses all pre-test data as
-                training; matches :class:`sklearn.model_selection.TimeSeriesSplit`
+                training; matches [`sklearn.model_selection.TimeSeriesSplit`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html)
                 when purge is zero. ``"sliding"`` caps each training set at
                 the most recent ``train_size`` rows after purge.
             prediction_times: Per-sample prediction times for the dataset.
-                Bound at construction so :meth:`split` matches the sklearn
+                Bound at construction so [`split`][purgedcv.BaseTemporalSplitter.split] matches the sklearn
                 signature.
             evaluation_times: Per-sample evaluation times. Required to apply
                 purge correctly.

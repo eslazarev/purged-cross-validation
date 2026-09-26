@@ -6,7 +6,7 @@ These functions exist for two purposes:
    their output is leakage-free.
 2. Users audit custom splits they have built by hand.
 
-Each ``assert_*`` raises a specific :class:`TemporalCVError` subclass with
+Each ``assert_*`` raises a specific [`TemporalCVError`][purgedcv.TemporalCVError] subclass with
 the offending row index in the message. The non-raising helpers return either
 a scalar overlap summary or a per-fold splitter audit suitable for logging,
 review, and regression checks.
@@ -137,7 +137,7 @@ def audit_splitter(
     """Return a non-raising, per-fold report for a temporal splitter.
 
     The report consumes the same candidate → purge → embargo → final pipeline
-    as :meth:`BaseTemporalSplitter.split`; purge and embargo counts therefore
+    as [`BaseTemporalSplitter.split`][purgedcv.BaseTemporalSplitter.split]; purge and embargo counts therefore
     come from the actual intermediate index arrays rather than being inferred
     from the final split. Sliding walk-forward truncation is implemented by
     the finalization stage and therefore appears in
@@ -148,7 +148,7 @@ def audit_splitter(
     whose label horizons overlap the test horizons after applying the
     splitter's ``purge_horizon`` padding. For non-empty candidates it equals
     ``rows_removed_by_purge / candidate_train_size``; empty candidates report
-    zero. :func:`compute_overlap_fraction` reproduces it only when given the
+    zero. [`compute_overlap_fraction`][purgedcv.diagnostics.compute_overlap_fraction] reproduces it only when given the
     same pre-purge candidate indices and purge horizon — indices returned by
     ``cv.split()`` are already final. ``final_overlap_fraction`` repeats the
     measure on final training rows and should be zero for a clean splitter.
@@ -156,7 +156,7 @@ def audit_splitter(
     For the built-in splitters, ``temporal_leakage_free`` is structurally
     expected to be ``True``: purge removes overlaps and later stages only
     remove rows. The column is primarily a regression guard for custom
-    :class:`BaseTemporalSplitter` subclasses whose finalization hook could
+    [`BaseTemporalSplitter`][purgedcv.BaseTemporalSplitter] subclasses whose finalization hook could
     accidentally reintroduce indices; it is not an independent validation
     algorithm. For an empty final train set it is vacuously ``True``; inspect
     ``train_nonempty`` before treating a fold as usable. Leakage and group
@@ -170,7 +170,7 @@ def audit_splitter(
     ``test_block_count`` expose that layout; the counts refer to contiguous
     runs of positional indices.
 
-    The audit requires the inherited :meth:`BaseTemporalSplitter.split`
+    The audit requires the inherited [`BaseTemporalSplitter.split`][purgedcv.BaseTemporalSplitter.split]
     implementation. A subclass overriding ``split()`` is rejected because its
     returned folds may diverge from the auditable candidate → purge → embargo
     → finalization pipeline. Custom subclasses should use
@@ -178,7 +178,7 @@ def audit_splitter(
     ``_finalize_train_idx`` instead.
 
     Args:
-        cv: A :class:`BaseTemporalSplitter` instance with times already bound.
+        cv: A [`BaseTemporalSplitter`][purgedcv.BaseTemporalSplitter] instance with times already bound.
         X: Feature matrix or other sized sample container. Its length must
             match the times bound to ``cv``; feature values are not inspected.
 
@@ -191,8 +191,8 @@ def audit_splitter(
         ``groups_disjoint`` (``None`` when no groups are bound).
 
     Raises:
-        TypeError: if ``cv`` is not a :class:`BaseTemporalSplitter` or its
-            class overrides :meth:`BaseTemporalSplitter.split`.
+        TypeError: if ``cv`` is not a [`BaseTemporalSplitter`][purgedcv.BaseTemporalSplitter] or its
+            class overrides [`BaseTemporalSplitter.split`][purgedcv.BaseTemporalSplitter.split].
         ValueError: if ``X`` has the wrong length or the splitter cannot form
             its configured folds.
 
@@ -293,7 +293,7 @@ def assert_no_temporal_leakage(
     *,
     purge_horizon: HorizonLike | None = None,
 ) -> None:
-    """Raise :class:`TemporalLeakageError` if any training row's label horizon
+    """Raise [`TemporalLeakageError`][purgedcv.TemporalLeakageError] if any training row's label horizon
     overlaps any test label horizon, optionally padded on both sides by
     ``purge_horizon``.
 
@@ -356,10 +356,10 @@ def assert_embargo_respected(
     embargo_observations: int | None = None,
     embargo_fraction: float | None = None,
 ) -> None:
-    """Raise :class:`EmbargoViolationError` when an embargo is violated.
+    """Raise [`EmbargoViolationError`][purgedcv.EmbargoViolationError] when an embargo is violated.
 
     The duration, observation-count, and fractional modes have the same
-    mutually-exclusive semantics as :func:`purgedcv.apply_embargo`. Exactly
+    mutually-exclusive semantics as [`purgedcv.apply_embargo`][purgedcv.apply_embargo]. Exactly
     one mode must be supplied; omitting all three is treated as a configuration
     error rather than a successful audit.
 
@@ -428,7 +428,7 @@ def assert_groups_disjoint(
     test_idx: NDArrayAny,
     groups: ArrayLike1D,
 ) -> None:
-    """Raise :class:`GroupLeakageError` if any group identifier appears in
+    """Raise [`GroupLeakageError`][purgedcv.GroupLeakageError] if any group identifier appears in
     both ``train_idx`` and ``test_idx``.
 
     Used by group-aware splitters to verify that no entity (patient, asset,
@@ -472,7 +472,7 @@ def compute_overlap_fraction(
     """Return the fraction of training rows whose half-open label horizon
     overlaps any test horizon, optionally padded by ``purge_horizon``.
 
-    Unlike :func:`assert_no_temporal_leakage`, this does not raise when it
+    Unlike [`assert_no_temporal_leakage`][purgedcv.diagnostics.assert_no_temporal_leakage], this does not raise when it
     finds leakage: it returns ``0.0`` for clean splits and ``1.0`` when every
     training row leaks. Malformed indices, times, and horizons still raise
     validation errors. Useful for logging splitter health metrics or for
