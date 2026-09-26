@@ -11,9 +11,10 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
-- Releases now propose version changes in a draft PR and publish the tested
-  version-changing merge, without pushing directly to protected `main`.
-  Release planning also picks up package changes left by a failed older run.
+- Release metadata is now added to the working PR instead of a separate
+  release PR. Only the tested version-changing merge is published, without
+  pushing directly to protected `main`. Repeated PR updates keep the prepared
+  version, and pending package changes from the old failed release are included.
 - The API reference now displays descriptions for all five public input and
   callback type aliases, and documents the shared splitter parameters under
   `BaseTemporalSplitter`.

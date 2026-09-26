@@ -11,7 +11,88 @@ permissions:
   contents: read
 
 jobs:
+  pr-version:
+    # Never give a fork write access. The helper comes from the trusted base,
+    # not from the PR checkout; no PR code is installed or executed here.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: pr-version-${{ github.repository }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    outputs:
+      updated: ${{ steps.update.outputs.updated }}
+    steps:
+      - name: Check out trusted release tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: release-tools
+          persist-credentials: false
+
+      - name: Check out the working PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Update version in this PR
+        id: update
+        working-directory: candidate
+        env:
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git check-ref-format "refs/heads/$PR_BRANCH"
+          if [ "$PR_BRANCH" = main ] || [ "$PR_BRANCH" = master ]; then
+            echo "Refusing to push version metadata to a protected base branch."
+            exit 1
+          fi
+          tip=$(git ls-remote --exit-code origin "refs/heads/$PR_BRANCH" | cut -f1)
+          if [ "$tip" != "$PR_HEAD" ]; then
+            echo "A newer PR head supersedes this run."
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ ! -f ../release-tools/tools/prepare_pr_release.py ]; then
+            echo "Bootstrap PR: trusted main does not have the helper yet."
+            echo "Include the version bump in this PR manually."
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin main
+          base=$(git rev-parse origin/main)
+          python ../release-tools/tools/prepare_pr_release.py \
+            --root . --base "$base" --head "$PR_HEAD"
+          if git diff --quiet; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- pyproject.toml src/purgedcv/__init__.py CITATION.cff
+          git -c core.hooksPath=/dev/null -c commit.gpgsign=false \
+            commit -m "chore: prepare release metadata"
+          git push origin "HEAD:refs/heads/$PR_BRANCH"
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+          echo "Version added to this PR. Run CI on the new head; approve pending workflows if asked."
+
   test:
+    needs: [pr-version]
+    if: >-
+      always() && !cancelled() &&
+      (needs.pr-version.result == 'success' || needs.pr-version.result == 'skipped') &&
+      needs.pr-version.outputs.updated != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -57,9 +138,18 @@ jobs:
   # Validate the citation metadata and guard against version drift. Runs
   # once (not across the Python matrix) because it is a static-file check.
   citation:
+    needs: [pr-version]
+    if: >-
+      always() && !cancelled() &&
+      (needs.pr-version.result == 'success' || needs.pr-version.result == 'skipped') &&
+      needs.pr-version.outputs.updated != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -74,8 +164,15 @@ jobs:
       - name: Check CITATION.cff version matches pyproject.toml
         run: python tools/sync_citation.py --check
 
-  # Version changes go through a draft PR. Only a tested version-changing
-  # push to main publishes; PR events never receive release credentials.
+      - name: Check version metadata is included in the working PR
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python tools/prepare_pr_release.py --root . --base "$PR_BASE" --head "$PR_HEAD" --check
+
+  # Code and version metadata merge together. Only a tested version-changing
+  # push to main publishes; PR events never receive publication credentials.
   release:
     needs: [test, citation]
     if: >-
@@ -84,7 +181,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     concurrency:
       group: release-${{ github.repository }}
       cancel-in-progress: false
@@ -106,47 +202,6 @@ jobs:
           AFTER: ${{ github.sha }}
         run: |
           python tools/release.py plan --before "$BEFORE" --after "$AFTER" >> "$GITHUB_OUTPUT"
-
-      - name: Check whether this is still the latest main commit
-        if: steps.plan.outputs.mode == 'prepare'
-        id: tip
-        run: |
-          tip=$(git ls-remote --exit-code origin refs/heads/main | cut -f1)
-          if [ "$tip" = "$GITHUB_SHA" ]; then
-            echo "current=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "current=false" >> "$GITHUB_OUTPUT"
-            echo "A newer main commit will prepare the release PR."
-          fi
-
-      - name: Prepare version files
-        if: steps.plan.outputs.mode == 'prepare' && steps.tip.outputs.current == 'true'
-        env:
-          VERSION: ${{ steps.plan.outputs.version }}
-        run: python tools/release.py prepare --version "$VERSION"
-
-      - name: Open or update draft release PR
-        if: steps.plan.outputs.mode == 'prepare' && steps.tip.outputs.current == 'true'
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          branch: release/v${{ steps.plan.outputs.version }}
-          add-paths: |
-            pyproject.toml
-            src/purgedcv/__init__.py
-            CITATION.cff
-          commit-message: "chore: release v${{ steps.plan.outputs.version }}"
-          title: "chore: release v${{ steps.plan.outputs.version }}"
-          draft: always-true
-          body: |
-            Prepare version ${{ steps.plan.outputs.version }} for release.
-
-            This PR changes only the package version and citation metadata.
-            Mark it **Ready for review** to trigger CI, approve any pending
-            workflow run if GitHub requests it, and wait for the checks before merging.
-            The version-changing merge to main will be tested again, then tagged
-            and published to PyPI. No direct push to main is used.
 
       - name: Install build tooling
         if: steps.plan.outputs.mode == 'publish'

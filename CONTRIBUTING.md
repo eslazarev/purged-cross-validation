@@ -71,48 +71,58 @@ disagree with a flag in your prose, raise it in the PR.
   `docs:`, `test:`). Not enforced.
 - Keep PRs focused. One feature, one fix, one refactor, not a mix.
 - Update `CHANGELOG.md` under `Unreleased` if your change is user-visible.
-- Releases use a separate version-bump PR. See the maintainer steps below.
-  Do not bump the version in an ordinary feature or bug-fix PR.
+- Code and release metadata belong in the same PR. See the maintainer steps
+  below; no separate release PR is needed.
 
 ## Releasing with protected main
 
-No direct push to `main` is needed. Keep branch protection enabled, including
-for administrators. In **Settings > Actions > General > Workflow permissions**,
-enable **Allow GitHub Actions to create and approve pull requests**. GitHub
-uses that setting for PR creation too; this workflow never approves or merges
-its own PR. Default token permissions can stay read-only.
+Open one PR with your code changes. For branches in this repository, CI adds
+a commit to that same branch when a release is needed. It updates only
+`pyproject.toml`, `src/purgedcv/__init__.py`, and `CITATION.cff`. The bump advances
+the patch, or the alpha number for alpha versions. Later pushes to the PR
+keep the prepared version rather than bumping it again. A manual minor or
+major bump is preserved.
 
-After CI passes on `main`, the release job compares the package files
-(`src/**` and `pyproject.toml`) with the current version's tag. Pending changes
-produce a draft `release/vX.Y.Z` PR updating `pyproject.toml`,
-`src/purgedcv/__init__.py`, and `CITATION.cff`. Further merges can update that
-draft. The bump advances the patch, or the alpha number for alpha versions.
-Docs-only changes do not cause a release when no package changes are pending.
-An earlier failed release may leave pending changes, so even a CI-only merge
-can open the needed release PR.
+Wait for checks on the **new head commit**, not the commit before the bot's
+update. GitHub may show **Approve workflows to run** after a bot push. Approve
+those runs if asked. If no new run appears, converting the PR to a draft and
+then marking it Ready for review triggers CI. Review the version metadata
+with the code, then merge this one PR.
 
-Review the draft. Mark it **Ready for review** to trigger CI, and approve any
-pending workflow run if GitHub asks. PRs created with `GITHUB_TOKEN` may need
-that human action before checks run. Wait for green checks, then merge.
-If the bot updates the PR, it becomes a draft again so the new head can be
-checked. No personal access token or branch-protection bypass is required.
+The write-enabled job uses tooling from a separate checkout of trusted
+`main`; it never installs or executes code from the PR. Fork PRs do not get
+write access. Their authors must include the version bump themselves:
 
-The version-changing merge to `main` runs tests and citation checks again.
-Only after they pass does the release job build, tag that exact merge commit,
-create the GitHub release, and upload to PyPI. During that interval, the
-version on `main` is pending publication, not yet a published release.
-For a minor or major release, prepare the three version files together in a
-reviewed PR instead of using the automatic patch bump.
+```bash
+python tools/release.py prepare --version <next-version>
+```
 
-If publication fails, rerun the failed jobs on the **original version-bump
+That command edits the three files locally. Commit them to the same working
+branch. For a minor or major release, edit the two package version strings
+and run `python tools/sync_citation.py --write --date YYYY-MM-DD` instead.
+CI checks the three versions agree and reports a missing bump. If another PR
+releases first, update your branch from `main` and run the checks again.
+
+Docs-only PRs leave the version unchanged unless older package changes are
+still waiting for release. The bot compares against the current version's
+tag so changes left by the old failed release are not forgotten. No new PR
+is created after a merge. This workflow does not need permission to create
+or approve PRs, a personal access token, or a branch-protection bypass.
+
+After merge, `main` runs tests and citation checks again. A version increase
+then builds, tags that exact tested commit, creates the GitHub release, and
+uploads to PyPI. An unchanged version does not publish. During publication,
+the version on `main` is pending, not yet released.
+
+If publication fails, rerun the failed jobs on the **original version-changing
 merge workflow**. Do not bump again. An existing tag must point to that same
 commit; a conflicting tag stops publication. Already-uploaded files are
-skipped on retry. A missing tag for an unchanged version pauses further
-automatic bumps until the pending release is finished. Once it is finished,
-rerun CI on a newer `main` push if package changes are still waiting.
+skipped on retry. Finish a pending release before preparing the next one.
 
-The `CITATION.cff` date is the date the release PR was prepared. Adjust it
-before merging if the release has been waiting for another day.
+The citation date is set when the version is prepared. Adjust it before
+merging if the PR has been waiting for another day. When introducing this
+workflow for the first time, include the version bump manually in that PR:
+the bot cannot use the new trusted helper until it is on `main`.
 
 ## Reporting bugs and requesting features
 
