@@ -72,9 +72,9 @@
 
 ## The problem
 
-Standard k-fold cross-validation assumes the rows are independent. Time-series data is not. When a label resolves over the next few days, it overlaps the labels sitting right next to it, so an ordinary shuffle-split leaks tomorrow's answer back into training. The rows immediately after a test window leak too, because they are serially correlated with it. Both effects quietly inflate backtested Sharpe ratios and hand you strategies that look great on a chart and bleed money once they go live. This library removes both.
+Time-series rows can share information. When a label resolves over the next few days, its outcome window overlaps those of nearby rows, so a shuffled split can put overlapping labels into training and test sets. Rows immediately after a test window may also be serially dependent on it. `purgedcv` removes label overlap and supports a post-test embargo chosen for the task. These controls do not guarantee independence or prevent every form of leakage.
 
-Why write another one? People have asked scikit-learn, auto-sklearn, and mlpack for purging and embargo support and been turned down or left waiting for years. The one mature implementation, mlfinlab, went closed-source and paid. The free alternative has been unmaintained since 2018. That gap is the reason this exists.
+Why this package? `purgedcv` brings label-aware splitting, group separation, CPCV path reconstruction, and fold diagnostics into one MIT-licensed package. It uses the scikit-learn splitter interface, so you can use it in an existing model-selection workflow. The [methodology guide](https://eslazarev.github.io/purged-cross-validation/methodology/) explains its scope and links to related projects.
 
 ---
 
