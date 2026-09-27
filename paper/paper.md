@@ -53,24 +53,20 @@ is a recognised failure mode in machine learning generally [@kaufman2012] and
 a documented cause of irreproducible results in applied science
 [@mcdermott2021].
 
-The demand for the fix is on the record. A 2022 auto-sklearn feature request
-asking for purging, embargoing, and CPCV, citing the same book, has stayed
-open for more than three years. A 2024 mlpack request for a `PurgedKFoldCV`
-class was closed as "not planned." scikit-learn recommends purging in its own
-documentation, yet ships only a single fixed `gap` on `TimeSeriesSplit`: no
-label-overlap purging, no embargo as a fraction of the data, no group
-awareness, no combinatorial paths.
-
-The space is not empty, and that is the problem. mlfinlab, the canonical
-implementation, was relicensed as a paid closed-source product and cannot be
-a dependency for an open project. timeseriescv, the main free combinatorial
-implementation, has not been released since 2018 and has known correctness
-issues. RiskLabAI is research-grade reference code rather than a typed,
-tested, `pip install`-able drop-in. In practice that has left three poor
-options: pay for a closed product, vendor an abandoned one, or copy the
-algorithms out of a textbook by hand. `purgedcv` aims at that gap.
+Researchers need to express label horizons and deployment groups in the split,
+then check that the resulting folds satisfy those constraints. `purgedcv`
+addresses this workflow with label-aware splitters, CPCV path reconstruction,
+and fold diagnostics in a single MIT-licensed package. The splitter interface
+supports use within scikit-learn model selection.
 
 # State of the field
+
+Related software includes scikit-learn's `TimeSeriesSplit` for ordered splits
+with a sample-count gap, timeseriescv for purged walk-forward and combinatorial
+validation [@timeseriescv2018], and mlfinlab for financial machine-learning
+methods [@mlfinlab2026]. These projects provide useful context for the methods
+implemented here. `purgedcv` focuses on explicit label intervals and group
+constraints, with diagnostics that can also check externally generated splits.
 
 Purging, embargoing, and CPCV come from chapters 7 and 12 of
 @lopezdeprado2018afml. The companion statistics that separate genuine skill

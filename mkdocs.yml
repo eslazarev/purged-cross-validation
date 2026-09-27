@@ -49,7 +49,15 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Quickstart: quickstart.md
-  - API reference: api.md
+  - API reference:
+      - Overview: api.md
+      - Splitters: api/splitters.md
+      - Purge and embargo: api/primitives.md
+      - Backtest paths: api/paths.md
+      - Statistical metrics: api/metrics.md
+      - Backtest overfitting and Optuna: api/overfitting.md
+      - Diagnostics and exceptions: api/diagnostics.md
+      - Time inputs and utilities: api/time.md
   - Architecture: architecture.md
   - Examples: examples.md
   - Methodology: methodology.md
@@ -77,6 +85,7 @@ markdown_extensions:
       permalink: true
 
 extra_javascript:
+  - javascripts/api-redirects.js
   - javascripts/mathjax.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 

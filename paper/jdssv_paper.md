@@ -167,32 +167,26 @@ behavior is protected by tests rather than by example output alone.
 
 # Existing software and differentiators
 
-Several packages overlap with part of this problem. provides ; its
-argument is a fixed integer count rather than a label-aware interval,
-and it does not provide group-purged folds, CPCV paths, or split-level
-diagnostics. provides fixed-gap splits, which are useful when the
-required buffer is known and constant, but it does not represent
-variable label horizons or grouped deployment targets. implements purged
-and combinatorial time-series cross-validation, but it does not unify
-variable-horizon label intervals, group-purged folds, post-test
-embargoes, CPCV path reconstruction, and independent diagnostic
-assertions in a typed -compatible package . is the best-known
-implementation associated with the financial machine-learning
-literature, but it is distributed as a commercial product and therefore
-cannot serve as a permissive dependency for open scientific software .
-The companion benchmark also records two non-tabulated open
-alternatives: did not run on the modern stack used here, and failed
-because a plotting dependency was unavailable. Those failures are
-recorded with exact exception messages rather than imputed scores.
+Several projects provide tools for time-series validation.
+scikit-learn's TimeSeriesSplit creates ordered train/test splits with a
+configurable gap measured in samples. tscv also provides gap-based
+cross-validation. timeseriescv implements purged walk-forward and combinatorial
+cross-validation using prediction and evaluation times. mlfinlab provides
+financial machine-learning tools, including cross-validation and
+backtest-overfitting analysis. These projects provide context for the methods
+used here.
 
-is therefore not differentiated by claiming new purging mathematics. Its
-contribution is integration and auditability. Unlike fixed-gap splitters
-or single-purpose CPCV implementations, unifies (a) variable-horizon
-label intervals, (b) group-purged folds, (c) post-test embargoes, (d)
-CPCV path reconstruction, and (e) split-level diagnostics as assertions
-that can be run on third-party or hand-written splits. This combination
-is what lets the same validation contract be used in ordinary model
-selection, in notebook examples, and in automated tests.
+purgedcv focuses on integration and auditability, rather than new purging
+mathematics. It brings together variable-horizon label intervals, group-purged
+folds, post-test embargoes, CPCV path reconstruction, and split-level diagnostic
+assertions. The assertions can also check third-party or hand-written splits.
+This shared interface supports use in scikit-learn model selection, notebook
+examples, and automated tests.
+
+The companion benchmark records results for specific split configurations.
+Runs that cannot complete in the recorded environment retain their exception
+messages rather than an estimated score. These records describe the experiment,
+not the overall quality or current compatibility of a package.
 
 # Reproducible experiments
 

@@ -353,33 +353,26 @@ reproducibility. A reported model score is only as meaningful as the split that
 created it, and the split should be auditable from code rather than described
 informally in prose.
 
-Several packages overlap with part of this problem. \pkg{scikit-learn} provides
-\code{TimeSeriesSplit}; its \code{gap} argument is a fixed integer count rather
-than a label-aware interval, and it does not provide group-purged folds, CPCV
-paths, or split-level diagnostics. \pkg{tscv} provides fixed-gap splits, which
-are useful when the required buffer is known and constant, but it does not
-represent variable label horizons or grouped deployment targets.
-\pkg{timeseriescv} implements purged and combinatorial time-series
-cross-validation, but it does not unify variable-horizon label intervals,
-group-purged folds, post-test embargoes, CPCV path reconstruction, and
-independent diagnostic assertions in a typed \pkg{scikit-learn}-compatible
-package \citep{timeseriescv2018}. \pkg{mlfinlab} is the best-known
-implementation associated with the financial machine-learning literature, but
-it is distributed as a commercial product and therefore cannot serve as a
-permissive dependency for open scientific software \citep{mlfinlab2026}. The
-companion benchmark also records two non-tabulated open alternatives:
-\pkg{mlfinpy} did not run on the modern \pkg{pandas} stack used here, and
-\pkg{RiskLabAI} failed because a plotting dependency was unavailable. Those
-failures are recorded with exact exception messages rather than imputed scores.
+Several projects provide tools for time-series validation.
+\pkg{scikit-learn}'s \code{TimeSeriesSplit} creates ordered train/test splits
+with a configurable gap measured in samples. \pkg{tscv} also provides
+gap-based cross-validation. \pkg{timeseriescv} implements purged walk-forward
+and combinatorial cross-validation using prediction and evaluation times
+\citep{timeseriescv2018}. \pkg{mlfinlab} provides financial machine-learning
+tools, including cross-validation and backtest-overfitting analysis
+\citep{mlfinlab2026}. These projects provide context for the methods used here.
 
-\pcv{} is therefore not differentiated by claiming new purging mathematics. Its
-contribution is integration and auditability. Unlike fixed-gap splitters or
-single-purpose CPCV implementations, \pcv{} unifies variable-horizon label
-intervals, group-purged folds, post-test embargoes, CPCV path reconstruction,
-and split-level diagnostics as assertions that can be run on third-party or
-hand-written splits. This combination is what lets the same validation contract
-be used in ordinary \pkg{scikit-learn} model selection, in notebook examples,
-and in automated tests.
+\pcv{} focuses on integration and auditability, rather than new purging
+mathematics. It brings together variable-horizon label intervals, group-purged
+folds, post-test embargoes, CPCV path reconstruction, and split-level diagnostic
+assertions. The assertions can also check third-party or hand-written splits.
+This shared interface supports use in \pkg{scikit-learn} model selection,
+notebook examples, and automated tests.
+
+The companion benchmark records results for specific split configurations.
+Runs that cannot complete in the recorded environment retain their exception
+messages rather than an estimated score. These records describe the experiment,
+not the overall quality or current compatibility of a package.
 
 There are limitations. Purging and embargoing remove a specific class of
 validation leakage; they do not solve all forms of leakage. Feature engineering

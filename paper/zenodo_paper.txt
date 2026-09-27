@@ -219,26 +219,20 @@ example output alone.
 
 Existing software and differentiators
 
-Several packages overlap with part of this problem. scikit-learn provides TimeSeriesSplit; its
-gap argument is a fixed integer count rather than a label-aware interval, and it does not provide
-group-purged folds, CPCV paths, or split-level diagnostics. tscv provides fixed-gap splits, which
-are useful when the required buffer is known and constant, but it does not represent variable
-label horizons or grouped deployment targets. timeseriescv implements purged and combinatorial
-time-series cross-validation, but it does not unify variable-horizon label intervals, group-purged
-folds, post-test embargoes, CPCV path reconstruction, and independent diagnostic assertions
-in a typed scikit-learn-compatible package [18]. mlfinlab is the best-known implementation
-associated with the financial machine-learning literature, but it is distributed as a commercial
-product and therefore cannot serve as a permissive dependency for open scientific software [6].
-The companion benchmark also records two non-tabulated open alternatives: mlfinpy did not
-run on the modern pandas stack used here, and RiskLabAI failed because a plotting dependency
-was unavailable. Those failures are recorded with exact exception messages rather than imputed
-scores.
-purgedcv is therefore not differentiated by claiming new purging mathematics. Its contribution is integration and auditability. Unlike fixed-gap splitters or single-purpose CPCV
-implementations, purgedcv unifies (a) variable-horizon label intervals, (b) group-purged folds, (c)
-post-test embargoes, (d) CPCV path reconstruction, and (e) split-level diagnostics as assertions
-that can be run on third-party or hand-written splits. This combination is what lets the same
-validation contract be used in ordinary scikit-learn model selection, in notebook examples, and
-in automated tests.
+Several projects provide tools for time-series validation. scikit-learn’s TimeSeriesSplit creates
+ordered train/test splits with a configurable gap measured in samples. tscv also provides
+gap-based cross-validation. timeseriescv implements purged walk-forward and combinatorial
+cross-validation using prediction and evaluation times [18]. mlfinlab provides financial machinelearning tools, including cross-validation and backtest-overfitting analysis [6]. These projects
+provide context for the methods used here.
+purgedcv focuses on integration and auditability, rather than new purging mathematics.
+It brings together variable-horizon label intervals, group-purged folds, post-test embargoes,
+CPCV path reconstruction, and split-level diagnostic assertions. The assertions can also check
+third-party or hand-written splits. This shared interface supports use in scikit-learn model
+selection, notebook examples, and automated tests.
+The companion benchmark records results for specific split configurations. Runs that cannot
+complete in the recorded environment retain their exception messages rather than an estimated
+score. These records describe the experiment, not the overall quality or current compatibility of
+a package.
 
 5
 
@@ -250,9 +244,7 @@ download public data sets on first use and cache them locally. The full Low Carb
 benchmark is an offline script because the raw corpus is approximately 8 GB; the script writes
 both the per-subsample CSV and a Markdown summary.
 
-4
-
-5.1
+5.1
 
 Controlled leakage task
 
@@ -261,7 +253,10 @@ independent noise and define the response at row t as the mean of the next H fut
 The only feature is a monotone clock. A model cannot forecast the future noise, but shuffled
 k-fold can exploit overlap between adjacent future-horizon labels. Large positive R2 is therefore
 evidence of validation leakage, not model skill.
-Table 2 reports a Random Forest experiment with n = 1500, H = 20, five outer folds, and
+
+4
+
+Table 2 reports a Random Forest experiment with n = 1500, H = 20, five outer folds, and
 seed 0. The overlap column is the mean fraction of training rows whose label window overlaps
 any test label window, averaged across folds.
 Table 2: Controlled leakage task. Positive R2 is fabricated because the target is unpredictable
@@ -358,16 +353,7 @@ and evaluates each validation scheme with the same modeling harness. Table 3 rep
 P
 P
 WAPE and 95% t-intervals. WAPE is |ŷ − y|/ |y|, reported in percent.
-By design, the result is less dramatic than the synthetic example. The temporal leakage gap
-between shuffled k-fold and walk-forward validation is measurable but small: 0.68 WAPE points,
-or 1.60% relative to walk-forward WAPE. The larger effect is the household gap. Scoring on
-unseen households is 2.56 WAPE points worse than the pooled temporal estimate, or 6.03%
-relative. This is the more important conclusion for deployment: if the model will be used for
-customers not seen during training, a purely temporal split answers a different question.
-
-5
-
-Table 3: Low Carbon London benchmark over 20 seeded subsamples of 60 households. Lower
+Table 3: Low Carbon London benchmark over 20 seeded subsamples of 60 households. Lower
 WAPE is better.
 Metric
 Mean 95% CI low 95% CI high
@@ -380,8 +366,6 @@ Temporal gap, relative percent
 Household gap, WAPE points
 Household gap, relative percent
 
-5.3
-
 41.68
 42.43
 42.36
@@ -390,6 +374,8 @@ Household gap, relative percent
 1.60
 2.56
 6.03
+
+5
 
 40.37
 41.07
@@ -408,6 +394,15 @@ Household gap, relative percent
 1.94
 3.03
 7.12
+
+By design, the result is less dramatic than the synthetic example. The temporal leakage gap
+between shuffled k-fold and walk-forward validation is measurable but small: 0.68 WAPE points,
+or 1.60% relative to walk-forward WAPE. The larger effect is the household gap. Scoring on
+unseen households is 2.56 WAPE points worse than the pooled temporal estimate, or 6.03%
+relative. This is the more important conclusion for deployment: if the model will be used for
+customers not seen during training, a purely temporal split answers a different question.
+
+5.3
 
 Cross-domain examples
 
@@ -493,8 +488,6 @@ validation pipeline: the method should make it easy to report that no reliable e
 
 6
 
-6
-
 Discussion
 
 The experiments show that leakage-aware validation is not a single recipe. In the controlled
@@ -502,7 +495,9 @@ task, randomization is catastrophic because every test label has overlapping tra
 In the smart-meter benchmark, the temporal effect is small but statistically visible, while the
 larger operational issue is whether the model is expected to generalize to new households. In
 other domains, the required split can be driven by patients, engines, seasons, stations, or market
-regimes. The validation object should encode that deployment question rather than being chosen
+6
+
+regimes. The validation object should encode that deployment question rather than being chosen
 only for convenience.
 purgedcv therefore treats diagnostics as first-class objects. A user can construct a split with
 this package, with another package, or by hand, and then check the interval and group invariants
@@ -547,12 +542,14 @@ type “Publication” and publication subtype “Preprint”. The recommended a
 Creative Commons Attribution 4.0 International (CC-BY-4.0). The related software archive
 remains MIT licensed. DOI 10.5281/zenodo.20312695 identifies the software archive; DOI
 10.5281/zenodo.20323362 identifies this preprint record.
-7
 
-Computational details
+Computational details
 The benchmark tables reported here were produced with purgedcv 0.0.6, Python 3.12.7, numpy
 2.4.5, pandas 3.0.3, scikit-learn 1.8.0, and scipy 1.17.1 on macOS 26.3.1 (arm64). The package
-supports Python 3.10 and later; runtime dependency lower bounds are numpy 1.24, pandas 2.0,
+
+7
+
+supports Python 3.10 and later; runtime dependency lower bounds are numpy 1.24, pandas 2.0,
 scikit-learn 1.3, and scipy 1.10.
 A split-generation microbenchmark is tracked as tools/microbench.py. It uses 1,000,000
 timestamped rows, five folds, one feature, a constant 20-second label horizon, and no estimator
@@ -592,13 +589,13 @@ Bailey, and colleagues; any implementation errors are the author’s.
 References
 [1] David H. Bailey and Marcos López de Prado. The sharpe ratio efficient frontier. Journal of
 Risk, 15(2):3–44, 2012.
+[2] David H. Bailey and Marcos López de Prado. The deflated sharpe ratio: Correcting for
+selection bias, backtest overfitting, and non-normality. Journal of Portfolio Management,
+40(5):94–107, 2014.
 
 8
 
-[2] David H. Bailey and Marcos López de Prado. The deflated sharpe ratio: Correcting for
-selection bias, backtest overfitting, and non-normality. Journal of Portfolio Management,
-40(5):94–107, 2014.
-[3] S. De Vito, E. Massera, M. Piga, L. Martinotto, and G. Di Francia. On field calibration
+[3] S. De Vito, E. Massera, M. Piga, L. Martinotto, and G. Di Francia. On field calibration
 of an electronic nose for benzene estimation in an urban pollution monitoring scenario.
 Sensors and Actuators B: Chemical, 129(2):750–757, 2008. 10.1016/j.snb.2007.09.060.
 [4] Ary L. Goldberger, Luis A. N. Amaral, Leon Glass, Jeffrey M. Hausdorff, Plamen Ch.
@@ -639,11 +636,11 @@ Olivier Grisel, Mathieu Blondel, Peter Prettenhofer, Ron Weiss, Vincent Dubourg,
 Vanderplas, Alexandre Passos, David Cournapeau, Matthieu Brucher, Matthieu Perrot,
 and Édouard Duchesnay. Scikit-learn: Machine learning in python. Journal of Machine
 Learning Research, 12:2825–2830, 2011.
+[15] PJM Interconnection. Hourly metered load data. Public historical load data, 2026. Mirror
+used by the example; public domain dedication (CC0); accessed 2026-05-21.
 9
 
-[15] PJM Interconnection. Hourly metered load data. Public historical load data, 2026. Mirror
-used by the example; public domain dedication (CC0); accessed 2026-05-21.
-[16] Abhinav Saxena, Kai Goebel, Don Simon, and Neil Eklund. Damage propagation modeling
+[16] Abhinav Saxena, Kai Goebel, Don Simon, and Neil Eklund. Damage propagation modeling
 for aircraft engine run-to-failure simulation. In International Conference on Prognostics
 and Health Management, 2008. 10.1109/PHM.2008.4711414.
 [17] Ikaro Silva, George Moody, Daniel J. Scott, Leo A. Celi, and Roger G. Mark. Predicting

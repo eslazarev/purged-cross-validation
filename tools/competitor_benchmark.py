@@ -1,4 +1,4 @@
-"""Controlled leakage benchmark: purgedcv vs competitor CV splitters.
+"""Controlled leakage benchmark across cross-validation splitters.
 
 Cross-validation splitters are not models -- they are leakage controls. So a
 fair comparison is not "whose accuracy is higher" but "how much leakage does
@@ -12,16 +12,17 @@ controlled construction from ``examples/synthetic_leakage_proof.ipynb``:
 
 Any clearly positive R^2 on this task is fabricated -- it is the train/test
 label overlap leaking the answer. We run the *same model* through each
-competitor's splitter and record:
+configured splitter and record:
 
   * mean R^2 it reports (<= ~0 is honest; large positive is leakage);
   * mean train/test label-overlap fraction it admits, measured with the
     tool-neutral ``purgedcv.diagnostics.compute_overlap_fraction`` (an
     interval-overlap count, independent of which library produced the folds).
 
-Competitors that do not install/run on a modern stack, or are closed-source,
-are NOT guessed at: each splitter is isolated, and a failure is recorded with
-its exact reason. Deterministic; the script is tracked under ``tools/`` but
+Each splitter is isolated. If a run cannot complete in the test environment,
+its exception is recorded rather than an estimated score. Results describe
+the tested configuration, not the overall quality of a package.
+Deterministic; the script is tracked under ``tools/`` but
 never imported by the library. Writes (git-ignored)
 ``examples/data/competitor_benchmark.csv`` and ``..._summary.md``.
 """
@@ -255,12 +256,15 @@ def main(argv: list[str] | None = None) -> int:
     df.to_csv(out_dir / "competitor_benchmark.csv", index=False)
 
     lines = [
-        "# Competitor benchmark -- controlled leakage task (raw results)",
+        "# Cross-validation benchmark -- controlled leakage task (raw results)",
         "",
         "Target = mean of next H pure-noise draws (unpredictable; honest R^2 ~ 0).",
         f"Feature = monotone clock. N={N}, H={H}, seed={SEED}, model = "
         "RandomForestRegressor(n_estimators=120). Large positive R^2 = fabricated",
         "leakage. Overlap = mean train/test label-overlap fraction admitted.",
+        "",
+        "Results apply to these split configurations and this environment,",
+        "not to the overall quality or current compatibility of a package.",
         "",
         "| library | splitter | status | mean R^2 | mean overlap | folds |",
         "|---|---|---|---|---|---|",

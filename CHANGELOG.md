@@ -9,6 +9,15 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Documentation
+
+- Related-software descriptions now focus on documented capabilities, with
+  links to project sources. Removed unsupported quality judgments from the
+  README, methodology guide, manuscripts, and an earlier benchmark entry.
+- The API reference now has an overview and seven topic pages. Existing
+  symbol bookmarks on `/api/` forward to the new pages when JavaScript is
+  enabled; the overview also lists direct links for readers without it.
+
 ### Fixed
 
 - Quickstart examples now pass a timedelta to standalone `purge` and a
@@ -302,11 +311,11 @@ patches; this entry records the work delivered across 0.0.5 through
   Real result (K=20, N=60, seed=0, 4,284 eligible households): temporal
   leak 1.60% (95% CI 1.27 – 1.94%), household leak 6.03% (95% CI
   4.93 – 7.12%). End-to-end test `test_e2e_lcl_full_benchmark.py`.
-- Controlled competitor benchmark (`tools/competitor_benchmark.py`) and
-  the empirical write-up at `paper/competitor_benchmark.md` — on the
-  controlled task `purgedcv` admits 0.000 label overlap while default
-  `KFold(shuffle=True)` fabricates R² = +0.92; mlfinpy is shown to be
-  broken on pandas ≥ 2.0; RiskLabAI does not install on a modern stack.
+- Controlled cross-validation benchmark (`tools/competitor_benchmark.py`)
+  recording model scores and label overlap on a shared synthetic task.
+  Results describe the tested split configurations. Runs that cannot complete
+  record the exception rather than an estimated score; they do not establish
+  compatibility outside that environment.
   End-to-end test `test_e2e_competitor_benchmark.py`.
 - `context7.json` so the docs are indexable by Context7.
 
