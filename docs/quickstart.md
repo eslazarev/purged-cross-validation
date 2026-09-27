@@ -1,10 +1,10 @@
 # Quickstart
 
-Three short snippets that cover the full surface: the row-level
-primitives, the sklearn splitter you will use most, and Combinatorial
-Purged Cross-Validation with backtest-path reconstruction and the
-deflated-Sharpe statistics. All snippets are runnable on a fresh
-`pip install purgedcv`.
+Start with the row-level primitives, then use a splitter with sklearn.
+The last section builds CPCV prediction paths and shows a separate
+deflated-Sharpe example. Each numbered section runs after a fresh
+`pip install purgedcv`. Run it from top to bottom: the smaller follow-on
+snippets reuse variables from that section.
 
 ## 1. Row-level primitives
 
@@ -29,7 +29,7 @@ train_kept = purge(
     train_idx, test_idx,
     prediction_times=pred,
     evaluation_times=evalu,
-    purge_horizon="5D",
+    purge_horizon=pd.Timedelta("5D"),
 )
 train_kept = apply_embargo(
     train_kept, test_idx,
@@ -39,6 +39,9 @@ train_kept = apply_embargo(
 )
 print(len(train_idx), "->", len(train_kept), "after purge + embargo")
 ```
+
+The standalone `purge` primitive takes a `pd.Timedelta` for its padding.
+Splitter constructors also accept strings such as `"5D"`.
 
 ### Choosing an embargo unit
 
@@ -93,7 +96,7 @@ cv = PurgedKFold(
     purge_horizon=f"{h}D",
     embargo=f"{h}D",
 )
-scores = cross_val_score(GradientBoostingRegressor(), features, labels, cv=cv)
+scores = cross_val_score(GradientBoostingRegressor(random_state=0), features, labels, cv=cv)
 print("honest R^2 per fold:", scores)
 ```
 
@@ -206,16 +209,16 @@ scorer that requests it for weighted evaluation.
 
 ## 3. CPCV + backtest paths + deflated Sharpe
 
-The full workflow from chapter 12 of *Advances in Financial Machine
-Learning*: enumerate `C(N, K)` purged folds, fit-predict on each, assemble
-the per-path out-of-sample predictions with `reconstruct_paths`, and
-correct the resulting Sharpe ratios for the number of model trials.
+CPCV fits on each purged fold and assembles out-of-sample predictions
+into backtest paths. With six groups and two test groups per fold, there
+are 15 folds and five paths. The example below uses random regression
+targets, not market returns.
 
 ```python
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge
-from purgedcv import CombinatorialPurgedCV, deflated_sharpe_ratio
+from purgedcv import CombinatorialPurgedCV
 
 n = 800
 rng = np.random.default_rng(0)
@@ -232,18 +235,46 @@ cpcv = CombinatorialPurgedCV(
     purge_horizon="3D",
 )
 paths = cpcv.backtest_paths(Ridge(), features, labels)
-# paths.shape == (n_paths, n_samples); NaN = unseen position
-
-# Treat each per-path mean predicted score as a per-strategy Sharpe-like
-# series and correct for the number of model trials we actually ran.
-per_path_sharpe = np.nanmean(paths, axis=1) / np.nanstd(paths, axis=1)
-dsr = deflated_sharpe_ratio(
-    per_path_sharpe.mean(),
-    n_trials=len(per_path_sharpe),
-    var_sharpe=per_path_sharpe.var(ddof=1),
-)
-print("Deflated Sharpe (probability skill is real):", dsr)
+print("Prediction paths:", paths.shape)  # (5, 800)
 ```
 
-For the full numerical example matching §7.4.1 of the book, see
+These are predictions. They are not strategy returns, and five CPCV paths
+are not five independent model trials. A trading application must define
+how predictions become positions and then account for realised returns
+and costs before computing a Sharpe ratio.
+
+### Deflated Sharpe needs a return series
+
+Here is a separate example. Simulate 20 independent candidate return
+series, then select the candidate with the highest observed Sharpe.
+DSR takes that candidate's full return series, not its scalar Sharpe.
+The correction uses all 20 trials and the variance of their per-observation
+Sharpes, including the candidates that lost the selection.
+
+```python
+import numpy as np
+from purgedcv import deflated_sharpe_ratio
+
+rng = np.random.default_rng(42)
+n_trials, n_obs = 20, 252
+trial_returns = rng.normal(0.0, 0.01, size=(n_trials, n_obs))
+trial_sharpes = trial_returns.mean(axis=1) / trial_returns.std(axis=1, ddof=1)
+best_trial = int(np.argmax(trial_sharpes))
+selected_returns = trial_returns[best_trial]
+var_sharpe = float(trial_sharpes.var(ddof=1))
+dsr = deflated_sharpe_ratio(
+    selected_returns,
+    n_trials=n_trials,
+    var_sharpe=var_sharpe,
+)
+print("Deflated Sharpe probability:", dsr)
+```
+
+The simulated trials are independent by construction. Real model searches
+often produce correlated candidates; the trial count then needs more care.
+See the [Optuna cookbook](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/optuna_dsr_cookbook.py)
+for recording a search and estimating an effective count. Keep Sharpe units
+consistent: this example does not annualise them.
+
+For a worked time-series regression example, see
 [`examples/energy_demand_pjm.ipynb`](examples.md).

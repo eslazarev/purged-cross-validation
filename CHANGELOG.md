@@ -11,6 +11,17 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
+- Quickstart examples now pass a timedelta to standalone `purge` and a
+  return series to DSR. The DSR example uses separate synthetic trials,
+  rather than treating CPCV prediction paths as independent strategies.
+  Every numbered section is executed directly from Markdown in an e2e test.
+- Released entries are grouped under versions 0.1.4 through 0.1.8 instead
+  of remaining under `Unreleased`.
+
+## [0.1.8] - 2026-09-26
+
+### Fixed
+
 - Publication no longer gets skipped after the PR-only version job is
   skipped on `main`. Tests and citation checks must still pass. A CI-only
   fix can recover an untagged prepared version without a second bump,
@@ -22,8 +33,15 @@ Plan is listed under the published version it shipped in.
 - The API reference now displays descriptions for all five public input and
   callback type aliases, and documents the shared splitter parameters under
   `BaseTemporalSplitter`.
+
+## [0.1.7] - 2026-09-26
+
+### Fixed
+
 - API docstrings now use MkDocs-compatible cross-references and a supported
   note block, so readers see working links instead of literal Sphinx tags.
+
+## [0.1.6] - 2026-09-04
 
 ### Added
 
@@ -31,6 +49,11 @@ Plan is listed under the published version it shipped in.
   `HorizonLike`, `PathMetricFn`, and `PerformanceMetric` callback/input type
   aliases, are now importable directly from `purgedcv` for typed downstream
   code without reaching into private modules.
+
+## [0.1.5] - 2026-08-30
+
+### Added
+
 - New public `audit_splitter(cv, X)` diagnostic returns one DataFrame row per
   fold with candidate and final train sizes, purge/embargo/finalization
   removal counts, indices added during custom finalization,
@@ -42,6 +65,11 @@ Plan is listed under the published version it shipped in.
   override `split()` are rejected because their returned folds can diverge
   from that auditable pipeline, and custom final indices are validated for
   positional correctness and uniqueness.
+
+## [0.1.4] - 2026-08-22
+
+### Added
+
 - Embargo can now be expressed in three mutually exclusive ways throughout
   the splitter, PBO, row-level, and diagnostics APIs: a wall-clock duration
   (`embargo`), a fixed number of post-test rows (`embargo_observations`), or a
@@ -363,7 +391,12 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.8
+[0.1.7]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.7
+[0.1.6]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.6
+[0.1.5]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.5
+[0.1.4]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.4
 [0.1.3]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.3
 [0.1.2]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.2
 [0.1.1]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.1
