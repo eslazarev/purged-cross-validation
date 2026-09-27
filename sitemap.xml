@@ -32,4 +32,32 @@
          <loc>https://eslazarev.github.io/purged-cross-validation/quickstart/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/diagnostics/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/metrics/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/overfitting/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/paths/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/primitives/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/splitters/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://eslazarev.github.io/purged-cross-validation/api/time/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
 </urlset>
