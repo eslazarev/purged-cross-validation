@@ -174,6 +174,15 @@ def test_type_alias_has_rendered_description(
     assert description in api_site[route].section_text(f"purgedcv.{symbol}")
 
 
+def test_with_times_example_is_rendered(api_site: dict[str, _APIPage]) -> None:
+    page = api_site["api/splitters/"]
+    assert "purgedcv.BaseTemporalSplitter.with_times" in page.ids
+    section = page.section_text("purgedcv.BaseTemporalSplitter")
+    assert "Longer labels remove more training" in section
+    assert "rebound" in section
+    assert "[6, 4, 6]" in section
+
+
 def test_base_splitter_documents_shared_parameters(api_site: dict[str, _APIPage]) -> None:
     section = api_site["api/splitters/"].section_text("purgedcv.BaseTemporalSplitter")
     assert "Parameters:" in section

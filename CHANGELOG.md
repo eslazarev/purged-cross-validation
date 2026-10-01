@@ -11,6 +11,10 @@ Plan is listed under the published version it shipped in.
 
 ### Documentation
 
+- Add a Docs build badge and complete notebook setup instructions, including
+  cloning the repository, creating an environment, and quoting extras for zsh.
+- Document `with_times()` inputs and add an executable example showing new
+  label horizons without modifying the original splitter.
 - Related-software descriptions now focus on documented capabilities, with
   links to project sources. Removed unsupported quality judgments from the
   README, methodology guide, manuscripts, and an earlier benchmark entry.
@@ -20,6 +24,8 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
+- Include `textstat` in the development extra so the documented prose gate
+  works after installing `.[dev,docs]`.
 - Package author metadata now includes the contact email listed in
   `CITATION.cff`.
 - Quickstart examples now pass a timedelta to standalone `purge` and a

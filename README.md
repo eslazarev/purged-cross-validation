@@ -3,6 +3,7 @@
 **Honest, leakage-aware cross-validation for time series and quantitative finance:** purged k-fold, embargo, walk-forward, and combinatorial purged CV (CPCV) with backtest-path reconstruction, plus deflated and probabilistic Sharpe ratios.
 
 [![CI](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/eslazarev/purged-cross-validation/actions/workflows/ci.yml)
+[![Docs](https://github.com/eslazarev/purged-cross-validation/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/eslazarev/purged-cross-validation/actions/workflows/docs.yml)
 [![Coverage](https://codecov.io/gh/eslazarev/purged-cross-validation/branch/main/graph/badge.svg)](https://codecov.io/gh/eslazarev/purged-cross-validation)
 [![PyPI version](https://img.shields.io/pypi/v/purgedcv)](https://pypi.org/project/purgedcv/)
 [![Conda version](https://img.shields.io/conda/vn/conda-forge/purgedcv)](https://anaconda.org/conda-forge/purgedcv)

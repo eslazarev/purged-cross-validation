@@ -9,13 +9,26 @@ from git via `.gitignore`, so reviewers see fresh downloads on their own machine
 
 ## How to run locally
 
+The notebooks are in the repository, not in the installed wheel. On macOS or
+Linux, start from a directory where you want to keep the checkout:
+
 ```bash
-# Install library + notebook dependencies
-pip install purgedcv[examples]
+git clone https://github.com/eslazarev/purged-cross-validation.git
+cd purged-cross-validation
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install this checkout and its notebook dependencies
+python -m pip install -e ".[examples]"
 
 # Launch Jupyter
-jupyter notebook examples/
+jupyter notebook --no-browser examples/
 ```
+
+Open the local URL printed by Jupyter in your browser. Start with
+`synthetic_leakage_proof.ipynb` if you want an example that needs no downloads.
+Keep the quotes around `.[examples]`; shells such as zsh otherwise interpret
+the brackets as a filename pattern. The library itself needs no API key.
 
 All splitter examples continue to use pandas timestamps, but the same APIs
 also accept NumPy datetime arrays, Python datetime sequences, and Polars
@@ -356,7 +369,7 @@ report a small calibration gap rather than a headline accuracy collapse.
 
 **Source:** the [`pricehub`](https://pypi.org/project/pricehub/) package; the
 notebook also needs Optuna, which the `examples` extra already includes
-(`pip install purgedcv[examples]`).
+(`pip install "purgedcv[examples]"`).
 
 **Files cached:**
 - `btcusdt_1d_binance_spot_2021_2023.csv` (~0.1 MB) — shared with notebook 5

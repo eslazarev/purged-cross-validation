@@ -260,6 +260,45 @@ class BaseTemporalSplitter(ABC):
         To change ``groups`` or any other construction parameter, build a
         fresh splitter via the constructor — this avoids surprising
         interactions between cached state and rebound inputs.
+
+        Args:
+            prediction_times: New prediction times, sorted in non-decreasing
+                order, with the same number of rows as the original splitter.
+            evaluation_times: New label-end times, aligned with the prediction
+                times. Each end must be at or after its prediction time.
+
+        Returns:
+            A shallow copy of the same concrete splitter type with the new
+            times. The original splitter is not modified.
+
+        Raises:
+            ValueError: If the new times are invalid or their row count differs
+                from the original splitter.
+
+        Examples:
+            Reuse a three-fold configuration for a later dataset whose labels
+            span three days instead of one. Longer labels remove more training
+            rows, while the original splitter keeps its one-day horizons:
+
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from purgedcv import PurgedKFold
+            >>> pred = pd.date_range("2024-01-01", periods=12, freq="D")
+            >>> cv = PurgedKFold(
+            ...     n_splits=3, prediction_times=pred,
+            ...     evaluation_times=pred + pd.Timedelta("1D"),
+            ... )
+            >>> new_pred = pred + pd.Timedelta("30D")
+            >>> rebound = cv.with_times(new_pred, new_pred + pd.Timedelta("3D"))
+            >>> rebound is cv
+            False
+            >>> rebound.get_n_splits()
+            3
+            >>> features = np.zeros((12, 1))
+            >>> [len(train) for train, _ in rebound.split(features)]
+            [6, 4, 6]
+            >>> [len(train) for train, _ in cv.split(features)]
+            [8, 8, 8]
         """
         pred = _coerce_1d(prediction_times, name="prediction_times")
         evalu = _coerce_1d(evaluation_times, name="evaluation_times")
