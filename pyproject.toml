@@ -9,7 +9,7 @@ description = "scikit-learn-compatible cross-validation for time-series and fina
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Evgenii Lazarev" }]
+authors = [{ name = "Evgenii Lazarev", email = "elazarev@gmail.com" }]
 keywords = [
     "cross-validation",
     "time-series",
