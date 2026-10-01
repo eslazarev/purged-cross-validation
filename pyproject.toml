@@ -75,6 +75,7 @@ dev = [
     "mypy>=1.10",
     "pandas-stubs>=2.0",
     "pre-commit>=3.5",
+    "textstat>=0.7.4",
 ]
 examples = [
     "jupyter>=1.0",
