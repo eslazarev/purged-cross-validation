@@ -20,6 +20,8 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
+- Package author metadata now includes the contact email listed in
+  `CITATION.cff`.
 - Quickstart examples now pass a timedelta to standalone `purge` and a
   return series to DSR. The DSR example uses separate synthetic trials,
   rather than treating CPCV prediction paths as independent strategies.

@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "purgedcv"
-version = "0.1.8"
+version = "0.1.9"
 description = "scikit-learn-compatible cross-validation for time-series and financial machine learning: purging, embargoes, combinatorial purged CV, and deflated Sharpe ratios."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Evgenii Lazarev" }]
+authors = [{ name = "Evgenii Lazarev", email = "elazarev@gmail.com" }]
 keywords = [
     "cross-validation",
     "time-series",
