@@ -5,7 +5,8 @@ library-level test (notebooks are docs here, not run under pytest, and the
 notebook needs Optuna and a download). The audit chains the new tools: PBO on a
 matrix of candidate strategies, the effective-trial correction for a correlated
 search, the deflated Sharpe under raw vs effective counts, and the per-path
-metric spread. Deterministic via fixed seeds.
+metric spread, and the minimum backtest length for the in-sample and
+held-out Sharpe. Deterministic via fixed seeds.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from purgedcv import (
     CombinatorialPurgedCV,
     deflated_sharpe_ratio,
     effective_n_trials,
+    minimum_backtest_length,
     path_metrics,
     probability_of_backtest_overfitting,
 )
@@ -89,3 +91,21 @@ def test_champion_path_spread_is_summarised() -> None:
     assert table.shape == (comb(7, 1), 4)
     assert list(table.columns) == ["sharpe", "calmar", "max_drawdown", "total_return"]
     assert table["max_drawdown"].dropna().ge(0).all()
+
+
+@pytest.mark.e2e
+def test_minimum_backtest_length_separates_in_sample_from_held_out() -> None:
+    """The notebook's MinBTL check: a large in-sample Sharpe over a few years
+    clears the bar even for the raw trial count, while a small held-out Sharpe
+    over one year needs decades of data. Fewer effective trials lower the bar.
+    The Sharpes and spans are the notebook's own (TPE search on BTC/USDT)."""
+    n_raw, n_eff = 400, 25
+    is_years, oos_years = 658 / 252, 282 / 252
+
+    is_raw = minimum_backtest_length(n_raw, target_sharpe=2.48)
+    is_eff = minimum_backtest_length(n_eff, target_sharpe=2.48)
+    oos_eff = minimum_backtest_length(n_eff, target_sharpe=0.31)
+
+    assert is_eff < is_raw < is_years
+    assert oos_eff > 10 * oos_years
+    assert minimum_backtest_length(1, target_sharpe=0.31) == 0.0

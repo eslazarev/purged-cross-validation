@@ -1,6 +1,6 @@
 # Installation
 
-`purgedcv` is on PyPI and conda-forge, and requires Python 3.10 or newer.
+`purgedcv` is on PyPI and conda-forge, and requires Python 3.11 or newer.
 
 ## From PyPI
 

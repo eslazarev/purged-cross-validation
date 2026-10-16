@@ -85,7 +85,8 @@ across seasons rather than a headline accuracy gap.
 
 [**backtest_overfitting_audit**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb)
 — a seeded Optuna search on BTC/USDT audited end to end with PBO,
-effective-trial DSR, CPCV backtest paths, and `path_metrics`. It distinguishes
+effective-trial DSR, the minimum backtest length, CPCV backtest paths, and
+`path_metrics`. It distinguishes
 a real model-family effect from unreliable selection of one apparent champion.
 
 [**clinical_mortality_physionet**](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/clinical_mortality_physionet.ipynb)

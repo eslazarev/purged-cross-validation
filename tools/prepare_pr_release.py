@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from release import (
@@ -66,7 +66,7 @@ def main() -> int:
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--base", required=True)
     parser.add_argument("--head", required=True)
-    parser.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
+    parser.add_argument("--date", default=datetime.now(UTC).date().isoformat())
     parser.add_argument("--check", action="store_true", help="fail instead of changing metadata")
     args = parser.parse_args()
     try:

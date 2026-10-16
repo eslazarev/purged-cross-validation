@@ -1,8 +1,9 @@
 # Quickstart
 
 Start with the row-level primitives, then use a splitter with sklearn.
-The last section builds CPCV prediction paths and shows a separate
-deflated-Sharpe example. Each numbered section runs after a fresh
+Section 3 builds CPCV prediction paths and shows a separate
+deflated-Sharpe example. Section 4 checks a whole search: paths from
+your own fitting loop, CSCV and PBO, and the minimum backtest length. Each numbered section runs after a fresh
 `pip install purgedcv`. Run it from top to bottom: the smaller follow-on
 snippets reuse variables from that section.
 
@@ -278,3 +279,98 @@ consistent: this example does not annualise them.
 
 For a worked time-series regression example, see
 [`examples/energy_demand_pjm.ipynb`](examples.md).
+
+## 4. Checking a search: own fit loop, CSCV, PBO and MinBTL
+
+`backtest_paths` fits a scikit-learn estimator for you. When you fit each
+fold yourself, for example with a custom training loop or a model outside
+scikit-learn, collect one prediction array per fold in `split` order and
+pass the list to `reconstruct_paths`. The result has the same layout as
+`backtest_paths`.
+
+```python
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import Ridge
+from purgedcv import CombinatorialPurgedCV
+
+n = 600
+rng = np.random.default_rng(1)
+features = rng.standard_normal((n, 4))
+labels = features @ np.array([0.4, -0.2, 0.0, 0.1]) + rng.standard_normal(n)
+pred = pd.Series(pd.date_range("2024-01-01", periods=n, freq="D"))
+evalu = pred + pd.Timedelta(days=2)
+
+cpcv = CombinatorialPurgedCV(
+    n_splits=6,
+    n_test_groups=2,
+    prediction_times=pred,
+    evaluation_times=evalu,
+    purge_horizon="2D",
+)
+
+fold_predictions = []
+for train_idx, test_idx in cpcv.split(features):
+    model = Ridge().fit(features[train_idx], labels[train_idx])
+    fold_predictions.append(model.predict(features[test_idx]))
+
+manual_paths = cpcv.reconstruct_paths(fold_predictions)
+print("Paths from the manual loop:", manual_paths.shape)  # (5, 600)
+```
+
+The module-level `purgedcv.reconstruct_paths` does the same job when you
+only have the fold predictions and fold test indices, without the
+splitter object.
+
+### CSCV and the probability of backtest overfitting
+
+`CombinatoriallySymmetricCV` is CPCV with half of the blocks held out in
+every split. `probability_of_backtest_overfitting` runs it over a matrix
+of candidate return series. In each split it picks the candidate with the
+best in-sample Sharpe and checks where that candidate ranks out of sample.
+PBO is the share of splits where it lands below the median. In the example
+none of the 50 candidates has an edge, so PBO should sit near 0.5.
+
+```python
+import numpy as np
+import pandas as pd
+from purgedcv import CombinatoriallySymmetricCV, probability_of_backtest_overfitting
+
+rng = np.random.default_rng(7)
+n_configs, n_obs = 50, 960
+candidate_returns = rng.normal(0.0, 0.01, size=(n_configs, n_obs))
+days = pd.Series(pd.date_range("2022-01-03", periods=n_obs, freq="B"))
+
+cscv = CombinatoriallySymmetricCV(
+    n_splits=8, prediction_times=days, evaluation_times=days
+)
+in_sample, out_of_sample = next(cscv.split(candidate_returns.T))
+print("CSCV splits:", cscv.get_n_splits())  # C(8, 4) = 70
+print("Rows per half:", len(in_sample), len(out_of_sample))  # 480 480
+
+result = probability_of_backtest_overfitting(candidate_returns, n_splits=8)
+print(f"PBO {result.pbo:.2f} over {result.n_combos} splits")  # PBO 0.57 over 70 splits
+```
+
+### Minimum backtest length
+
+The best of 50 noise candidates still shows a positive annualised Sharpe.
+`minimum_backtest_length` gives the number of years a backtest needs
+before an annualised Sharpe of a given size is more than the best of that
+many lucky tries. This sample has fewer years than that, so even a Sharpe
+of 1 would not be evidence of skill.
+
+```python
+from purgedcv import minimum_backtest_length
+
+annual_sharpes = (
+    candidate_returns.mean(axis=1) / candidate_returns.std(axis=1, ddof=1) * np.sqrt(252)
+)
+years_of_data = n_obs / 252
+min_years = minimum_backtest_length(n_configs, target_sharpe=1.0)
+print(f"Best annualised Sharpe: {annual_sharpes.max():.2f}")  # 0.85
+print(f"{years_of_data:.1f} years of data; MinBTL {min_years:.1f} years")  # 3.8 vs 5.2
+```
+
+[`examples/backtest_overfitting_audit.ipynb`](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb) runs the same
+checks on a real Optuna search over BTC/USDT strategies.

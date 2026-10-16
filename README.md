@@ -10,7 +10,7 @@
 [![PyPI downloads](https://static.pepy.tech/badge/purgedcv)](https://pepy.tech/project/purgedcv)
 [![PyPI wheel](https://img.shields.io/pypi/wheel/purgedcv)](https://pypi.org/project/purgedcv/#files)
 
-[![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org/downloads/)
+[![Python versions](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/eslazarev/purged-cross-validation/blob/main/LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
@@ -19,7 +19,7 @@
 
 **[Documentation →](https://eslazarev.github.io/purged-cross-validation/)** · **[Example notebooks →](https://github.com/eslazarev/purged-cross-validation/tree/main/examples)** · purge/embargo, walk-forward, and CPCV with PSR/DSR worked end to end on real ICU-mortality, turbofan-RUL, rainfall, and electricity-demand data.
 
-*Cite this software:* see [`CITATION.cff`](https://github.com/eslazarev/purged-cross-validation/blob/main/CITATION.cff) and [`paper/paper.md`](https://github.com/eslazarev/purged-cross-validation/blob/main/paper/paper.md) (JOSS paper).
+*Cite this software:* see [Citation](#citation) for the Zenodo DOI and a BibTeX entry.
 
 ---
 
@@ -59,6 +59,7 @@
 - [Does it actually catch leakage?](#does-it-actually-catch-leakage)
 - [Does an honest CV deploy better?](#does-an-honest-cv-deploy-better)
 - [What about a market with no real edge?](#what-about-a-market-with-no-real-edge)
+- [Example notebooks](#example-notebooks)
 - [Installation](#installation)
 - [Quickstart](#quickstart)
   - [1. The core primitive: `purge`](#1-the-core-primitive-purge)
@@ -67,6 +68,7 @@
   - [4. Purged k-fold: `PurgedKFold`](#4-purged-k-fold-purgedkfold)
   - [5. CPCV + path reconstruction + metrics: the full workflow](#5-cpcv--path-reconstruction--metrics-the-full-workflow)
 - [Methodology references](#methodology-references)
+- [Citation](#citation)
 - [License](#license)
 
 ---
@@ -137,6 +139,28 @@ On a task where no honest model has predictive power (daily BTC/USDT 2021-2023 w
 Both strategies lose money over the sideways-down deployment window; the naive pick loses three to five times more per unit of risk. Direction stable across 5 seeds. The library's value on a no-edge market is loss avoidance rather than gain.
 
 ![Honest CV avoids the overfitter on crypto: cumulative log-return curves for naive-selected RandomForest, PurgedKFold-selected Ridge, and buy-and-hold over a 180-bar held-out window.](https://raw.githubusercontent.com/eslazarev/purged-cross-validation/main/.github/images/selection_regret_crypto.png)
+
+## Example notebooks
+
+Fifteen notebooks in [`examples/`](https://github.com/eslazarev/purged-cross-validation/tree/main/examples) run on `pip install "purgedcv[examples]"`. Each one downloads its data on the first run and caches it, so later runs work offline. The [examples page](https://eslazarev.github.io/purged-cross-validation/examples/) in the documentation has longer descriptions, and the [examples README](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/README.md) lists data sources and licences.
+
+| Notebook | Data | What it shows |
+|----------|------|---------------|
+| [synthetic_leakage_proof](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/synthetic_leakage_proof.ipynb) | Synthetic, no download | A target nothing can predict. Shuffled k-fold scores R² above 0.8; `PurgedKFold` brings the label overlap to zero and the score below the mean baseline. |
+| [cv-leakage-controlled-study](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/cv-leakage-controlled-study.ipynb) | Synthetic, no download | The same zero-skill setup over 30 realisations, comparing shuffled and unshuffled KFold, walk-forward, and purged k-fold. |
+| [ohlc_trading_signal](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/ohlc_trading_signal.ipynb) | BTC/USDT daily bars | A 20-bar forward return. Shuffled k-fold reports R² near +0.85; `PurgedKFold` takes it to about -1.2. |
+| [earthquake_magnitude_leakage](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/earthquake_magnitude_leakage.ipynb) | USGS M5+ catalogue | Magnitudes that cannot be predicted from the past. Shuffled k-fold still prints R² = +0.65; purged, blocked, and walk-forward splits do not. |
+| [air_quality_clock_leakage](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/air_quality_clock_leakage.ipynb) | UCI air quality | One cumulative-hour counter sends shuffled R² from 0.07 to 0.99 while the purged and walk-forward scores stay put. |
+| [uk_smart_meter_lcl](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/uk_smart_meter_lcl.ipynb) | Low Carbon London smart meters | The temporal leak is small (about 1.6 %). The leak that matters is across households (about 6 %). |
+| [selection_regret_lcl](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_lcl.ipynb) | Low Carbon London smart meters | Model selection on 48 households, deployment on 12 unseen ones. `PurgedGroupKFold` picks the model that deploys better. |
+| [model_comparison_honest_cv](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/model_comparison_honest_cv.ipynb) | BTC/USDT daily bars | Six candidate models. After the Deflated Sharpe Ratio corrects for the number of trials, none of them clears 0.95. |
+| [selection_regret_crypto](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/selection_regret_crypto.ipynb) | BTC/USDT daily bars | Selection on a market with no edge, judged on a frozen 180-bar deployment window. |
+| [epl_match_prediction](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/epl_match_prediction.ipynb) | Premier League matches | Calibration drift across seasons rather than a headline accuracy gap. |
+| [backtest_overfitting_audit](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb) | BTC/USDT daily bars + Optuna | A 400-trial search audited with PBO, effective-trial DSR, `minimum_backtest_length`, CPCV paths, and `path_metrics`. |
+| [clinical_mortality_physionet](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/clinical_mortality_physionet.ipynb) | PhysioNet ICU records | `PurgedGroupKFold` holding whole patients out. |
+| [predictive_maintenance_nasa](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/predictive_maintenance_nasa.ipynb) | NASA C-MAPSS turbofans | Remaining useful life with an expanding `WalkForwardSplit`. |
+| [precipitation_noaa](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/precipitation_noaa.ipynb) | NOAA GHCN-Daily rainfall | `PurgedKFold` with a purge horizon and an embargo on a one-day-ahead regression. |
+| [energy_demand_pjm](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/energy_demand_pjm.ipynb) | PJM hourly load | CPCV backtest paths with PSR, DSR, and MinTRL, following section 7.4.1 of *Advances in Financial Machine Learning*. |
 
 ---
 
@@ -381,6 +405,8 @@ print(f"MinTRL: {int(n_min)} observations")
 
 For the full selection-bias workflow on a real search, the Deflated Sharpe Ratio with the correct `var_sharpe`, `effective_n_trials` for correlated Optuna trials, `minimum_backtest_length`, and PBO are worked end to end on real BTC/USDT data in [`examples/backtest_overfitting_audit.ipynb`](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb). The Deflated Sharpe Ratio deflates by the number of strategy *configurations* searched (not the number of CPCV paths), with `var_sharpe` estimated from the spread of trial Sharpes rather than assumed.
 
+Section 4 of the [documentation quickstart](https://eslazarev.github.io/purged-cross-validation/quickstart/#4-checking-a-search-own-fit-loop-cscv-pbo-and-minbtl) covers the remaining selection tools on small synthetic data: `reconstruct_paths` for your own per-fold fitting loop, `CombinatoriallySymmetricCV` with PBO, and `minimum_backtest_length`.
+
 ---
 
 ## Methodology references
@@ -409,6 +435,36 @@ choice and execution of every experiment, and all reported numbers are the
 author's own: each empirical result in this repository comes from a script
 in `examples/` or `tools/` that is committed and reproducible, and the
 numbers were verified against those runs rather than generated as text.
+
+## Citation
+
+If you use `purgedcv` in research, please cite the software archive on Zenodo. The DOI below always resolves to the latest release; each release also has its own DOI on the [Zenodo record](https://doi.org/10.5281/zenodo.20312695), which is the one to cite when you need to pin a version. [`CITATION.cff`](https://github.com/eslazarev/purged-cross-validation/blob/main/CITATION.cff) holds the same metadata, and GitHub turns it into the "Cite this repository" button.
+
+```bibtex
+@software{lazarev_purgedcv,
+  author    = {Lazarev, Evgenii},
+  title     = {purgedcv: scikit-learn-compatible purged and combinatorial
+               cross-validation for time-series and financial machine learning},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.20312695},
+  url       = {https://github.com/eslazarev/purged-cross-validation}
+}
+```
+
+The accompanying preprint, which has not been peer reviewed, can be cited as:
+
+```bibtex
+@misc{lazarev_purgedcv_preprint,
+  author    = {Lazarev, Evgenii},
+  title     = {purgedcv: Label-Aware Cross-Validation for Overlapping-Horizon
+               Prediction in Python},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.20323362},
+  note      = {Preprint}
+}
+```
 
 ## License
 
