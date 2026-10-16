@@ -25,10 +25,27 @@ Plan is listed under the published version it shipped in.
   README already claimed it did.
 - The README lists all fifteen example notebooks, and a new Citation section
   gives the Zenodo DOI with BibTeX entries. `CITATION.cff` records the DOI.
+- Released entries are grouped under versions 0.1.9 and 0.1.10 instead of
+  remaining under `Unreleased`.
+
+## [0.1.10] - 2026-10-01
+
+### Documentation
+
 - Add a Docs build badge and complete notebook setup instructions, including
   cloning the repository, creating an environment, and quoting extras for zsh.
 - Document `with_times()` inputs and add an executable example showing new
   label horizons without modifying the original splitter.
+
+### Fixed
+
+- Include `textstat` in the development extra so the documented prose gate
+  works after installing `.[dev,docs]`.
+
+## [0.1.9] - 2026-10-01
+
+### Documentation
+
 - Related-software descriptions now focus on documented capabilities, with
   links to project sources. Removed unsupported quality judgments from the
   README, methodology guide, manuscripts, and an earlier benchmark entry.
@@ -38,8 +55,6 @@ Plan is listed under the published version it shipped in.
 
 ### Fixed
 
-- Include `textstat` in the development extra so the documented prose gate
-  works after installing `.[dev,docs]`.
 - Package author metadata now includes the contact email listed in
   `CITATION.cff`.
 - Quickstart examples now pass a timedelta to standalone `purge` and a
@@ -422,7 +437,9 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.10
+[0.1.9]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.9
 [0.1.8]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.8
 [0.1.7]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.7
 [0.1.6]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.6
