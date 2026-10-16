@@ -243,3 +243,6 @@ docstmp/
 # macOS
 .DS_Store
 ROADMAP.md
+
+# Marketing drafts and their exported images (not part of the package).
+articles/

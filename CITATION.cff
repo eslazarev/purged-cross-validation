@@ -9,6 +9,7 @@ authors:
     orcid: "https://orcid.org/0009-0000-1398-7842"
 version: 0.1.10
 date-released: "2026-10-01"
+doi: 10.5281/zenodo.20312695
 repository-code: "https://github.com/eslazarev/purged-cross-validation"
 url: "https://github.com/eslazarev/purged-cross-validation"
 license: MIT

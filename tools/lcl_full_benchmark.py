@@ -27,7 +27,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
 
@@ -224,7 +224,7 @@ def run(args: argparse.Namespace) -> Path:
     lines = [
         "# LCL full-population benchmark",
         "",
-        f"- generated: {datetime.now(timezone.utc).isoformat()}",
+        f"- generated: {datetime.now(UTC).isoformat()}",
         f"- raw dir: `{raw_dir}`",
         f"- eligible Std households (>= {min_half_hours} half-hours, "
         f">= {min_span_days} days): **{len(eligible)}**",

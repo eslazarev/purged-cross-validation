@@ -14,7 +14,7 @@ source .venv/bin/activate
 pip install -e ".[dev,docs]"
 ```
 
-Python 3.10 or newer is required.
+Python 3.11 or newer is required.
 
 ## Running the gates locally
 

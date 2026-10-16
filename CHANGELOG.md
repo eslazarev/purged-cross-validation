@@ -9,8 +9,22 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Changed
+
+- Python 3.11 is now the minimum supported version. Python 3.10 reaches end
+  of life this month. CI tests 3.11 through 3.15, and the package metadata,
+  README badge, and install docs list the same range.
+
 ### Documentation
 
+- Quickstart section 4 shows `reconstruct_paths` on a hand-written fit loop,
+  `CombinatoriallySymmetricCV` with PBO, and `minimum_backtest_length`, all
+  checked by the quickstart e2e test.
+- The backtest overfitting audit notebook now compares the minimum backtest
+  length with the in-sample and held-out spans of its Optuna champion. The
+  README already claimed it did.
+- The README lists all fifteen example notebooks, and a new Citation section
+  gives the Zenodo DOI with BibTeX entries. `CITATION.cff` records the DOI.
 - Add a Docs build badge and complete notebook setup instructions, including
   cloning the repository, creating an environment, and quoting extras for zsh.
 - Document `with_times()` inputs and add an executable example showing new

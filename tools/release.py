@@ -14,7 +14,7 @@ import argparse
 import re
 import subprocess
 import sys
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from sync_citation import cff_version, pyproject_version, sync_text
@@ -178,7 +178,7 @@ def main() -> int:
     planning.add_argument("--after", required=True)
     preparing = commands.add_parser("prepare")
     preparing.add_argument("--version", required=True)
-    preparing.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
+    preparing.add_argument("--date", default=datetime.now(UTC).date().isoformat())
     args = parser.parse_args()
     try:
         if args.command == "plan":

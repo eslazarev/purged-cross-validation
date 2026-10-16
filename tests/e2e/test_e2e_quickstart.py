@@ -29,7 +29,7 @@ def _chapters() -> dict[int, list[tuple[int, str]]]:
         chapter = int(preceding[-1].group(1))
         line = markdown[: match.start(1)].count("\n") + 1
         chapters.setdefault(chapter, []).append((line, match.group(1)))
-    assert set(chapters) == {1, 2, 3}, "Keep all Quickstart chapters covered"
+    assert set(chapters) == {1, 2, 3, 4}, "Keep all Quickstart chapters covered"
     return chapters
 
 
@@ -78,6 +78,26 @@ elif chapter == 3:
     assert namespace["var_sharpe"] == float(expected_sharpes.var(ddof=1))
     assert 0 <= namespace["dsr"] <= 1
     assert namespace["dsr"] <= probabilistic_sharpe_ratio(namespace["selected_returns"], 0.0)
+elif chapter == 4:
+    from sklearn.linear_model import Ridge
+    from purgedcv import minimum_backtest_length
+
+    cpcv = namespace["cpcv"]
+    manual = namespace["manual_paths"]
+    assert manual.shape == (5, 600)
+    # A hand-written fit loop must give exactly what backtest_paths gives.
+    expected = cpcv.backtest_paths(Ridge(), namespace["features"], namespace["labels"])
+    np.testing.assert_allclose(manual, expected)
+    assert namespace["cscv"].get_n_splits() == 70
+    assert len(namespace["in_sample"]) == len(namespace["out_of_sample"]) == 480
+    assert not np.intersect1d(namespace["in_sample"], namespace["out_of_sample"]).size
+    result = namespace["result"]
+    assert result.n_combos == namespace["cscv"].get_n_splits()
+    assert 0.3 <= result.pbo <= 0.7  # 50 noise candidates: no reliable winner
+    # The point of the section: the sample is shorter than MinBTL.
+    assert namespace["years_of_data"] < namespace["min_years"]
+    assert namespace["min_years"] == minimum_backtest_length(50, target_sharpe=1.0)
+    assert 0 < namespace["annual_sharpes"].max() < 1
 print("QUICKSTART_OK")
 """
     result = subprocess.run(
