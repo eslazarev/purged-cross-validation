@@ -470,6 +470,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-checking-a-search-own-fit-loop-cscv-pbo-and-minbtl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Checking a search: own fit loop, CSCV, PBO and MinBTL
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Checking a search: own fit loop, CSCV, PBO and MinBTL">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cscv-and-the-probability-of-backtest-overfitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSCV and the probability of backtest overfitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-backtest-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimum backtest length
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -990,6 +1029,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-checking-a-search-own-fit-loop-cscv-pbo-and-minbtl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Checking a search: own fit loop, CSCV, PBO and MinBTL
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Checking a search: own fit loop, CSCV, PBO and MinBTL">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cscv-and-the-probability-of-backtest-overfitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSCV and the probability of backtest overfitting
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minimum-backtest-length" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimum backtest length
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1012,8 +1090,9 @@
 
 <h1 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h1>
 <p>Start with the row-level primitives, then use a splitter with sklearn.
-The last section builds CPCV prediction paths and shows a separate
-deflated-Sharpe example. Each numbered section runs after a fresh
+Section 3 builds CPCV prediction paths and shows a separate
+deflated-Sharpe example. Section 4 checks a whole search: paths from
+your own fitting loop, CSCV and PBO, and the minimum backtest length. Each numbered section runs after a fresh
 <code>pip install purgedcv</code>. Run it from top to bottom: the smaller follow-on
 snippets reuse variables from that section.</p>
 <h2 id="1-row-level-primitives">1. Row-level primitives<a class="headerlink" href="#1-row-level-primitives" title="Permanent link">&para;</a></h2>
@@ -1250,6 +1329,87 @@ for recording a search and estimating an effective count. Keep Sharpe units
 consistent: this example does not annualise them.</p>
 <p>For a worked time-series regression example, see
 <a href="../examples/"><code>examples/energy_demand_pjm.ipynb</code></a>.</p>
+<h2 id="4-checking-a-search-own-fit-loop-cscv-pbo-and-minbtl">4. Checking a search: own fit loop, CSCV, PBO and MinBTL<a class="headerlink" href="#4-checking-a-search-own-fit-loop-cscv-pbo-and-minbtl" title="Permanent link">&para;</a></h2>
+<p><code>backtest_paths</code> fits a scikit-learn estimator for you. When you fit each
+fold yourself, for example with a custom training loop or a model outside
+scikit-learn, collect one prediction array per fold in <code>split</code> order and
+pass the list to <code>reconstruct_paths</code>. The result has the same layout as
+<code>backtest_paths</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ridge</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">purgedcv</span><span class="w"> </span><span class="kn">import</span> <span class="n">CombinatorialPurgedCV</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">n</span> <span class="o">=</span> <span class="mi">600</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="n">features</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">labels</span> <span class="o">=</span> <span class="n">features</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">pred</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"D"</span><span class="p">))</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">evalu</span> <span class="o">=</span> <span class="n">pred</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="n">cpcv</span> <span class="o">=</span> <span class="n">CombinatorialPurgedCV</span><span class="p">(</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>    <span class="n">n_splits</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>    <span class="n">n_test_groups</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>    <span class="n">prediction_times</span><span class="o">=</span><span class="n">pred</span><span class="p">,</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>    <span class="n">evaluation_times</span><span class="o">=</span><span class="n">evalu</span><span class="p">,</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>    <span class="n">purge_horizon</span><span class="o">=</span><span class="s2">"2D"</span><span class="p">,</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="p">)</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="n">fold_predictions</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="k">for</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">test_idx</span> <span class="ow">in</span> <span class="n">cpcv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">features</span><span class="p">):</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>    <span class="n">model</span> <span class="o">=</span> <span class="n">Ridge</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">train_idx</span><span class="p">])</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>    <span class="n">fold_predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]))</span>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="n">manual_paths</span> <span class="o">=</span> <span class="n">cpcv</span><span class="o">.</span><span class="n">reconstruct_paths</span><span class="p">(</span><span class="n">fold_predictions</span><span class="p">)</span>
+<a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Paths from the manual loop:"</span><span class="p">,</span> <span class="n">manual_paths</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>  <span class="c1"># (5, 600)</span>
+</code></pre></div>
+<p>The module-level <code>purgedcv.reconstruct_paths</code> does the same job when you
+only have the fold predictions and fold test indices, without the
+splitter object.</p>
+<h3 id="cscv-and-the-probability-of-backtest-overfitting">CSCV and the probability of backtest overfitting<a class="headerlink" href="#cscv-and-the-probability-of-backtest-overfitting" title="Permanent link">&para;</a></h3>
+<p><code>CombinatoriallySymmetricCV</code> is CPCV with half of the blocks held out in
+every split. <code>probability_of_backtest_overfitting</code> runs it over a matrix
+of candidate return series. In each split it picks the candidate with the
+best in-sample Sharpe and checks where that candidate ranks out of sample.
+PBO is the share of splits where it lands below the median. In the example
+none of the 50 candidates has an edge, so PBO should sit near 0.5.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">purgedcv</span><span class="w"> </span><span class="kn">import</span> <span class="n">CombinatoriallySymmetricCV</span><span class="p">,</span> <span class="n">probability_of_backtest_overfitting</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">n_configs</span><span class="p">,</span> <span class="n">n_obs</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">960</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">candidate_returns</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_configs</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">))</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="n">days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2022-01-03"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"B"</span><span class="p">))</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">cscv</span> <span class="o">=</span> <span class="n">CombinatoriallySymmetricCV</span><span class="p">(</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="n">n_splits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">prediction_times</span><span class="o">=</span><span class="n">days</span><span class="p">,</span> <span class="n">evaluation_times</span><span class="o">=</span><span class="n">days</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="p">)</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">in_sample</span><span class="p">,</span> <span class="n">out_of_sample</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">cscv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">candidate_returns</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"CSCV splits:"</span><span class="p">,</span> <span class="n">cscv</span><span class="o">.</span><span class="n">get_n_splits</span><span class="p">())</span>  <span class="c1"># C(8, 4) = 70</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Rows per half:"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_sample</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_of_sample</span><span class="p">))</span>  <span class="c1"># 480 480</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="n">result</span> <span class="o">=</span> <span class="n">probability_of_backtest_overfitting</span><span class="p">(</span><span class="n">candidate_returns</span><span class="p">,</span> <span class="n">n_splits</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PBO </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">pbo</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> over </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">n_combos</span><span class="si">}</span><span class="s2"> splits"</span><span class="p">)</span>  <span class="c1"># PBO 0.57 over 70 splits</span>
+</code></pre></div>
+<h3 id="minimum-backtest-length">Minimum backtest length<a class="headerlink" href="#minimum-backtest-length" title="Permanent link">&para;</a></h3>
+<p>The best of 50 noise candidates still shows a positive annualised Sharpe.
+<code>minimum_backtest_length</code> gives the number of years a backtest needs
+before an annualised Sharpe of a given size is more than the best of that
+many lucky tries. This sample has fewer years than that, so even a Sharpe
+of 1 would not be evidence of skill.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">purgedcv</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimum_backtest_length</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">annual_sharpes</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">candidate_returns</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">candidate_returns</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">252</span><span class="p">)</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">)</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">years_of_data</span> <span class="o">=</span> <span class="n">n_obs</span> <span class="o">/</span> <span class="mi">252</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">min_years</span> <span class="o">=</span> <span class="n">minimum_backtest_length</span><span class="p">(</span><span class="n">n_configs</span><span class="p">,</span> <span class="n">target_sharpe</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Best annualised Sharpe: </span><span class="si">{</span><span class="n">annual_sharpes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># 0.85</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">years_of_data</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> years of data; MinBTL </span><span class="si">{</span><span class="n">min_years</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> years"</span><span class="p">)</span>  <span class="c1"># 3.8 vs 5.2</span>
+</code></pre></div>
+<p><a href="https://github.com/eslazarev/purged-cross-validation/blob/main/examples/backtest_overfitting_audit.ipynb"><code>examples/backtest_overfitting_audit.ipynb</code></a> runs the same
+checks on a real Optuna search over BTC/USDT strategies.</p>
 
 
 
