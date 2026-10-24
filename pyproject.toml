@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "purgedcv"
-version = "0.1.11"
+version = "0.1.12"
 description = "scikit-learn-compatible cross-validation for time-series and financial machine learning: purging, embargoes, combinatorial purged CV, and deflated Sharpe ratios."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -90,6 +90,7 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.24",
     "mkdocs-include-markdown-plugin>=6.0",
+    "mkdocs-llmstxt>=0.5",
 ]
 
 [project.urls]

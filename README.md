@@ -61,6 +61,7 @@
 - [What about a market with no real edge?](#what-about-a-market-with-no-real-edge)
 - [Example notebooks](#example-notebooks)
 - [Installation](#installation)
+  - [Using purgedcv with AI coding agents](#using-purgedcv-with-ai-coding-agents)
 - [Quickstart](#quickstart)
   - [1. The core primitive: `purge`](#1-the-core-primitive-purge)
   - [2. The post-test buffer: `apply_embargo`](#2-the-post-test-buffer-apply_embargo)
@@ -182,6 +183,25 @@ Time inputs are framework-agnostic: pandas `Series`/`DatetimeIndex`, NumPy
 `datetime64`/`timedelta64` arrays, Python datetime sequences, and Polars
 `Series` are accepted. Polars remains optional; inputs are converted to a
 one-dimensional NumPy array at the API boundary.
+
+### Using purgedcv with AI coding agents
+
+The repository ships an agent skill in
+[`skills/purgedcv/SKILL.md`](skills/purgedcv/SKILL.md). It tells an agent when
+purged CV is needed, how to build `evaluation_times`, which splitter to pick,
+and which mistakes to avoid. In Claude Code, install it with:
+
+```text
+/plugin install purgedcv --marketplace eslazarev/purged-cross-validation
+```
+
+Other agents that read the Agent Skills format can use the same folder. For
+chat assistants, the documentation is also published as plain text in
+[`llms.txt`](https://eslazarev.github.io/purged-cross-validation/llms.txt) and
+[`llms-full.txt`](https://eslazarev.github.io/purged-cross-validation/llms-full.txt).
+If your question is which splitter to use, start with
+[Choosing a splitter](https://eslazarev.github.io/purged-cross-validation/choosing-a-splitter/)
+and [Common mistakes](https://eslazarev.github.io/purged-cross-validation/common-mistakes/).
 
 ---
 
