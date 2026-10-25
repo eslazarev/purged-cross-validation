@@ -48,6 +48,8 @@ TARGETS = [
     REPO / "paper" / "paper.md",  # tracked JOSS paper
     REPO / "docs" / "index.md",
     REPO / "docs" / "quickstart.md",
+    REPO / "docs" / "choosing-a-splitter.md",
+    REPO / "docs" / "common-mistakes.md",
     REPO / "docs" / "examples.md",
     REPO / "docs" / "methodology.md",
     REPO / "docs" / "architecture.md",

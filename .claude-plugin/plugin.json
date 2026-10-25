@@ -1,0 +1,19 @@
+{
+  "name": "purgedcv",
+  "description": "Leakage-aware cross-validation for time-series and financial ML with the purgedcv package: purged k-fold, embargo, walk-forward, CPCV, deflated Sharpe ratio and PBO.",
+  "author": {
+    "name": "Evgenii Lazarev",
+    "url": "https://github.com/eslazarev"
+  },
+  "license": "MIT",
+  "homepage": "https://eslazarev.github.io/purged-cross-validation/",
+  "repository": "https://github.com/eslazarev/purged-cross-validation",
+  "keywords": [
+    "cross-validation",
+    "time-series",
+    "quantitative-finance",
+    "backtesting",
+    "scikit-learn",
+    "data-leakage"
+  ]
+}
