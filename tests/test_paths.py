@@ -226,3 +226,49 @@ class TestReconstructPaths:
                 n_test_groups,
                 n_samples,
             )
+
+
+class TestReconstructPathsDtypes:
+    def test_numeric_predictions_give_float_paths(self) -> None:
+        fold_test = _cpcv_fold_test_indices(16, 4, 2)
+        preds = [np.ones(len(t), dtype=np.int64) for t in fold_test]
+        paths = reconstruct_paths(preds, fold_test, 4, 2, 16)
+        assert paths.dtype == np.float64
+
+    def test_string_predictions_give_object_paths(self) -> None:
+        fold_test = _cpcv_fold_test_indices(16, 4, 2)
+        preds = [np.array([f"f{f}"] * len(t)) for f, t in enumerate(fold_test)]
+        paths = reconstruct_paths(preds, fold_test, 4, 2, 16)
+        assert paths.dtype == object
+        assert paths[0, 0] == "f0"
+
+    def test_missing_fold_inside_string_paths_is_nan(self) -> None:
+        fold_test = _cpcv_fold_test_indices(16, 4, 2)
+        preds: list[NDArrayAny] = [np.array(["a"] * len(t)) for t in fold_test]
+        preds[0] = np.full(len(fold_test[0]), np.nan)
+        paths = reconstruct_paths(preds, fold_test, 4, 2, 16)
+        assert paths.dtype == object
+        missing = [[v is not None and v != v for v in row] for row in paths]
+        assert any(any(row) for row in missing)
+        assert {v for v in paths.ravel() if v == v} == {"a"}
+
+    def test_rejects_two_dimensional_predictions(self) -> None:
+        fold_test = _cpcv_fold_test_indices(16, 4, 2)
+        preds = [np.zeros((len(t), 2)) for t in fold_test]
+        with pytest.raises(ValueError, match=r"fold 0: expected 1-D predictions"):
+            reconstruct_paths(preds, fold_test, 4, 2, 16)
+
+    def test_object_array_of_numbers_gives_float_paths(self) -> None:
+        """A classifier fit on object-dtype integer labels predicts an
+        object array of ints; that stays numeric, as it was before."""
+        fold_test = _cpcv_fold_test_indices(16, 4, 2)
+        preds = [np.array([1, 0] * (len(t) // 2), dtype=object) for t in fold_test]
+        paths = reconstruct_paths(preds, fold_test, 4, 2, 16)
+        assert paths.dtype == np.float64
+
+    def test_numeric_looking_strings_stay_strings(self) -> None:
+        fold_test = _cpcv_fold_test_indices(16, 4, 2)
+        preds = [np.array(["1"] * len(t), dtype=object) for t in fold_test]
+        paths = reconstruct_paths(preds, fold_test, 4, 2, 16)
+        assert paths.dtype == object
+        assert paths[0, 0] == "1"
