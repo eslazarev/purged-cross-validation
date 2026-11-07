@@ -100,3 +100,106 @@ def test_subprocess_backtest_paths_smoke() -> None:
     )
     assert result.stdout.strip() == "OK"
     assert result.stderr == ""
+
+
+_CLASSIFIER_STORY = textwrap.dedent("""\
+    import numpy as np
+    import pandas as pd
+    from sklearn.compose import ColumnTransformer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+    from purgedcv import CombinatorialPurgedCV
+
+    n = 180
+    rng = np.random.default_rng(7)
+    dates = pd.date_range("2024-01-01", periods=n, freq="D")
+    X = pd.DataFrame(
+        {
+            "momentum": rng.normal(size=n),
+            "volume": rng.normal(size=n),
+            "sector": rng.choice(["energy", "tech", "retail"], size=n),
+        },
+        index=dates,
+    )
+    y = pd.Series(np.where(X["momentum"] > 0, "up", "down"), index=dates)
+
+    model = make_pipeline(
+        ColumnTransformer(
+            [
+                ("num", StandardScaler(), ["momentum", "volume"]),
+                ("cat", OneHotEncoder(handle_unknown="ignore"), ["sector"]),
+            ]
+        ),
+        LogisticRegression(),
+    )
+    cv = CombinatorialPurgedCV(
+        n_splits=6,
+        n_test_groups=2,
+        prediction_times=pd.Series(dates),
+        evaluation_times=pd.Series(dates + pd.Timedelta(days=5)),
+        embargo="2D",
+    )
+    paths = cv.backtest_paths(model, X, y)
+    accuracy = (paths == y.to_numpy()).mean(axis=1)
+    print(paths.shape, paths.dtype, sorted(set(paths.ravel())), bool((accuracy > 0.8).all()))
+    """)
+
+
+@pytest.mark.e2e
+def test_user_story_classifier_pipeline_with_named_columns_and_text_labels() -> None:
+    """A user classifies "up"/"down" moves with a pipeline whose
+    ColumnTransformer picks columns by name, then scores each backtest
+    path by accuracy against the original labels."""
+    namespace: dict[str, object] = {}
+    exec(_CLASSIFIER_STORY, namespace)
+    paths = namespace["paths"]
+    assert isinstance(paths, np.ndarray)
+    assert paths.shape == (5, 180)
+    assert paths.dtype == object
+    assert set(paths.ravel().tolist()) == {"down", "up"}
+    accuracy = namespace["accuracy"]
+    assert isinstance(accuracy, np.ndarray)
+    assert (accuracy > 0.8).all()
+
+
+@pytest.mark.e2e
+def test_subprocess_classifier_pipeline_with_named_columns_and_text_labels() -> None:
+    result = subprocess.run(
+        [sys.executable, "-c", _CLASSIFIER_STORY],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result.stdout.strip() == "(5, 180) object ['down', 'up'] True"
+    assert result.stderr == ""
+
+
+@pytest.mark.e2e
+def test_subprocess_multi_output_predictions_get_a_clear_error() -> None:
+    snippet = textwrap.dedent("""\
+        import numpy as np
+        import pandas as pd
+        from sklearn.linear_model import Ridge
+        from purgedcv import CombinatorialPurgedCV
+
+        dates = pd.Series(pd.date_range("2024-01-01", periods=60, freq="D"))
+        cv = CombinatorialPurgedCV(
+            n_splits=6, n_test_groups=2,
+            prediction_times=dates, evaluation_times=dates + pd.Timedelta(days=1),
+        )
+        X = np.random.default_rng(0).normal(size=(60, 3))
+        Y = X[:, :2]
+        try:
+            cv.backtest_paths(Ridge(), X, Y)
+        except ValueError as exc:
+            print(exc)
+        """)
+    result = subprocess.run(
+        [sys.executable, "-c", snippet],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert "expects 1-D predictions" in result.stdout
+    assert "Ridge.predict returned shape (20, 2)" in result.stdout

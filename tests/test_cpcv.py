@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import warnings
 from math import comb
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ from sklearn.exceptions import FitFailedWarning
 
 from purgedcv import reconstruct_paths
 from purgedcv._cpcv import CombinatoriallySymmetricCV, CombinatorialPurgedCV
+from purgedcv._typing import NDArrayAny
 from purgedcv.diagnostics import (
     assert_embargo_respected,
     assert_no_temporal_leakage,
@@ -354,3 +356,128 @@ class TestCombinatoriallySymmetricCV:
         X = np.zeros((24, 1))  # noqa: N806
         for _, test_idx in cv.split(X):
             assert len(test_idx) == 12
+
+
+class _RecordingRegressor:
+    """Predicts the training mean and records what ``fit`` received."""
+
+    seen: ClassVar[list[tuple[type, object]]] = []
+
+    def get_params(self, deep: bool = True) -> dict[str, object]:
+        return {}
+
+    def set_params(self, **params: object) -> _RecordingRegressor:
+        return self
+
+    def fit(self, X: object, y: object) -> _RecordingRegressor:  # noqa: N803
+        _RecordingRegressor.seen.append((type(X), getattr(X, "columns", None)))
+        self.mean_ = float(np.mean(np.asarray(y)))
+        return self
+
+    def predict(self, X: pd.DataFrame) -> NDArrayAny:  # noqa: N803
+        return np.full(len(X), self.mean_)
+
+
+class _TwoColumnPredictor(_RecordingRegressor):
+    """Returns 2-D predictions, which a backtest path cannot hold."""
+
+    def predict(self, X: pd.DataFrame) -> NDArrayAny:  # noqa: N803
+        return np.zeros((len(X), 2))
+
+
+def _dated_frame(n: int = 48) -> tuple[pd.DataFrame, pd.Series]:
+    """Features and a target indexed by dates, so label-based and
+    positional indexing give different answers."""
+    rng = np.random.default_rng(0)
+    idx = pd.date_range("2024-01-01", periods=n, freq="D")
+    X = pd.DataFrame(  # noqa: N806
+        {"momentum": rng.normal(size=n), "volume": rng.normal(size=n)},
+        index=idx,
+    )
+    y = pd.Series(X["momentum"] * 2.0 + rng.normal(scale=0.1, size=n), index=idx)
+    return X, y
+
+
+class TestBacktestPathsInputTypes:
+    def _cv(self, n: int = 48) -> CombinatorialPurgedCV:
+        pred, evalu = _times(n=n, horizon_days=2)
+        return CombinatorialPurgedCV(
+            n_splits=6,
+            n_test_groups=2,
+            prediction_times=pred,
+            evaluation_times=evalu,
+        )
+
+    def test_dataframe_reaches_estimator_with_column_names(self) -> None:
+        X, y = _dated_frame()  # noqa: N806
+        _RecordingRegressor.seen = []
+        self._cv().backtest_paths(_RecordingRegressor(), X, y)
+        assert len(_RecordingRegressor.seen) == comb(6, 2)
+        for seen_type, seen_columns in _RecordingRegressor.seen:
+            assert seen_type is pd.DataFrame
+            assert isinstance(seen_columns, pd.Index)
+            assert list(seen_columns) == ["momentum", "volume"]
+
+    def test_column_transformer_selecting_by_name(self) -> None:
+        from sklearn.compose import ColumnTransformer
+        from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        X, y = _dated_frame()  # noqa: N806
+        by_name = make_pipeline(ColumnTransformer([("s", StandardScaler(), ["momentum"])]), Ridge())
+        by_position = make_pipeline(ColumnTransformer([("s", StandardScaler(), [0])]), Ridge())
+        cv = self._cv()
+        paths_by_name = cv.backtest_paths(by_name, X, y)
+        paths_by_position = cv.backtest_paths(by_position, X.to_numpy(), y.to_numpy())
+        assert paths_by_name.dtype == np.float64
+        np.testing.assert_allclose(paths_by_name, paths_by_position)
+
+    def test_pandas_rows_are_selected_by_position_not_label(self) -> None:
+        """A shuffled DatetimeIndex must not change which rows a fold uses."""
+        from sklearn.linear_model import Ridge
+
+        X, y = _dated_frame()  # noqa: N806
+        shuffled = np.random.default_rng(1).permutation(len(X))
+        X_odd = X.set_axis(X.index[shuffled])  # noqa: N806
+        y_odd = y.set_axis(y.index[shuffled])
+        cv = self._cv()
+        np.testing.assert_allclose(
+            cv.backtest_paths(Ridge(), X_odd, y_odd),
+            cv.backtest_paths(Ridge(), X.to_numpy(), y.to_numpy()),
+        )
+
+    def test_string_class_labels_are_kept(self) -> None:
+        from sklearn.linear_model import LogisticRegression
+
+        X, y = _dated_frame()  # noqa: N806
+        labels = pd.Series(np.where(y > 0, "up", "down"), index=y.index)
+        paths = self._cv().backtest_paths(LogisticRegression(), X, labels)
+        assert paths.shape == (5, 48)
+        assert paths.dtype == object
+        assert set(paths.ravel().tolist()) <= {"up", "down"}
+
+    def test_integer_predictions_still_come_back_as_float(self) -> None:
+        from sklearn.linear_model import LogisticRegression
+
+        X, y = _dated_frame()  # noqa: N806
+        paths = self._cv().backtest_paths(LogisticRegression(), X, (y > 0).astype(int))
+        assert paths.dtype == np.float64
+        assert set(np.unique(paths).tolist()) <= {0.0, 1.0}
+
+    def test_two_dimensional_predictions_raise_a_clear_error(self) -> None:
+        X, y = _dated_frame()  # noqa: N806
+        with pytest.raises(ValueError, match=r"1-D predictions.*shape \(16, 2\)"):
+            self._cv().backtest_paths(_TwoColumnPredictor(), X, y)
+
+    def test_polars_frame_is_supported(self) -> None:
+        pl = pytest.importorskip("polars")
+        from sklearn.linear_model import Ridge
+
+        X, y = _dated_frame()  # noqa: N806
+        X_pl = pl.from_pandas(X.reset_index(drop=True))  # noqa: N806
+        cv = self._cv()
+        np.testing.assert_allclose(
+            cv.backtest_paths(Ridge(), X_pl, y.to_numpy()),
+            cv.backtest_paths(Ridge(), X.to_numpy(), y.to_numpy()),
+        )

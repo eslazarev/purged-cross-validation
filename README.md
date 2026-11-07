@@ -23,6 +23,26 @@
 
 ---
 
+## Installation
+
+```bash
+pip install purgedcv
+
+# Or from conda-forge (conda or mamba)
+conda install -c conda-forge purgedcv
+mamba install -c conda-forge purgedcv
+
+# Directly from the repository
+pip install git+https://github.com/eslazarev/purged-cross-validation.git
+```
+
+Time inputs are framework-agnostic: pandas `Series`/`DatetimeIndex`, NumPy
+`datetime64`/`timedelta64` arrays, Python datetime sequences, and Polars
+`Series` are accepted. Polars remains optional; inputs are converted to a
+one-dimensional NumPy array at the API boundary.
+
+---
+
 ## API summary
 
 | Symbol | Domain | Description |
@@ -60,7 +80,6 @@
 - [Does an honest CV deploy better?](#does-an-honest-cv-deploy-better)
 - [What about a market with no real edge?](#what-about-a-market-with-no-real-edge)
 - [Example notebooks](#example-notebooks)
-- [Installation](#installation)
 - [Quickstart](#quickstart)
   - [1. The core primitive: `purge`](#1-the-core-primitive-purge)
   - [2. The post-test buffer: `apply_embargo`](#2-the-post-test-buffer-apply_embargo)
@@ -161,27 +180,6 @@ Fifteen notebooks in [`examples/`](https://github.com/eslazarev/purged-cross-val
 | [predictive_maintenance_nasa](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/predictive_maintenance_nasa.ipynb) | NASA C-MAPSS turbofans | Remaining useful life with an expanding `WalkForwardSplit`. |
 | [precipitation_noaa](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/precipitation_noaa.ipynb) | NOAA GHCN-Daily rainfall | `PurgedKFold` with a purge horizon and an embargo on a one-day-ahead regression. |
 | [energy_demand_pjm](https://github.com/eslazarev/purged-cross-validation/blob/main/examples/energy_demand_pjm.ipynb) | PJM hourly load | CPCV backtest paths with PSR, DSR, and MinTRL, following section 7.4.1 of *Advances in Financial Machine Learning*. |
-
----
-
-## Installation
-
-```bash
-
-pip install purgedcv
-
-# Or from conda-forge (conda or mamba)
-conda install -c conda-forge purgedcv
-mamba install -c conda-forge purgedcv
-
-# Directly from the repository
-pip install git+https://github.com/eslazarev/purged-cross-validation.git
-```
-
-Time inputs are framework-agnostic: pandas `Series`/`DatetimeIndex`, NumPy
-`datetime64`/`timedelta64` arrays, Python datetime sequences, and Polars
-`Series` are accepted. Polars remains optional; inputs are converted to a
-one-dimensional NumPy array at the API boundary.
 
 ---
 
