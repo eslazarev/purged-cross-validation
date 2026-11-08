@@ -970,6 +970,10 @@ group <code>g</code>, the k-th fold (in fold-iteration order) that contains
 <code>g</code> as a test group contributes <code>g</code>'s predictions to path k.</p>
 <p>NaN predictions in any fold propagate only to the paths that use
 that fold for the affected group(s).</p>
+<p>Numeric (including boolean) predictions give a float array. If any
+fold holds non-numeric values, such as string class labels, the
+result is an object array that keeps those values as they are, with
+NaN wherever a fold's predictions were NaN.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1086,7 +1090,17 @@ Used here to recover the group block layout.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p><code>(n_paths, n_samples)</code> array of predictions.</p>
+                <p><code>(n_paths, n_samples)</code> array of predictions, of dtype float or</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="purgedcv._typing.NDArrayAny">NDArrayAny</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>object as described above.</p>
               </div>
             </td>
           </tr>
@@ -1109,7 +1123,8 @@ Used here to recover the group block layout.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>on fold count or fold-prediction length mismatch.</p>
+                <p>on fold count or fold-prediction length mismatch, or
+when a fold's predictions are not one-dimensional.</p>
               </div>
             </td>
           </tr>

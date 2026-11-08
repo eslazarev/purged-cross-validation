@@ -2787,7 +2787,11 @@ sequence.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Feature matrix of shape <code>(n_samples, n_features)</code>.</p>
+                <p>Feature matrix of shape <code>(n_samples, n_features)</code>. A
+pandas or polars DataFrame is passed to the estimator as a
+DataFrame, so pipelines that select columns by name (for
+example with <code>ColumnTransformer</code>) work. Rows are taken by
+position, so the index does not need to be sorted or unique.</p>
               </div>
             </td>
             <td>
@@ -2839,7 +2843,7 @@ sequence.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>with <code>n_paths = C(n_splits - 1, n_test_groups - 1)</code>.</p>
+                <p>with <code>n_paths = C(n_splits - 1, n_test_groups - 1)</code>. The array</p>
               </div>
             </td>
           </tr>
@@ -2849,7 +2853,7 @@ sequence.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Affected rows contain NaN when an upstream fold could not be</p>
+                <p>is float when the predictions are numeric. When <code>predict</code></p>
               </div>
             </td>
           </tr>
@@ -2859,7 +2863,27 @@ sequence.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>fit.</p>
+                <p>returns non-numeric values, such as string class labels, it is</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="purgedcv._typing.NDArrayAny">NDArrayAny</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>an object array holding those values. Affected entries contain</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="purgedcv._typing.NDArrayAny">NDArrayAny</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>NaN when an upstream fold could not be fit.</p>
               </div>
             </td>
           </tr>
@@ -2884,6 +2908,17 @@ sequence.</p>
               <div class="doc-md-description">
                 <p>if <code>estimator</code> lacks <code>fit</code> or
 <code>predict</code>.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>if <code>y</code> does not match <code>X</code> in length, or if
+<code>predict</code> does not return one value per test row.</p>
               </div>
             </td>
           </tr>
