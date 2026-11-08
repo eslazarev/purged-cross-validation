@@ -9,6 +9,31 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Fixed
+
+- `CombinatorialPurgedCV.backtest_paths` passes pandas and polars inputs to
+  the estimator unchanged, taking fold rows by position. Pipelines whose
+  `ColumnTransformer` selects columns by name now work. An unsorted or
+  duplicated index is still fine, as before.
+- `backtest_paths` and `reconstruct_paths` keep non-numeric predictions.
+  String class labels come back as an object array instead of failing with
+  "could not convert string to float". Numeric predictions still give a
+  float array.
+- Predictions that are not one value per row (multi-output models, for
+  example) raise a `ValueError` that names the estimator and the shape,
+  instead of a NumPy broadcasting error.
+
+### Added
+
+- FTSE 100 selection-regret example notebook, contributed in #29.
+- `.github/CODEOWNERS`.
+
+### Documentation
+
+- The README puts installation right after the badges.
+
+## [0.1.11] - 2026-10-16
+
 ### Changed
 
 - Python 3.11 is now the minimum supported version. Python 3.10 reaches end
@@ -437,7 +462,8 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.11
 [0.1.10]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.10
 [0.1.9]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.9
 [0.1.8]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.8

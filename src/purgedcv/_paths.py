@@ -9,11 +9,23 @@ from __future__ import annotations
 from collections.abc import Sequence
 from itertools import combinations
 from math import comb
+from numbers import Real
 
 import numpy as np
 
 from ._typing import NDArrayAny
 from ._validation import _validate_integer, _validate_positional_indices
+
+
+def _holds_numbers(preds: NDArrayAny) -> bool:
+    """True for numeric or boolean arrays, and for object arrays whose
+    elements are all real numbers (what a classifier fit on object-dtype
+    integer labels returns). Strings, even ``"1"``, are not numbers."""
+    if preds.dtype.kind in "biuf":
+        return True
+    if preds.dtype.kind == "O":
+        return all(isinstance(v, Real) for v in preds)
+    return False
 
 
 def reconstruct_paths(
@@ -39,6 +51,11 @@ def reconstruct_paths(
     NaN predictions in any fold propagate only to the paths that use
     that fold for the affected group(s).
 
+    Numeric (including boolean) predictions give a float array. If any
+    fold holds non-numeric values, such as string class labels, the
+    result is an object array that keeps those values as they are, with
+    NaN wherever a fold's predictions were NaN.
+
     Args:
         fold_predictions: One array per fold; ``fold_predictions[f]`` is the
             prediction values for the rows in ``fold_test_indices[f]``,
@@ -51,10 +68,12 @@ def reconstruct_paths(
         n_samples: Total number of samples in the dataset.
 
     Returns:
-        ``(n_paths, n_samples)`` array of predictions.
+        ``(n_paths, n_samples)`` array of predictions, of dtype float or
+        object as described above.
 
     Raises:
-        ValueError: on fold count or fold-prediction length mismatch.
+        ValueError: on fold count or fold-prediction length mismatch, or
+            when a fold's predictions are not one-dimensional.
 
     Examples:
         >>> import numpy as np
@@ -111,7 +130,8 @@ def reconstruct_paths(
         cursor += sz
 
     fold_combos = list(combinations(range(n_splits), n_test_groups))
-    for f, (combo, preds, test_idx) in enumerate(
+    fold_arrays: list[NDArrayAny] = []
+    for f, (combo, preds_in, test_idx) in enumerate(
         zip(fold_combos, fold_predictions, fold_test_indices, strict=True)
     ):
         test_idx = _validate_positional_indices(
@@ -119,6 +139,15 @@ def reconstruct_paths(
             test_idx,
             n_samples=n_samples,
         )
+        preds = np.asarray(preds_in)
+        if preds.ndim != 1:
+            raise ValueError(
+                f"fold {f}: expected 1-D predictions, one value per test row, "
+                f"got shape {preds.shape}. A backtest path holds a single "
+                "prediction per sample; reduce multi-output or probability "
+                "predictions to one column first."
+            )
+        fold_arrays.append(preds)
         if len(preds) != len(test_idx):
             raise ValueError(
                 f"fold {f}: predictions length {len(preds)} does not match "
@@ -132,7 +161,7 @@ def reconstruct_paths(
     # fold-iteration order, where prediction_slice is the portion of that
     # fold's predictions corresponding to that group's rows.
     group_to_fold_slices: dict[int, list[tuple[int, NDArrayAny]]] = {g: [] for g in range(n_splits)}
-    for fold_idx, (combo, preds) in enumerate(zip(fold_combos, fold_predictions, strict=True)):
+    for fold_idx, (combo, preds) in enumerate(zip(fold_combos, fold_arrays, strict=True)):
         cursor_in_fold = 0
         for g in combo:
             g_size = len(group_indices[g])
@@ -143,7 +172,8 @@ def reconstruct_paths(
 
     # n_paths = C(N-1, K-1). Greedy assignment: g's k-th fold occurrence -> path k.
     n_paths = comb(n_splits - 1, n_test_groups - 1)
-    paths = np.full((n_paths, n_samples), np.nan, dtype=float)
+    numeric = all(_holds_numbers(preds) for preds in fold_arrays)
+    paths = np.full((n_paths, n_samples), np.nan, dtype=float if numeric else object)
     for g in range(n_splits):
         for path_idx, (_, slice_preds) in enumerate(group_to_fold_slices[g]):
             paths[path_idx, group_indices[g]] = slice_preds

@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from itertools import combinations
 from math import comb
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -21,6 +22,25 @@ from purgedcv._time import HorizonLike
 from purgedcv._validation import _validate_integer
 
 from ._typing import NDArrayAny, TimesLike
+
+
+def _row_indexable(data: object) -> Any:
+    """Return ``data`` in a form whose rows can be taken by position.
+
+    pandas and polars objects are kept as they are, so column names and
+    dtypes reach the estimator (a ``ColumnTransformer`` that selects
+    columns by name needs them). Anything else becomes a NumPy array.
+    """
+    if hasattr(data, "iloc") or type(data).__module__.split(".")[0] == "polars":
+        return data
+    return np.asarray(data)
+
+
+def _take_rows(data: Any, idx: NDArrayAny) -> Any:
+    """Take rows ``idx`` (positions, not labels) from ``_row_indexable`` output."""
+    if hasattr(data, "iloc"):
+        return data.iloc[idx]
+    return data[idx]
 
 
 class CombinatorialPurgedCV(BaseTemporalSplitter):
@@ -167,18 +187,26 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         Args:
             estimator: A scikit-learn estimator with ``fit(X, y)`` and
                 ``predict(X)`` methods.
-            X: Feature matrix of shape ``(n_samples, n_features)``.
+            X: Feature matrix of shape ``(n_samples, n_features)``. A
+                pandas or polars DataFrame is passed to the estimator as a
+                DataFrame, so pipelines that select columns by name (for
+                example with ``ColumnTransformer``) work. Rows are taken by
+                position, so the index does not need to be sorted or unique.
             y: Target vector of shape ``(n_samples,)``.
 
         Returns:
             ``(n_paths, n_samples)`` array of out-of-sample predictions
-            with ``n_paths = C(n_splits - 1, n_test_groups - 1)``.
-            Affected rows contain NaN when an upstream fold could not be
-            fit.
+            with ``n_paths = C(n_splits - 1, n_test_groups - 1)``. The array
+            is float when the predictions are numeric. When ``predict``
+            returns non-numeric values, such as string class labels, it is
+            an object array holding those values. Affected entries contain
+            NaN when an upstream fold could not be fit.
 
         Raises:
             AttributeError or TypeError: if ``estimator`` lacks ``fit`` or
                 ``predict``.
+            ValueError: if ``y`` does not match ``X`` in length, or if
+                ``predict`` does not return one value per test row.
 
         Examples:
             >>> import warnings
@@ -206,13 +234,11 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
         from sklearn.exceptions import FitFailedWarning
 
         n_samples = self._n_samples_or_check(X)
-        # Convert to ndarray once so per-fold indexing is uniform.
-        X_arr = np.asarray(X)  # noqa: N806
-        y_arr = np.asarray(y)
-        if y_arr.ndim == 0 or len(y_arr) != n_samples:
-            raise ValueError(
-                f"y length {len(y_arr) if y_arr.ndim else 0} does not match X length {n_samples}."
-            )
+        X_rows = _row_indexable(X)  # noqa: N806
+        y_rows = _row_indexable(y)
+        y_len = len(y_rows) if np.ndim(y_rows) else 0
+        if y_len != n_samples:
+            raise ValueError(f"y length {y_len} does not match X length {n_samples}.")
 
         fold_test_indices = list(self._iter_test_indices(n_samples))
         fold_predictions: list[NDArrayAny] = []
@@ -227,8 +253,16 @@ class CombinatorialPurgedCV(BaseTemporalSplitter):
                 fold_predictions.append(np.full(len(test_idx), np.nan, dtype=float))
                 continue
             est = clone(estimator)
-            est.fit(X_arr[train_idx], y_arr[train_idx])
-            preds = np.asarray(est.predict(X_arr[test_idx]), dtype=float)
+            est.fit(_take_rows(X_rows, train_idx), _take_rows(y_rows, train_idx))
+            preds = np.asarray(est.predict(_take_rows(X_rows, test_idx)))
+            if preds.ndim != 1:
+                raise ValueError(
+                    f"backtest_paths expects 1-D predictions, one value per test "
+                    f"row, but {type(estimator).__name__}.predict returned shape "
+                    f"{preds.shape}. A backtest path holds a single prediction per "
+                    "sample; for multi-output models, run the folds yourself and "
+                    "call reconstruct_paths once per output."
+                )
             fold_predictions.append(preds)
 
         return reconstruct_paths(
