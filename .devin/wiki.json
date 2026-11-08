@@ -1,0 +1,116 @@
+{
+  "repo_notes": [
+    {
+      "content": "purgedcv is a user-facing library. Write the wiki for people who want to validate a model on time-series or financial data without label leakage, not for people who want to study the internals. Lead every page with what the user calls and why, then give a short runnable example taken from README.md, docs/quickstart.md or the docstrings. Keep internal modules (files starting with an underscore) in the background."
+    },
+    {
+      "content": "The supported Python range is 3.11 to 3.15. Installation is `pip install purgedcv` or `conda install -c conda-forge purgedcv`. Runtime dependencies are numpy, pandas, scipy and scikit-learn. Polars inputs are accepted but polars is never imported as a dependency."
+    },
+    {
+      "content": "The CHANGELOG headings 'Plan A' to 'Plan D' and the D1 to D8 domain labels are leftover planning labels from the 0.0.x series. Do not present them as a feature lifecycle or a project structure. Describe history by released versions only."
+    },
+    {
+      "content": "The methods are due to Marcos Lopez de Prado (Advances in Financial Machine Learning, 2018) and Bailey and Lopez de Prado (PSR 2012, DSR 2014, PBO and CSCV 2017). purgedcv is an MIT-licensed, scikit-learn-compatible implementation and an open alternative to the purging and CPCV parts of mlfinlab. Cite the original papers for the methods and the Zenodo concept DOI 10.5281/zenodo.20312695 for the software."
+    },
+    {
+      "content": "Report only numbers that appear in examples/, paper/ or the README. Where an example concludes that a gap is small or that no edge survives honest validation, keep that conclusion. Shuffled KFold is the failure mode the library prevents, not a baseline to beat on accuracy."
+    },
+    {
+      "content": "paper/ and the LCL selection-regret material are research artefacts built on top of the library. Summarise them on one page and keep them out of the user guide pages. Use plain Mermaid syntax without special characters in node labels so that every diagram renders."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "What leakage in time-series cross-validation is, which problems purgedcv solves, and a map of the public API by task."
+    },
+    {
+      "title": "Installation",
+      "purpose": "pip and conda-forge installation, supported Python versions, optional extras, and accepted input types for prediction_times, evaluation_times and groups.",
+      "parent": "Overview"
+    },
+    {
+      "title": "Quickstart",
+      "purpose": "Walk through docs/quickstart.md: purge and embargo on raw rows, PurgedKFold with cross_val_score, audit_splitter, and the CSCV, PBO and MinBTL section.",
+      "parent": "Overview"
+    },
+    {
+      "title": "Choosing a Splitter",
+      "purpose": "Follow docs/choosing-a-splitter.md: which splitter answers which validation question, panels with groups set to the date, and how they compare with scikit-learn TimeSeriesSplit and shuffled KFold.",
+      "parent": "Overview"
+    },
+    {
+      "title": "Common Mistakes",
+      "purpose": "Follow docs/common-mistakes.md: calendar label ends, unsorted rows, backward shifts, grouping a date-sorted panel by asset, preprocessing outside the fold, and the exact error messages purgedcv raises.",
+      "parent": "Overview"
+    },
+    {
+      "title": "Using purgedcv with AI Coding Agents",
+      "purpose": "The agent skill in skills/purgedcv/SKILL.md, how to install it as a Claude Code plugin, llms.txt on the docs site, and AGENTS.md for contributors.",
+      "parent": "Overview"
+    },
+    {
+      "title": "Purge and Embargo",
+      "purpose": "The purge and apply_embargo primitives, half-open label horizons, and the three mutually exclusive embargo modes."
+    },
+    {
+      "title": "Cross-Validation Splitters",
+      "purpose": "Shared behaviour of all splitters: the scikit-learn splitter protocol, purge and embargo applied per fold, group disjointness."
+    },
+    {
+      "title": "WalkForwardSplit",
+      "purpose": "Expanding and sliding walk-forward validation with train_size, test_size and step.",
+      "parent": "Cross-Validation Splitters"
+    },
+    {
+      "title": "PurgedKFold and PurgedGroupKFold",
+      "purpose": "Contiguous purged k-fold and its group-aware variant for panels of assets, customers or households.",
+      "parent": "Cross-Validation Splitters"
+    },
+    {
+      "title": "CombinatorialPurgedCV",
+      "purpose": "Combinatorial purged cross-validation, the number of folds and paths, and backtest_paths.",
+      "parent": "Cross-Validation Splitters"
+    },
+    {
+      "title": "Using with scikit-learn and Optuna",
+      "purpose": "cross_val_score, GridSearchCV, Pipeline, and the Optuna integration for hyperparameter search under purged validation.",
+      "parent": "Cross-Validation Splitters"
+    },
+    {
+      "title": "Backtest Overfitting Statistics",
+      "purpose": "Which statistic answers which question after a search."
+    },
+    {
+      "title": "Backtest Paths",
+      "purpose": "reconstruct_paths and path_metrics for a hand-written per-fold loop.",
+      "parent": "Backtest Overfitting Statistics"
+    },
+    {
+      "title": "PSR, DSR, MinTRL and MinBTL",
+      "purpose": "probabilistic_sharpe_ratio, deflated_sharpe_ratio, min_track_record_length and minimum_backtest_length, with the inputs each one needs.",
+      "parent": "Backtest Overfitting Statistics"
+    },
+    {
+      "title": "Probability of Backtest Overfitting",
+      "purpose": "CombinatoriallySymmetricCV and PBO, and how to read the result.",
+      "parent": "Backtest Overfitting Statistics"
+    },
+    {
+      "title": "Diagnostics",
+      "purpose": "audit_splitter and the assertion helpers for checking any splitter, including custom ones, with their docstring examples."
+    },
+    {
+      "title": "Example Notebooks",
+      "purpose": "The notebooks listed in the README table: data source, question each one answers, and the measured result."
+    },
+    {
+      "title": "Research Using purgedcv",
+      "purpose": "Short summary of the paper and the LCL selection-regret study in paper/ and how they use the library."
+    },
+    {
+      "title": "Contributing and Development",
+      "purpose": "Development setup, test suite layout, CI matrix, release process and contribution policy, in one page."
+    }
+  ]
+}

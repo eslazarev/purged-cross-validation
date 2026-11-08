@@ -44,11 +44,33 @@ plugins:
             separate_signature: true
             merge_init_into_class: true
   - include-markdown
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: >-
+        purgedcv is an MIT-licensed, scikit-learn-compatible Python package for
+        leakage-aware cross-validation on time-series and financial data. Every
+        splitter needs prediction_times (when the prediction is made, sorted) and
+        evaluation_times (when the label is known).
+      sections:
+        Start here:
+          - index.md: What the package does and when you need it
+          - installation.md: pip and conda installation, accepted time inputs
+          - quickstart.md: Runnable walkthrough from purge to PBO
+          - choosing-a-splitter.md: Which splitter fits which validation question
+          - common-mistakes.md: Typical leakage errors and the messages purgedcv raises
+        API reference:
+          - api.md
+          - api/*.md
+        Background:
+          - methodology.md
+          - examples.md
 
 nav:
   - Home: index.md
   - Installation: installation.md
   - Quickstart: quickstart.md
+  - Choosing a splitter: choosing-a-splitter.md
+  - Common mistakes: common-mistakes.md
   - API reference:
       - Overview: api.md
       - Splitters: api/splitters.md

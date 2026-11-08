@@ -3,6 +3,8 @@
   "projectTitle": "purgedcv",
   "description": "scikit-learn-compatible cross-validation for time-series and financial machine learning: purging, embargoes, combinatorial purged CV, walk-forward, and Probabilistic/Deflated Sharpe Ratio.",
   "folders": [
+    "docs",
+    "skills",
     "src/purgedcv",
     "examples",
     "paper"
@@ -11,8 +13,7 @@
     "tests",
     ".github",
     "examples/data",
-    "tools",
-    "docs"
+    "tools"
   ],
   "excludeFiles": [
     "paper/paper.bib",
@@ -22,6 +23,8 @@
     "Algorithms (purging, embargo, CPCV, PSR/DSR/MinTRL) are due to Marcos Lopez de Prado and Bailey & Lopez de Prado; this library is an open, MIT-licensed, sklearn-compatible implementation. Cite the original work, not the library, for the methods themselves.",
     "Show real, measured numbers from examples/ and paper/ rather than inventing accuracy figures. Where the worked examples report 'small gap' or 'no edge survives', preserve that honest framing instead of overclaiming.",
     "Naive shuffled k-fold is the failure mode this library exists to prevent, not a baseline to compete with on accuracy. The fair comparison between CV schemes is the label-overlap fraction they admit, not their reported score.",
-    "Prefer the documented public API: WalkForwardSplit, PurgedKFold, PurgedGroupKFold, CombinatorialPurgedCV, reconstruct_paths, deflated_sharpe_ratio, probabilistic_sharpe_ratio, min_track_record_length, and the diagnostics module."
+    "Prefer the documented public API: WalkForwardSplit, PurgedKFold, PurgedGroupKFold, CombinatorialPurgedCV, CombinatoriallySymmetricCV, reconstruct_paths, path_metrics, audit_splitter, probabilistic_sharpe_ratio, deflated_sharpe_ratio, min_track_record_length, minimum_backtest_length, probability_of_backtest_overfitting, and the diagnostics module.",
+    "Every splitter needs prediction_times (sorted, when the prediction is made) and evaluation_times (when the label is known). Build evaluation_times with a per-entity row shift, not calendar arithmetic: sort by [entity, time] first because shift() follows row order, then df.groupby('asset')['date'].shift(-h), drop incomplete rows, and sort the frame by [time, entity]. For a panel, pass groups=date to PurgedGroupKFold; grouping a date-sorted panel by asset leaves no training rows.",
+    "TimeSeriesSplit(gap=h) is a valid alternative for a single series with a fixed horizon of h rows. purgedcv is needed when horizons vary per row, rows share timestamps, or k-fold/CPCV with purge and embargo is wanted. PBO measures whether the in-sample ranking of candidates holds out of sample; it is not a test of edge, which the deflated Sharpe ratio addresses."
   ]
 }

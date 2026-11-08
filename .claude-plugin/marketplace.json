@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "purgedcv",
+  "owner": {
+    "name": "Evgenii Lazarev",
+    "url": "https://github.com/eslazarev"
+  },
+  "metadata": {
+    "description": "Agent skill for the purgedcv Python package"
+  },
+  "plugins": [
+    {
+      "name": "purgedcv",
+      "source": "./",
+      "description": "Leakage-aware cross-validation for time-series and financial ML with the purgedcv package: purged k-fold, embargo, walk-forward, CPCV, deflated Sharpe ratio and PBO."
+    }
+  ]
+}

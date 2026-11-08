@@ -9,6 +9,25 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Documentation
+
+- New "Choosing a splitter" page: which splitter answers which validation
+  question, panels grouped by date, and PBO, DSR and MinBTL after a search.
+- New "Common mistakes" page with the errors purgedcv raises for unsorted
+  rows, backward label shifts and length mismatches, plus the mistakes it
+  cannot detect. One of them is grouping a date-sorted panel by asset, which
+  leaves every fold with no training rows.
+- The docs site now publishes `llms.txt` and `llms-full.txt` through
+  `mkdocs-llmstxt`, which is added to the `docs` extra.
+- An agent skill in `skills/purgedcv/SKILL.md`, installable as a Claude Code
+  plugin from this repository. `AGENTS.md` covers agents that change the
+  package itself. `context7.json` now indexes `docs/` and the skill, and
+  `.devin/wiki.json` steers the DeepWiki page structure.
+- An e2e test runs every example in the two new pages and the skill, checks
+  that the quoted error messages match the package, and builds `llms.txt`.
+
+## [0.1.11] - 2026-10-16
+
 ### Changed
 
 - Python 3.11 is now the minimum supported version. Python 3.10 reaches end
