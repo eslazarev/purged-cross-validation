@@ -2,12 +2,28 @@
 
 All notable changes to `purged-cross-validation` are recorded here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-The 0.0.x series is the pre-1.0 development line. The library's feature
+The 0.x series is the pre-1.0 development line. The library's feature
 work was organised internally as Plans A–D (foundations → splitters →
 backtest paths → metrics); the cumulative feature set delivered by each
 Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-16
+
+First stable release. `purgedcv` passed pyOpenSci peer review
+([pyOpenSci/software-submission#348](https://github.com/pyOpenSci/software-submission/issues/348)).
+The public API is the same as in 0.1.12.
+
+### Changed
+
+- Development status classifier is now "Production/Stable".
+
+### Documentation
+
+- pyOpenSci peer-reviewed badge in the README.
+
+## [0.1.12] - 2026-11-08
 
 ### Fixed
 
@@ -462,7 +478,9 @@ Development patch release.
 
 First PyPI release.
 
-[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v0.1.11...HEAD
+[Unreleased]: https://github.com/eslazarev/purged-cross-validation/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v1.0.0
+[0.1.12]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.12
 [0.1.11]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.11
 [0.1.10]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.10
 [0.1.9]: https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.9
