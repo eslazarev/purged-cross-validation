@@ -29,7 +29,7 @@ from purgedcv.exceptions import (
     TemporalLeakageError,
 )
 
-__version__ = "0.1.12"
+__version__ = "1.0.0"
 
 __all__ = [
     "ArrayLike1D",
