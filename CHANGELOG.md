@@ -9,6 +9,13 @@ Plan is listed under the published version it shipped in.
 
 ## [Unreleased]
 
+### Fixed
+
+- `tools/competitor_benchmark.py` no longer sets `purge_horizon` on top of
+  `evaluation_times` for the three purgedcv splitters, which purged twice the
+  label horizon. The purgedcv rows now keep more training rows, still with
+  zero label overlap.
+
 ## [1.0.0] - 2026-11-16
 
 First stable release. `purgedcv` passed pyOpenSci peer review
