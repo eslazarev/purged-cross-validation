@@ -115,7 +115,6 @@ def _pcv_purged(f: np.ndarray, y: np.ndarray, p: pd.Series, e: pd.Series) -> Fol
         n_splits=N_SPLITS,
         prediction_times=p,
         evaluation_times=e,
-        purge_horizon=f"{H}D",
         embargo=f"{H}D",
     )
     return _arr(cv.split(f))
@@ -128,7 +127,6 @@ def _pcv_walk(f: np.ndarray, y: np.ndarray, p: pd.Series, e: pd.Series) -> Folds
         window="expanding",
         prediction_times=p,
         evaluation_times=e,
-        purge_horizon=f"{H}D",
     )
     return _arr(cv.split(f))
 
@@ -139,7 +137,6 @@ def _pcv_cpcv(f: np.ndarray, y: np.ndarray, p: pd.Series, e: pd.Series) -> Folds
         n_test_groups=2,
         prediction_times=p,
         evaluation_times=e,
-        purge_horizon=f"{H}D",
     )
     return _arr(cv.split(f))
 
