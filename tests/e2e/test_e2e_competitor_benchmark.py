@@ -10,8 +10,8 @@ dependency-free core (sklearn + purgedcv) via ``--core-only``:
 * ``purgedcv PurgedKFold`` admits exactly 0.0 overlap and returns no skill.
 
 No third-party competitor is asserted (they may be absent on CI; the tool
-isolates and reports them). Skipped when ``tools/`` is absent -- it is
-git-ignored, so a clean checkout has no benchmark script.
+isolates and reports them). The script is tracked under ``tools/``; the
+skip only guards against it being moved or renamed.
 """
 
 from __future__ import annotations
@@ -66,8 +66,13 @@ def test_competitor_benchmark_invariants_and_determinism(tmp_path: Path) -> None
 
     # Every purgedcv splitter must reach exactly zero label overlap.
     pcv = ran[ran["library"] == "purgedcv"]
-    assert len(pcv) >= 1
+    assert sorted(pcv["splitter"]) == [
+        "CombinatorialPurgedCV",
+        "PurgedKFold",
+        "WalkForwardSplit",
+    ]
     assert (pcv["mean_overlap"] == 0.0).all()
+    assert (pcv["mean_r2"] <= 0.0).all()
 
     # Deterministic: a second run yields a byte-identical CSV.
     second = _run(out_b)
