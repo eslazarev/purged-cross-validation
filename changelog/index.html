@@ -787,6 +787,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -805,7 +827,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#changed" class="md-nav__link">
+  <a href="#changed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -894,7 +916,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#changed_1" class="md-nav__link">
+  <a href="#changed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1246,7 +1268,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changed_2" class="md-nav__link">
+  <a href="#changed_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1346,7 +1368,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changed_3" class="md-nav__link">
+  <a href="#changed_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1534,6 +1556,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1552,7 +1596,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#changed" class="md-nav__link">
+  <a href="#changed_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1641,7 +1685,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#changed_1" class="md-nav__link">
+  <a href="#changed_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -1993,7 +2037,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changed_2" class="md-nav__link">
+  <a href="#changed_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -2093,7 +2137,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#changed_3" class="md-nav__link">
+  <a href="#changed_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         Changed
@@ -2261,12 +2305,27 @@ Plan is listed under the published version it shipped in.</p>
   <code>evaluation_times</code> for the three purgedcv splitters, which purged twice the
   label horizon. The purgedcv rows now keep more training rows, still with
   zero label overlap.</li>
+<li>The <code>check-yaml</code> pre-commit hook accepts the <code>!!python/name</code> tag in
+  <code>mkdocs.yml</code>. Before, it rejected the file on every run.</li>
+</ul>
+<h3 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The release job installs <code>build</code>, <code>twine</code> and <code>hatchling</code> from the
+  hash-locked <code>tools/release-requirements.txt</code> and builds with
+  <code>--no-isolation</code>, so no unhashed package reaches the wheel. Third-party
+  actions are pinned to commit SHAs, and the release checkout does not keep
+  the job credentials.</li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CI and the contributor install command include the <code>optuna</code> extra, so the
+  Optuna cookbook e2e test runs instead of being skipped.</li>
 </ul>
 <h2 id="100-2026-11-16"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v1.0.0">1.0.0</a> - 2026-11-16<a class="headerlink" href="#100-2026-11-16" title="Permanent link">&para;</a></h2>
 <p>First stable release. <code>purgedcv</code> passed pyOpenSci peer review
 (<a href="https://github.com/pyOpenSci/software-submission/issues/348">pyOpenSci/software-submission#348</a>).
 The public API is the same as in 0.1.12.</p>
-<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Development status classifier is now "Production/Stable".</li>
 </ul>
@@ -2299,7 +2358,7 @@ The public API is the same as in 0.1.12.</p>
 <li>The README puts installation right after the badges.</li>
 </ul>
 <h2 id="0111-2026-10-16"><a href="https://github.com/eslazarev/purged-cross-validation/releases/tag/v0.1.11">0.1.11</a> - 2026-10-16<a class="headerlink" href="#0111-2026-10-16" title="Permanent link">&para;</a></h2>
-<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Python 3.11 is now the minimum supported version. Python 3.10 reaches end
   of life this month. CI tests 3.11 through 3.15, and the package metadata,
@@ -2532,7 +2591,7 @@ rather than slipped into a patch release.</p>
   five times more per unit of risk. The library's value on a no-edge
   market is loss avoidance rather than gain.</li>
 </ul>
-<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>min_track_record_length</code> now returns <code>math.inf</code> instead of raising when
   <code>observed_sharpe &lt;= target_sharpe</code>: no finite track record can establish
@@ -2628,7 +2687,7 @@ patches; this entry records the work delivered across 0.0.5 through
   End-to-end test <code>test_e2e_competitor_benchmark.py</code>.</li>
 <li><code>context7.json</code> so the docs are indexable by Context7.</li>
 </ul>
-<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>BaseTemporalSplitter</code> now requires monotonic <code>prediction_times</code> at
   construction (<code>require_monotonic=True</code>). Closes a silent
