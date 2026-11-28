@@ -109,7 +109,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,docs]"
+          pip install -e ".[dev,docs,optuna]"
 
       - name: Ruff lint
         run: ruff check .
@@ -125,7 +125,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           files: coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -193,6 +193,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -209,17 +210,19 @@ jobs:
 
       - name: Install build tooling
         if: steps.plan.outputs.mode == 'publish'
-        run: python -m pip install build twine
+        run: python -m pip install --require-hashes -r tools/release-requirements.txt
 
       - name: Build
         if: steps.plan.outputs.mode == 'publish'
+        # --no-isolation builds with the hash-locked hatchling installed
+        # above, instead of an unhashed copy fetched from PyPI.
         run: |
-          python -m build
+          python -m build --no-isolation
           python -m twine check dist/*
 
       - name: GitHub Release
         if: steps.plan.outputs.mode == 'publish'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: "v${{ steps.plan.outputs.version }}"
           target_commitish: ${{ github.sha }}

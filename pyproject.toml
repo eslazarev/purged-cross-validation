@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.33.0"]
 build-backend = "hatchling.build"
 
 [project]
 name = "purgedcv"
-version = "1.0.0"
+version = "1.0.1"
 description = "scikit-learn-compatible cross-validation for time-series and financial machine learning: purging, embargoes, combinatorial purged CV, and deflated Sharpe ratios."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -144,5 +144,5 @@ show_error_codes = true
 files = ["src", "tests"]
 
 [[tool.mypy.overrides]]
-module = ["hypothesis.*", "sklearn.*", "scipy.*"]
+module = ["hypothesis.*", "sklearn.*", "scipy.*", "optuna.*"]
 ignore_missing_imports = true
