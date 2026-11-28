@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.33.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -144,5 +144,5 @@ show_error_codes = true
 files = ["src", "tests"]
 
 [[tool.mypy.overrides]]
-module = ["hypothesis.*", "sklearn.*", "scipy.*"]
+module = ["hypothesis.*", "sklearn.*", "scipy.*", "optuna.*"]
 ignore_missing_imports = true

@@ -1,0 +1,13 @@
+# Build and upload tooling for the release job in .github/workflows/ci.yml.
+# The job installs the hash-locked tools/release-requirements.txt. To change
+# a pin, edit this file and regenerate the lock from the repository root:
+#
+#   uv pip compile tools/release-requirements.in --generate-hashes \
+#     --python-version 3.11 --python-platform linux \
+#     --exclude-newer 2026-11-12 -o tools/release-requirements.txt
+#
+# hatchling must match [build-system] requires in pyproject.toml, because the
+# release job builds with --no-isolation from this lock.
+build==1.6.1
+twine==7.0.0
+hatchling==1.33.0

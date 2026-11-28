@@ -11,7 +11,7 @@ git clone https://github.com/eslazarev/purged-cross-validation.git
 cd purged-cross-validation
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,docs]"
+pip install -e ".[dev,docs,optuna]"
 ```
 
 Python 3.11 or newer is required.

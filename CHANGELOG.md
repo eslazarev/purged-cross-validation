@@ -15,6 +15,21 @@ Plan is listed under the published version it shipped in.
   `evaluation_times` for the three purgedcv splitters, which purged twice the
   label horizon. The purgedcv rows now keep more training rows, still with
   zero label overlap.
+- The `check-yaml` pre-commit hook accepts the `!!python/name` tag in
+  `mkdocs.yml`. Before, it rejected the file on every run.
+
+### Security
+
+- The release job installs `build`, `twine` and `hatchling` from the
+  hash-locked `tools/release-requirements.txt` and builds with
+  `--no-isolation`, so no unhashed package reaches the wheel. Third-party
+  actions are pinned to commit SHAs, and the release checkout does not keep
+  the job credentials.
+
+### Changed
+
+- CI and the contributor install command include the `optuna` extra, so the
+  Optuna cookbook e2e test runs instead of being skipped.
 
 ## [1.0.0] - 2026-11-16
 
